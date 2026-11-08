@@ -52,5 +52,12 @@ fi
 
 cd "$ROOT"
 python3 -m unittest discover -s tests -v
-cmake --preset android-arm64
-cmake --build --preset android-arm64
+
+# The Android native target is defined inside the app module, not at the
+# repository root. Gradle owns the authoritative Android CMake invocation
+# and supplies the SDK-pinned CMake/toolchain configuration.
+if [[ ! -f "$ROOT/app/src/main/cpp/CMakeLists.txt" ]]; then
+  echo "ERROR: Android native CMake project is missing: app/src/main/cpp/CMakeLists.txt" >&2
+  exit 2
+fi
+echo "PASS: Android native CMake project found; Gradle will configure and build it."
