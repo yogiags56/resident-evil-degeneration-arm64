@@ -15,9 +15,9 @@ if [[ -n "$ANDROID_CLI" && -x "$ANDROID_CLI" ]]; then
   "$ANDROID_CLI" --sdk="$SDK" sdk install \
   platform-tools \
   platforms/android-35 \
-  build-tools@35.0.0 \
-  cmake@3.22.1 \
-  ndk@30.0.16248370
+  build-tools/35.0.0 \
+  cmake/3.22.1 \
+  ndk/30.0.16248370
 elif [[ -x "$SDKMANAGER" ]] || command -v sdkmanager >/dev/null 2>&1; then
   if [[ -x "$SDKMANAGER" ]]; then
     MANAGER="$SDKMANAGER"
