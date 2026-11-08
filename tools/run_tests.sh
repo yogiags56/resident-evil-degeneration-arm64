@@ -78,7 +78,9 @@ fi
 "$CC" "${CFLAGS[@]}" -I runtime/guest -I app/src/main/cpp \
   tests/test_re_s3e_file_import_dispatch.c \
   runtime/guest/re_guest_imports.c runtime/guest/s3e_aapcs32.c \
-  runtime/guest/re_guest_cpu.c app/src/main/cpp/re_s3e_file_api_audit.c \
+  runtime/guest/re_guest_cpu.c runtime/guest/re_guest_memory.c \
+  runtime/guest/re_guest_memory_bus.c runtime/guest/re_guest_cpu_bus_adapter.c \
+  app/src/main/cpp/re_s3e_file_api_audit.c \
   app/src/main/cpp/re_s3e_file_read_contract.c \
   -o build/host-tests/test_re_s3e_file_import_dispatch
 "$CC" "${CFLAGS[@]}" -I runtime/guest -I app/src/main/cpp \
