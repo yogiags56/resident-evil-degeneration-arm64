@@ -8,7 +8,7 @@ extern "C" {
 #endif
 
 /* Transitional CPU-facing facade. It does not change REGUESTMEM or CPU ABI. */
-typedef struct {
+typedef struct REGUESTCPUBUS {
     REGUESTMEMBUS *bus;
 } REGUESTCPUBUS;
 
