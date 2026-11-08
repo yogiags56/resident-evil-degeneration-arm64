@@ -23,6 +23,10 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
   runtime/guest/re_guest_memory.c runtime/guest/re_guest_memory_bus.c \
   runtime/guest/re_guest_cpu_bus_adapter.c \
   -o build/host-tests/test_re_guest_cpu_bus_adapter
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_cpu_instruction_fetch.c \
+  runtime/guest/re_guest_memory.c runtime/guest/re_guest_memory_bus.c \
+  runtime/guest/re_guest_cpu_bus_adapter.c \
+  -o build/host-tests/test_re_guest_cpu_instruction_fetch
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_imports.c \
   runtime/guest/re_guest_imports.c runtime/guest/s3e_aapcs32.c runtime/guest/re_guest_cpu.c \
   -o build/host-tests/test_re_guest_imports
