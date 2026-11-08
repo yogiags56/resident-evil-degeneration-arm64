@@ -18,14 +18,13 @@ NDK_BIN="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/$NDK_HOST/bin"
 bash "$ROOT/tools/verify_android_liblzma.sh" "$ANDROID_LIBLZMA_ROOT" \
   "$NDK_BIN/llvm-readelf" "$NDK_BIN/llvm-ar"
 cd "$ROOT"
-if [[ -x "$ROOT/gradlew" ]]; then
-  "$ROOT/gradlew" --no-daemon :app:assembleDebug
-elif command -v gradle >/dev/null 2>&1; then
-  bash "$ROOT/tools/provision_gradle_wrapper.sh"
+if command -v gradle >/dev/null 2>&1; then
+  gradle --no-daemon :app:assembleDebug
+elif [[ -x "$ROOT/gradlew" ]]; then
   "$ROOT/gradlew" --no-daemon :app:assembleDebug
 else
-  echo "ERROR: neither gradlew nor system Gradle is available." >&2
-  echo "Install Gradle 8.9+ or generate the wrapper before building." >&2
+  echo "ERROR: neither system Gradle nor gradlew is available." >&2
+  echo "Install the pinned Gradle distribution before building." >&2
   exit 2
 fi
 LIB="$ROOT/app/build/intermediates/cxx/RelWithDebInfo"
