@@ -110,25 +110,32 @@ class AndroidToolchainLockTests(unittest.TestCase):
     def test_sdk_installer_uses_all_pinned_sdk_packages(self):
         script = (ROOT / "tools/install_android_sdk_packages.sh").read_text()
         for package in (
-            "platform-tools", "platforms/android-35", "build-tools;35.0.0",
-            "cmake;3.22.1", "ndk;30.0.16248370",
+            '"platform-tools"', '"platforms;android-35"', '"build-tools;35.0.0"',
+            '"cmake;3.22.1"', '"ndk;30.0.16248370"',
         ):
             self.assertIn(package, script)
-        self.assertIn("ANDROID_CLI", script)
-        self.assertIn("deprecated sdkmanager compatibility path", script)
+        self.assertIn("commandlinetools-linux-", script)
+        self.assertIn("sha256sum --check", script)
+        self.assertIn("cmdline-tools/latest/bin/sdkmanager", script)
 
     def test_sdk_installer_fails_clearly_without_sdkmanager(self):
         with tempfile.TemporaryDirectory() as tmp:
             env = os.environ.copy()
-            env["ANDROID_SDK_ROOT"] = tmp
+            fake_bin = pathlib.Path(tmp) / "bin"
+            fake_bin.mkdir()
+            fake_curl = fake_bin / "curl"
+            fake_curl.write_text("#!/usr/bin/env bash\\nexit 22\\n")
+            fake_curl.chmod(0o755)
+            env["ANDROID_SDK_ROOT"] = str(pathlib.Path(tmp) / "sdk")
+            env["PATH"] = str(fake_bin) + os.pathsep + env.get("PATH", "")
             env.pop("ANDROID_SDKMANAGER", None)
             result = subprocess.run(
                 ["bash", str(ROOT / "tools/install_android_sdk_packages.sh")],
                 cwd=ROOT, env=env, text=True, stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
             )
-            self.assertEqual(result.returncode, 2)
-            self.assertIn("Android CLI not found", result.stdout)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("Downloading pinned official Android command-line tools", result.stdout)
 
 
     def test_wrapper_provisioner_pins_checksum_and_version(self):
