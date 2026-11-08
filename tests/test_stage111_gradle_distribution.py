@@ -16,6 +16,8 @@ class GradleDistributionTests(unittest.TestCase):
         script=SCRIPT.read_text()
         self.assertIn("distribution_sha256",script)
         self.assertIn("services.gradle.org/distributions",script)
+        self.assertIn("downloads.gradle.org/distributions",script)
+        self.assertIn("mirrors.aliyun.com/gradle/distributions",script)
         self.assertIn("verify_gradle_distribution.py",script)
         verifier=VERIFY.read_text()
         self.assertIn("hashlib.sha256",verifier)
