@@ -37,9 +37,9 @@ int main(void) {
 
     /* First Thumb halfword is executable; second is in a non-executable region. */
     assert(re_guest_memory_unmap(&memory,0x1000u)==RE_GUEST_MEM_OK);
-    assert(re_guest_memory_map(&memory,0x1000u,2u,code,
+    assert(re_guest_memory_map(&memory,0x1000u,2u,code+2,
         RE_GUEST_MEM_READ|RE_GUEST_MEM_EXEC)==RE_GUEST_MEM_OK);
-    assert(re_guest_memory_map(&memory,0x1002u,2u,code+2,
+    assert(re_guest_memory_map(&memory,0x1002u,2u,code+4,
         RE_GUEST_MEM_READ)==RE_GUEST_MEM_OK);
     assert(re_guest_cpu_fetch_instruction(&cpu_bus,0x1000u,1,
         &instruction,&width)==RE_GUEST_MEM_E_PERMISSION);
