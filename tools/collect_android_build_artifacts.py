@@ -33,6 +33,17 @@ def unique_file(root: Path, pattern: str, description: str) -> Path:
     return matches[0]
 
 
+def is_elf64_aarch64(data: bytes) -> bool:
+    # ELF ident + e_machine (little-endian uint16 at byte offset 18).
+    return (
+        len(data) >= 20
+        and data[:4] == b"\\x7fELF"
+        and data[4] == 2
+        and data[5] == 1
+        and int.from_bytes(data[18:20], "little") == 183
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, required=True)
@@ -54,16 +65,16 @@ def main() -> int:
             packaged_native = "lib/arm64-v8a/libre_asset_probe.so"
             if packaged_native not in entries:
                 raise ValueError(f"APK does not package {packaged_native}")
-            packaged_digest = hashlib.sha256(package.read(packaged_native)).hexdigest()
-        if packaged_digest != sha256(native):
-            raise ValueError("standalone ARM64 native library does not match the copy packaged in the APK")
+            packaged_native_bytes = package.read(packaged_native)
+        if not is_elf64_aarch64(packaged_native_bytes):
+            raise ValueError("native library packaged in APK is not ELF64/AArch64")
         output.mkdir(parents=True, exist_ok=True)
         files = []
-        for source, name, role in (
+        outputs = [
             (apk, "resident-evil-degeneration-arm64-bootstrap-probe.apk", "bootstrap-probe-apk"),
-            (native, "libre_asset_probe.so", "android-arm64-native-library"),
             (archive, "liblzma-android-arm64.a", "android-arm64-static-dependency"),
-        ):
+        ]
+        for source, name, role in outputs:
             destination = output / name
             shutil.copy2(source, destination)
             files.append({
@@ -72,6 +83,27 @@ def main() -> int:
                 "size_bytes": destination.stat().st_size,
                 "sha256": sha256(destination),
             })
+
+        # Android Gradle Plugin may strip debug/symbol sections from the APK
+        # copy, so it is not byte-identical to the unstripped CMake intermediate.
+        # Export the actual packaged ARM64 binary and keep the intermediate
+        # separately for native debugging.
+        packaged_output = output / "libre_asset_probe.so"
+        packaged_output.write_bytes(packaged_native_bytes)
+        files.append({
+            "file": packaged_output.name,
+            "role": "android-arm64-native-library-packaged-in-apk",
+            "size_bytes": packaged_output.stat().st_size,
+            "sha256": sha256(packaged_output),
+        })
+        unstripped_output = output / "libre_asset_probe-unstripped.so"
+        shutil.copy2(native, unstripped_output)
+        files.append({
+            "file": unstripped_output.name,
+            "role": "android-arm64-native-library-unstripped-intermediate",
+            "size_bytes": unstripped_output.stat().st_size,
+            "sha256": sha256(unstripped_output),
+        })
         manifest = {
             "schema_version": 1,
             "project": "Resident Evil: Degeneration Native ARM64 Port",
