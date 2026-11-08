@@ -15,6 +15,8 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
   -o build/host-tests/test_re_s3e_file_api_audit
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_cpu.c runtime/guest/re_guest_cpu.c \
   -o build/host-tests/test_re_guest_cpu
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_memory.c runtime/guest/re_guest_memory.c \
+  -o build/host-tests/test_re_guest_memory
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_imports.c \
   runtime/guest/re_guest_imports.c runtime/guest/s3e_aapcs32.c runtime/guest/re_guest_cpu.c \
   -o build/host-tests/test_re_guest_imports
