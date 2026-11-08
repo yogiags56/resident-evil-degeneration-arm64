@@ -11,7 +11,8 @@ REPO = "yogiags56/resident-evil-degeneration-arm64"
 class AndroidSdkManagerBootstrapTests(unittest.TestCase):
     def test_installer_uses_official_pinned_command_line_tools_archive(self):
         script = (ROOT / "tools/install_android_sdk_packages.sh").read_text()
-        self.assertIn("commandlinetools-linux-15859902_latest.zip", script)
+        self.assertIn('BUILD=15859902', script)
+        self.assertIn('ARCHIVE="commandlinetools-linux-${BUILD}_latest.zip"', script)
         self.assertIn(
             "4e4c464f145a7512b57d088ac6c278c03c9eea610886b35a5e0804e74eedf583",
             script,
