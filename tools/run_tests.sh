@@ -14,6 +14,8 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
   app/src/main/cpp/re_s3e_file_api_audit.c \
   -o build/host-tests/test_re_s3e_file_api_audit
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_cpu.c runtime/guest/re_guest_cpu.c \
+  runtime/guest/re_guest_memory.c runtime/guest/re_guest_memory_bus.c \
+  runtime/guest/re_guest_cpu_bus_adapter.c \
   -o build/host-tests/test_re_guest_cpu
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_memory.c runtime/guest/re_guest_memory.c runtime/guest/re_guest_memory_view.c \
   -o build/host-tests/test_re_guest_memory
@@ -33,14 +35,20 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
   -o build/host-tests/test_re_guest_cpu_checked_step
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_imports.c \
   runtime/guest/re_guest_imports.c runtime/guest/s3e_aapcs32.c runtime/guest/re_guest_cpu.c \
+  runtime/guest/re_guest_memory.c runtime/guest/re_guest_memory_bus.c \
+  runtime/guest/re_guest_cpu_bus_adapter.c \
   -o build/host-tests/test_re_guest_imports
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_runtime.c \
   runtime/guest/re_guest_runtime.c runtime/guest/re_guest_imports.c \
   runtime/guest/s3e_aapcs32.c runtime/guest/re_guest_cpu.c \
+  runtime/guest/re_guest_memory.c runtime/guest/re_guest_memory_bus.c \
+  runtime/guest/re_guest_cpu_bus_adapter.c \
   -o build/host-tests/test_re_guest_runtime
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_gl_imports.c \
   runtime/guest/re_guest_gl_imports.c runtime/guest/re_guest_runtime.c \
   runtime/guest/re_guest_imports.c runtime/guest/s3e_aapcs32.c runtime/guest/re_guest_cpu.c \
+  runtime/guest/re_guest_memory.c runtime/guest/re_guest_memory_bus.c \
+  runtime/guest/re_guest_cpu_bus_adapter.c \
   -o build/host-tests/test_re_guest_gl_imports
 "$CC" "${CFLAGS[@]}" -I runtime/archive tests/test_re_dtrz_vfs.c \
   runtime/archive/re_dtrz_vfs.c -o build/host-tests/test_re_dtrz_vfs
@@ -81,6 +89,8 @@ fi
 "$CC" "${CFLAGS[@]}" -I runtime/guest -I app/src/main/cpp -I runtime/archive \
   tests/test_re_s3e_file_bridge_dispatch_dtrz.c \
   runtime/guest/re_guest_imports.c runtime/guest/s3e_aapcs32.c runtime/guest/re_guest_cpu.c \
+  runtime/guest/re_guest_memory.c runtime/guest/re_guest_memory_bus.c \
+  runtime/guest/re_guest_cpu_bus_adapter.c \
   runtime/archive/re_dtrz_vfs.c runtime/archive/re_dtrz_file_backend.c \
   app/src/main/cpp/re_s3e_file_bridge.c app/src/main/cpp/re_file_adapter.c \
   app/src/main/cpp/re_s3e_file_api_audit.c app/src/main/cpp/re_s3e_file_read_contract.c \
