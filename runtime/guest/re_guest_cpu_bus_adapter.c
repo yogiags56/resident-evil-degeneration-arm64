@@ -1,7 +1,7 @@
 #include "re_guest_cpu_bus_adapter.h"
 
 void re_guest_cpu_bus_init(REGUESTCPUBUS *cpu_bus,
-    const REGUESTMEMBUS *memory_bus) {
+    REGUESTMEMBUS *memory_bus) {
     if (cpu_bus) cpu_bus->bus = memory_bus;
 }
 
@@ -53,7 +53,7 @@ REGUESTMEMStatus re_guest_cpu_read32(const REGUESTCPUBUS *cpu_bus,
 REGUESTMEMStatus re_guest_cpu_write8(const REGUESTCPUBUS *cpu_bus,
     uint32_t address, uint8_t value) {
     if (!cpu_bus || !cpu_bus->bus) return RE_GUEST_MEM_E_ARGUMENT;
-    return re_guest_memory_write8((REGUESTMEMBUS *)cpu_bus->bus, address, value);
+    return re_guest_memory_write8(cpu_bus->bus, address, value);
 }
 
 REGUESTMEMStatus re_guest_cpu_write16(const REGUESTCPUBUS *cpu_bus,
