@@ -72,7 +72,7 @@ jobs:
           git add -A
 
           # Keep the Android workflow out of this import commit.
-          git reset -- .github/workflows/android-arm64.yml
+          git reset -- .github/workflows/
 
           if git diff --cached --quiet; then
             echo "No source changes to commit"
