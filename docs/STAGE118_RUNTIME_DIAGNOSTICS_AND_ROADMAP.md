@@ -77,3 +77,16 @@ Stage numbers after 118 are planning targets, not completed work. Dependencies m
 - Physical-device execution: not verified.
 - Original game boot/gameplay: not achieved.
 - Production S3E file imports: disabled pending exact edge-case semantics and image binding verification.
+
+
+## Stage 119 implementation update — Guest memory manager
+
+The first Stage 119 module is now present:
+- `runtime/guest/re_guest_memory.h/.c` provides a bounded region table with 32-bit guest bases and 64-bit checked end calculations.
+- Region mapping rejects zero-length regions, invalid permission bits, address-space overflow, overlap, and table exhaustion.
+- Resolve requires the entire requested range to fit inside one mapped region and checks requested read/write/execute permissions.
+- Unmap clears a region by exact base address.
+- Host regression tests cover mapping, resolution, permission denial, boundary crossing, 32-bit wraparound, overlap, and unmap.
+- The test runner includes the new suite, and Android CMake compiles the module.
+
+The manager borrows host buffers; the future runtime context must own their allocation and lifetime. This module is intentionally not yet wired into the CPU's legacy contiguous `REGUESTMEM` interface. That migration needs a separate adapter and CPU access audit before it can safely replace the current memory model.
