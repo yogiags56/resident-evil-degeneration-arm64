@@ -1,0 +1,82 @@
+
+name: Import Stage 115 source
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import-source:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract and validate Stage 115 archive
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import zipfile
+          import pathlib
+          import stat
+
+          archive = pathlib.Path(
+              "RE_Degeneration_ARM64_Stage115_Source.zip"
+          )
+
+          if not archive.is_file():
+              raise SystemExit("Stage 115 ZIP not found")
+
+          with zipfile.ZipFile(archive) as z:
+              for info in z.infolist():
+                  path = pathlib.PurePosixPath(info.filename)
+
+                  if path.is_absolute() or ".." in path.parts:
+                      raise SystemExit("Unsafe archive path")
+
+                  if "\\" in info.filename:
+                      raise SystemExit("Invalid archive path")
+
+                  mode = info.external_attr >> 16
+                  if stat.S_ISLNK(mode):
+                      raise SystemExit("Symlink rejected")
+
+                  if info.is_dir():
+                      continue
+
+                  target = pathlib.Path(*path.parts)
+                  target.parent.mkdir(
+                      parents=True, exist_ok=True
+                  )
+
+                  with z.open(info) as src:
+                      with target.open("wb") as dst:
+                          while True:
+                              chunk = src.read(1024 * 1024)
+                              if not chunk:
+                                  break
+                              dst.write(chunk)
+
+          archive.unlink()
+          print("Stage 115 source extracted successfully")
+          PY
+
+      - name: Commit extracted source
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "No source changes to commit"
+            exit 0
+          fi
+
+          git commit -m "Import Stage 115 source tree"
+          git push origin HEAD:main
+          
