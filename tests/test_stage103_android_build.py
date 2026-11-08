@@ -26,11 +26,12 @@ class Stage103AndroidBuildTests(unittest.TestCase):
         self.assertIn("ANDROID_LIBLZMA_ROOT", gradle)
         self.assertIn("abiFilters 'arm64-v8a'", gradle)
 
-    def test_build_script_supports_wrapper_or_system_gradle(self):
+    def test_build_script_prefers_pinned_system_gradle_without_wrapper_bootstrap(self):
         script = self.read("tools/build_android_arm64.sh")
-        self.assertIn('"$ROOT/gradlew"', script)
         self.assertIn("command -v gradle", script)
-        self.assertIn("provision_gradle_wrapper.sh", script)
+        self.assertIn('gradle --no-daemon :app:assembleDebug', script)
+        self.assertIn('"$ROOT/gradlew"', script)
+        self.assertNotIn("provision_gradle_wrapper.sh", script)
 
     def test_preflight_checks_android_liblzma_files(self):
         script = self.read("tools/android_arm64_preflight.sh")
