@@ -8,7 +8,7 @@ class AndroidArm64WorkflowTests(unittest.TestCase):
         required=[
             "actions/checkout@v4",
             "actions/setup-java@v4",
-            "Install official Android CLI",
+            "Install pinned Android command-line tools, SDK and NDK",
             "tools/install_android_sdk_packages.sh",
             "tools/install_gradle_distribution.sh",
             "tools/provision_gradle_wrapper.sh",
