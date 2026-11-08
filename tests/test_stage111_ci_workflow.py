@@ -19,6 +19,7 @@ class AndroidArm64WorkflowTests(unittest.TestCase):
         ]
         positions=[workflow.index(x) for x in required]
         self.assertEqual(positions,sorted(positions))
+        self.assertNotIn("tools/provision_gradle_wrapper.sh",workflow)
         self.assertIn("ubuntu-24.04",workflow)
         self.assertIn("timeout-minutes: 60",workflow)
         self.assertIn("retention-days: 14", workflow)
