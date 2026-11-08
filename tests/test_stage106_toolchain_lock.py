@@ -110,8 +110,8 @@ class AndroidToolchainLockTests(unittest.TestCase):
     def test_sdk_installer_uses_all_pinned_sdk_packages(self):
         script = (ROOT / "tools/install_android_sdk_packages.sh").read_text()
         for package in (
-            "platform-tools", "platforms/android-35", "build-tools@35.0.0",
-            "cmake@3.22.1", "ndk@30.0.16248370",
+            "platform-tools", "platforms/android-35", "build-tools;35.0.0",
+            "cmake;3.22.1", "ndk;30.0.16248370",
         ):
             self.assertIn(package, script)
         self.assertIn("ANDROID_CLI", script)
