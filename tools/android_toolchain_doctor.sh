@@ -42,8 +42,8 @@ if [[ -x "$ROOT/gradlew" && -f "$ROOT/gradle/wrapper/gradle-wrapper.jar" ]]; the
   else add gradle FAIL "wrapper distribution pin/checksum mismatch"; fi
 elif check_cmd gradle; then
   gv="$(gradle --version | sed -n 's/^Gradle //p' | head -n1)"
-  if [[ "$gv" =~ ^[0-9]+\\.[0-9]+ ]] && awk -v v="$gv" 'BEGIN {split(v,a,"."); exit !((a[1]>8)||(a[1]==8 && a[2]>=9))}'; then
-    add gradle PASS "system Gradle $gv can provision the pinned wrapper"
+  if [[ "$gv" =~ ^[0-9]+\.[0-9]+ ]] && awk -v v="$gv" 'BEGIN {split(v,a,"."); exit !((a[1]>8)||(a[1]==8 && a[2]>=9))}'; then
+    add gradle PASS "system Gradle $gv available for the Android build"
   else add gradle FAIL "Gradle 8.9+ required to provision wrapper; found ${gv:-unknown}"; fi
 else add gradle FAIL "gradlew+wrapper JAR and system Gradle both missing"; fi
 SDK="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
