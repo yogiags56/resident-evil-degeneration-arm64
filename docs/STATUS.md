@@ -42,3 +42,8 @@ Added opt-in `re_guest_cpu_step_checked`. It fetches ARM/Thumb instructions thro
 ## Stage 119I update
 
 Expanded `tests/test_re_guest_cpu_checked_step.c` with ARM MOV, Thumb-2 MOVW, IT EQ true/false execution, and Thumb-2 second-halfword EXEC-permission denial. Existing Thumb-1, fetch parity, and permission-denial checks remain. The test remains opt-in and does not switch production runtime to the checked path. See [Stage 119I report](STAGE119I_CHECKED_CPU_REGRESSION.md).
+
+
+## Stage 119J update
+
+Added CPU-facing data-memory facade `re_guest_cpu_memory.h/.c` for checked byte/halfword/word reads and writes through the guest memory bus, with CPU error-status mapping. Added `tests/test_re_guest_cpu_memory.c`, registered it in the host test runner, and added the implementation to Android CMake. This does **not** migrate interpreter load/store opcodes yet; the legacy decoder still uses contiguous memory. Strict bus alignment behavior remains provisional pending ARMv7 alignment research. See [Stage 119J report](STAGE119J_CPU_DATA_MEMORY_FACADE.md).
