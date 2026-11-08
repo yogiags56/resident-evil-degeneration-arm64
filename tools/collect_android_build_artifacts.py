@@ -37,7 +37,7 @@ def is_elf64_aarch64(data: bytes) -> bool:
     # ELF ident + e_machine (little-endian uint16 at byte offset 18).
     return (
         len(data) >= 20
-        and data[:4] == b"\\x7fELF"
+        and data[:4] == b"\x7fELF"
         and data[4] == 2
         and data[5] == 1
         and int.from_bytes(data[18:20], "little") == 183
