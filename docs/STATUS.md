@@ -37,3 +37,8 @@ Extended the CPU bus adapter with a checked instruction-fetch helper. ARM fetch 
 ## Stage 119H update
 
 Added opt-in `re_guest_cpu_step_checked`. It fetches ARM/Thumb instructions through the checked EXEC memory bus, validates Thumb-2 second-halfword access, verifies instruction bytes match the legacy contiguous decoder view, then invokes the existing CPU step. Permission and mismatch failures return before CPU state advances. Added and registered `tests/test_re_guest_cpu_checked_step.c`. The legacy CPU entry point and public memory/CPU structure layouts remain unchanged. This is a transitional dual-view gate: instruction/data accesses inside the decoder still use contiguous legacy memory. See [Stage 119H report](STAGE119H_CHECKED_CPU_STEP.md).
+
+
+## Stage 119I update
+
+Expanded `tests/test_re_guest_cpu_checked_step.c` with ARM MOV, Thumb-2 MOVW, IT EQ true/false execution, and Thumb-2 second-halfword EXEC-permission denial. Existing Thumb-1, fetch parity, and permission-denial checks remain. The test remains opt-in and does not switch production runtime to the checked path. See [Stage 119I report](STAGE119I_CHECKED_CPU_REGRESSION.md).
