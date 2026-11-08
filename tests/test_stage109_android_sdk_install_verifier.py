@@ -21,7 +21,7 @@ class AndroidSdkInstallVerifierTests(unittest.TestCase):
     def test_installer_runs_post_install_verification(self):
         script = (ROOT / "tools/install_android_sdk_packages.sh").read_text()
         self.assertIn("verify_android_sdk_install.sh", script)
-        self.assertIn("ndk@30.0.16248370", script)
+        self.assertIn("ndk;30.0.16248370", script)
         self.assertIn("sdk install", script)
         self.assertIn("deprecated sdkmanager compatibility path", script)
 
