@@ -12,3 +12,8 @@ See [Stage 118 report](STAGE118_RUNTIME_DIAGNOSTICS_AND_ROADMAP.md).
 ## Stage 119 update
 
 Initial guest memory manager committed. The new region table maps bounded 32-bit guest ranges onto caller-owned host buffers, rejects overlaps and 32-bit address-space overflow, and enforces read/write/execute permissions on resolution. Tests cover map/resolve/permission/bounds/overlap/unmap. The module is included in Android CMake and host test runner. It is not yet connected to the CPU interpreter; the current CPU still uses its legacy contiguous `REGUESTMEM` interface. A safe adapter and memory-access migration remain required before XE3U loading.
+
+
+## Stage 119C update
+
+Stage 119C hardens guest address arithmetic and adds a bounded single-region compatibility view for the legacy CPU memory structure. Tests cover the 4 GiB boundary, SIZE_MAX-sized requests, invalid permissions, region capacity, and adapter permission checks. The adapter is compiled in host tests and Android CMake. **It is not a multi-region memory bus and does not yet connect the region manager to CPU execution.** Full CPU access migration and XE3U loader fixtures remain Stage 119 exit criteria. See [Stage 119C report](STAGE119C_MEMORY_HARDENING.md).
