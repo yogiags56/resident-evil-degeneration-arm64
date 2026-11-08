@@ -36,7 +36,7 @@ int main(void) {
     assert(re_guest_memory_read32(&bus, 0x3006u, &word_value) == RE_GUEST_MEM_E_RANGE);
     assert(re_guest_memory_read16(&bus, 0x3001u, &half_value) == RE_GUEST_MEM_E_RANGE && half_value == 0u);
     assert(re_guest_memory_write32(&bus, 0x3002u, 0u) == RE_GUEST_MEM_E_RANGE);
-    assert(re_guest_memory_fetch32(&bus, 0x100eu, &word_value) == RE_GUEST_MEM_E_NOT_FOUND);
+    assert(re_guest_memory_fetch32(&bus, 0x1010u, &word_value) == RE_GUEST_MEM_E_NOT_FOUND);
     assert(re_guest_memory_fetch16(&bus, 0x100fu, &half_value) == RE_GUEST_MEM_E_RANGE && half_value == 0u);
     assert(re_guest_memory_read8(&bus, 0xffffffffu, &byte_value) == RE_GUEST_MEM_E_NOT_FOUND);
     assert(re_guest_memory_fetch8(&bus, 0x1000u, NULL) == RE_GUEST_MEM_E_ARGUMENT);
