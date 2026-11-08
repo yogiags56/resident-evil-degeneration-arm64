@@ -12,7 +12,8 @@ SDKMANAGER="${ANDROID_SDKMANAGER:-$SDK/cmdline-tools/latest/bin/sdkmanager}"
 if [[ -n "$ANDROID_CLI" && -x "$ANDROID_CLI" ]]; then
   echo "Using Android CLI for SDK package management."
   echo "The official Android CLI may prompt for package licenses."
-  "$ANDROID_CLI" --sdk="$SDK" sdk install \
+  echo "=== ANDROID SDK PACKAGE CATALOG ==="
+"$ANDROID_CLI" --sdk="$SDK" sdk list --all sdk install \
   platform-tools \
   platforms/android-35 \
   build-tools@35.0.0 \
