@@ -56,7 +56,6 @@ jobs:
           echo "$GRADLE_HOME/bin" >> "$GITHUB_PATH"
           export PATH="$GRADLE_HOME/bin:$PATH"
           gradle --version
-          bash tools/provision_gradle_wrapper.sh
 
       - name: Fetch and verify XZ Utils
         run: bash tools/fetch_xz_source.sh
