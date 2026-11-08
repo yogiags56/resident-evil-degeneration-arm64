@@ -30,13 +30,13 @@ for tool in cmake ninja python3; do
 done
 
 if ((${#errors[@]})); then
-  printf 'ANDROID ARM64 PREFLIGHT BLOCKED:\\n' >&2
-  printf ' - %s\\n' "${errors[@]}" >&2
+  printf 'ANDROID ARM64 PREFLIGHT BLOCKED:\n' >&2
+  printf ' - %s\n' "${errors[@]}" >&2
   exit 2
 fi
 
 cmake_version="$(cmake --version | awk 'NR==1 {print $3}')"
-if [[ "$(printf '%s\\n' 3.22.1 "$cmake_version" | sort -V | head -n1)" != "3.22.1" ]]; then
+if [[ "$(printf '%s\n' 3.22.1 "$cmake_version" | sort -V | head -n1)" != "3.22.1" ]]; then
   echo "ERROR: CMake 3.22.1 or newer is required; found $cmake_version" >&2
   exit 2
 fi
