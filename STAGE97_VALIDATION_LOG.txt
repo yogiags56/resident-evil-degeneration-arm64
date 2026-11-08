@@ -1,0 +1,45 @@
+Stage 97 validation
+===================
+
+Input: user-supplied original Android APK
+APK SHA-256: 6654b4af083a899b5c75de92a66b485435b3ce6ac65afbe96082d5ede4eb23d2
+
+S3E decoded image:
+- Size: 1,660,600 bytes
+- SHA-256: 66b4987fbc419be8b4c91e0d0ee1f57fd8cb40771e92ee7c38658b799fb5e5fd
+- XE3U magic: PASS
+- Code+initialized-data blob: 1,509,476 bytes; SHA-256 `5fc9a53a90895eff456181357806f27b7566e7841df87328b6459c1715e79006`
+- Fixup sections: 4
+- API symbols: 227
+- Internal relocations: 36,377
+- External relocations: 238 (0 ARM, 238 Thumb)
+
+File API external relocation cells:
+- s3eFileClose: 0x13B71C
+- s3eFileRead: 0x13B7E0
+- s3eFileOpen: 0x13BA50
+- s3eFileGetChar: 0x13BA6C
+
+Fresh direct Thumb thunk call references:
+- s3eFileRead: 35
+- s3eFileOpen: 11
+- s3eFileGetChar: 5
+- s3eFileClose: 13
+
+Return-contract finding:
+- s3eFileRead returns item/element count, not bytes.
+- Original caller 0xB0428 requests one element with a variable element size and compares r0 with 1.
+- Partial-read and error semantics remain incomplete; production authorization remains disabled.
+
+New tests:
+- tests/test_s3e_binary_audit.py: 5 tests PASS
+- tools/s3e_binary_audit.py against original APK: PASS
+
+Full host test suite:
+- Python unittest discovery: 22 tests PASS
+- Host mock compile: PASS
+- DTRZ adapter/VFS/LZMA tests: PASS
+- Guest CPU/import/runtime/GL tests: PASS
+- Stage 95/96 file API audit and dispatch tests: PASS
+
+No Android NDK build, physical-device validation, original game boot, or gameplay is claimed.

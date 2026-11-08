@@ -1,0 +1,51 @@
+test_bad_magic_rejected (test_dtrz_extract.DTRZExtractTests.test_bad_magic_rejected) ... ok
+test_decoded_size_mismatch_rejected (test_dtrz_extract.DTRZExtractTests.test_decoded_size_mismatch_rejected) ... ok
+test_extract_writes_expected_paths (test_dtrz_extract.DTRZExtractTests.test_extract_writes_expected_paths) ... ok
+test_file_index_mismatch_rejected (test_dtrz_extract.DTRZExtractTests.test_file_index_mismatch_rejected) ... ok
+test_folder_index_out_of_range_rejected (test_dtrz_extract.DTRZExtractTests.test_folder_index_out_of_range_rejected) ... ok
+test_location_count_mismatch_rejected (test_dtrz_extract.DTRZExtractTests.test_location_count_mismatch_rejected) ... ok
+test_non_monotonic_payload_offsets_rejected (test_dtrz_extract.DTRZExtractTests.test_non_monotonic_payload_offsets_rejected) ... ok
+test_parse_and_decode_root_and_folder_entries (test_dtrz_extract.DTRZExtractTests.test_parse_and_decode_root_and_folder_entries) ... ok
+test_truncated_attribute_table_rejected (test_dtrz_extract.DTRZExtractTests.test_truncated_attribute_table_rejected) ... ok
+test_unknown_method_rejected (test_dtrz_extract.DTRZExtractTests.test_unknown_method_rejected) ... ok
+test_unsafe_filename_rejected (test_dtrz_extract.DTRZExtractTests.test_unsafe_filename_rejected) ... ok
+test_verify_reports_all_entries (test_dtrz_extract.DTRZExtractTests.test_verify_reports_all_entries) ... ok
+test_bad_magic_rejected (test_dtrz_inspect.DTRZInspectorTests.test_bad_magic_rejected) ... ok
+test_empty_root_rejected (test_dtrz_inspect.DTRZInspectorTests.test_empty_root_rejected) ... ok
+test_negative_count_rejected (test_dtrz_inspect.DTRZInspectorTests.test_negative_count_rejected) ... ok
+test_tables_and_boundary (test_dtrz_inspect.DTRZInspectorTests.test_tables_and_boundary) ... ok
+test_unterminated_table_rejected (test_dtrz_inspect.DTRZInspectorTests.test_unterminated_table_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.015s
+
+OK
+CHECK re_file_adapter.c
+CHECK re_android_asset_backend.c
+CHECK re_android_jni_assets.c
+CHECK native_probe.c
+CHECK re_s3e_file_read_contract.c
+CHECK re_s3e_file_api_audit.c
+PASS: native C translation units pass host mock-header syntax checks.
+RUN build/host-tests/test_re_dtrz_file_backend
+Stage 94 DTRZ file backend integration tests passed (20 assertions)
+RUN build/host-tests/test_re_dtrz_lzma
+test_re_dtrz_lzma: 6 scenarios passed
+RUN build/host-tests/test_re_dtrz_vfs
+test_re_dtrz_vfs: 29 assertions passed
+RUN build/host-tests/test_re_file_adapter
+Stage 82 file adapter tests passed
+RUN build/host-tests/test_re_guest_cpu
+Stage60 guest CPU tests: PASS
+RUN build/host-tests/test_re_guest_gl_imports
+Verified GL import adapter tests: PASS (12 assertions)
+RUN build/host-tests/test_re_guest_imports
+Guest import trampoline tests: PASS (11 assertions)
+RUN build/host-tests/test_re_guest_runtime
+Guest runtime coordinator tests: PASS (10 assertions)
+RUN build/host-tests/test_re_s3e_file_api_audit
+Stage 95 file API argument audit: 14 assertions passed; imports remain disabled.
+RUN build/host-tests/test_re_s3e_file_import_dispatch
+Stage 96 synthetic file import dispatch: PASS (28 assertions)
+RUN build/host-tests/test_s3e_file_read_contract
+Stage89 contract tests: 10 assertions passed; guest return remains quarantined.

@@ -1,0 +1,107 @@
+STAGE 94 VALIDATION LOG
+=======================
+
+[FULL HOST TEST SUITE]
+test_bad_magic_rejected (test_dtrz_extract.DTRZExtractTests.test_bad_magic_rejected) ... ok
+test_decoded_size_mismatch_rejected (test_dtrz_extract.DTRZExtractTests.test_decoded_size_mismatch_rejected) ... ok
+test_extract_writes_expected_paths (test_dtrz_extract.DTRZExtractTests.test_extract_writes_expected_paths) ... ok
+test_file_index_mismatch_rejected (test_dtrz_extract.DTRZExtractTests.test_file_index_mismatch_rejected) ... ok
+test_folder_index_out_of_range_rejected (test_dtrz_extract.DTRZExtractTests.test_folder_index_out_of_range_rejected) ... ok
+test_location_count_mismatch_rejected (test_dtrz_extract.DTRZExtractTests.test_location_count_mismatch_rejected) ... ok
+test_non_monotonic_payload_offsets_rejected (test_dtrz_extract.DTRZExtractTests.test_non_monotonic_payload_offsets_rejected) ... ok
+test_parse_and_decode_root_and_folder_entries (test_dtrz_extract.DTRZExtractTests.test_parse_and_decode_root_and_folder_entries) ... ok
+test_truncated_attribute_table_rejected (test_dtrz_extract.DTRZExtractTests.test_truncated_attribute_table_rejected) ... ok
+test_unknown_method_rejected (test_dtrz_extract.DTRZExtractTests.test_unknown_method_rejected) ... ok
+test_unsafe_filename_rejected (test_dtrz_extract.DTRZExtractTests.test_unsafe_filename_rejected) ... ok
+test_verify_reports_all_entries (test_dtrz_extract.DTRZExtractTests.test_verify_reports_all_entries) ... ok
+test_bad_magic_rejected (test_dtrz_inspect.DTRZInspectorTests.test_bad_magic_rejected) ... ok
+test_empty_root_rejected (test_dtrz_inspect.DTRZInspectorTests.test_empty_root_rejected) ... ok
+test_negative_count_rejected (test_dtrz_inspect.DTRZInspectorTests.test_negative_count_rejected) ... ok
+test_tables_and_boundary (test_dtrz_inspect.DTRZInspectorTests.test_tables_and_boundary) ... ok
+test_unterminated_table_rejected (test_dtrz_inspect.DTRZInspectorTests.test_unterminated_table_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.078s
+
+OK
+CHECK re_file_adapter.c
+CHECK re_android_asset_backend.c
+CHECK re_android_jni_assets.c
+CHECK native_probe.c
+CHECK re_s3e_file_read_contract.c
+PASS: native C translation units pass host mock-header syntax checks.
+RUN build/host-tests/test_re_dtrz_file_backend
+Stage 94 DTRZ file backend integration tests passed (20 assertions)
+RUN build/host-tests/test_re_dtrz_lzma
+test_re_dtrz_lzma: 6 scenarios passed
+RUN build/host-tests/test_re_dtrz_vfs
+test_re_dtrz_vfs: 29 assertions passed
+RUN build/host-tests/test_re_file_adapter
+Stage 82 file adapter tests passed
+RUN build/host-tests/test_re_guest_cpu
+Stage60 guest CPU tests: PASS
+RUN build/host-tests/test_re_guest_gl_imports
+Verified GL import adapter tests: PASS (12 assertions)
+RUN build/host-tests/test_re_guest_imports
+Guest import trampoline tests: PASS (11 assertions)
+RUN build/host-tests/test_re_guest_runtime
+Guest runtime coordinator tests: PASS (10 assertions)
+RUN build/host-tests/test_s3e_file_read_contract
+Stage89 contract tests: 10 assertions passed; guest return remains quarantined.
+
+[UBSAN NEW ADAPTER INTEGRATION]
+Stage 94 DTRZ file backend integration tests passed (20 assertions)
+
+[ORIGINAL MAIN.DZ THROUGH FILE ADAPTER]
+OK	console.bin	18200	2362f83f
+OK	localisation/english.dat	48097	062fa459
+OK	localisation/french.dat	52278	00ccde95
+OK	localisation/german.dat	52936	ef7ab256
+OK	localisation/italian.dat	52047	f7a79221
+OK	localisation/japanese.dat	62009	d08ece03
+OK	localisation/spanish.dat	49462	66d09b15
+OK	localisation/LocaliseHashes.dat	6918	feb865b7
+OK	common/loading_wav.group.bin	493533	aafe1b92
+OK	common/fixed_wav.group.bin	11603956	caaaf5d3
+OK	common/splash.group.bin	295555	723d22cf
+OK	common/frontend_wav.group.bin	181456	44b98e5a
+OK	common/characters/characters_main.group.bin	748845	6e8b4b3b
+OK	common/designObjects/designObjects.group.bin	864	3c7b5629
+OK	common/mercenarymode.group.bin	4280	d229751e
+OK	common/storymode.group.bin	10639	d22a91ce
+OK	levels/baggage/baggage.group.bin	3357612	0cbc7e9d
+OK	levels/baggage/baggage_mercenary.group.bin	7585	28750dfb
+OK	levels/baggage/baggage_story.group.bin	16826	88581385
+OK	levels/dutyfreeeast/dutyfreeeast.group.bin	3315942	30eff279
+OK	levels/dutyfreeeast/dutyfreeeast_mercenary.group.bin	8388	efefe4b7
+OK	levels/dutyfreeeast/dutyfreeeast_story.group.bin	12449	d8d344e7
+OK	levels/dutyfreewest/dutyfreewest.group.bin	3243436	1960c1fc
+OK	levels/dutyfreewest/dutyfreewest_story.group.bin	6850	261f37c8
+OK	levels/generatortunnels/generatortunnels.group.bin	3308117	25bd20c4
+OK	levels/generatortunnels/generatortunnels_story.group.bin	6457	43d34912
+OK	levels/infirmary/infirmary.group.bin	3360172	ebf1976a
+OK	levels/infirmary/infirmary_story.group.bin	22278	ee5a7e28
+OK	levels/planecargo/planecargo.group.bin	837318	5d73c7a9
+OK	levels/planecargo/planecargo_story.group.bin	4909	1eaeee12
+OK	levels/planecrashed/planecrashed.group.bin	3287207	0712e0bd
+OK	levels/planecrashed/planecrashed_story.group.bin	3830	a560996c
+OK	levels/planeentrance/planeentrance.group.bin	3187818	3b189022
+OK	levels/planeentrance/planeentrance_story.group.bin	4520	37e100b6
+OK	levels/planeexit/planeexit.group.bin	3259069	6a473f90
+OK	levels/planeexit/planeexit_story.group.bin	11108	8ae9653e
+OK	levels/security/security.group.bin	3348489	ea75fe4d
+OK	levels/security/security_story.group.bin	14054	4ed223d1
+OK	levels/staffarea/staffarea.group.bin	3271241	706b52da
+OK	levels/staffarea/staffarea_story.group.bin	8603	6b357b76
+OK	levels/vip/vip.group.bin	3362386	f1885b9a
+OK	levels/vip/vip_story.group.bin	20334	ec1ccc6b
+OK	levels/vipplane/vipplane.group.bin	3215661	279e5ac8
+OK	levels/vipplane/vipplane_story.group.bin	5139	68abca9b
+OK	levels/warehouse/warehouse.group.bin	3239131	85c6fe0d
+OK	levels/warehouse/warehouse_story.group.bin	8651	256562f1
+OK	common/environment.group.bin	539602	6b26768d
+PASS: 47 entries, 57976257 decoded bytes through REFileAdapter
+
+[PYTHON ORACLE COMPARISON]
+PASS: 47/47 adapter streams match Python extraction by size and FNV-1a.
+Note: original APK/archive and extracted assets are not included.

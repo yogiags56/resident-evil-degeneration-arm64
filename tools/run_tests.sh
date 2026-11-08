@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+python3 -m unittest discover -s tests -v
+bash ./tools/compile_host_mock.sh
+mkdir -p build/host-tests
+CC="${CC:-clang}"
+CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
+"$CC" "${CFLAGS[@]}" tests/test_s3e_file_read_contract.c \
+  app/src/main/cpp/re_s3e_file_read_contract.c \
+  -o build/host-tests/test_s3e_file_read_contract
+"$CC" "${CFLAGS[@]}" tests/test_re_s3e_file_api_audit.c \
+  app/src/main/cpp/re_s3e_file_api_audit.c \
+  -o build/host-tests/test_re_s3e_file_api_audit
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_cpu.c runtime/guest/re_guest_cpu.c \
+  -o build/host-tests/test_re_guest_cpu
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_imports.c \
+  runtime/guest/re_guest_imports.c runtime/guest/s3e_aapcs32.c runtime/guest/re_guest_cpu.c \
+  -o build/host-tests/test_re_guest_imports
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_runtime.c \
+  runtime/guest/re_guest_runtime.c runtime/guest/re_guest_imports.c \
+  runtime/guest/s3e_aapcs32.c runtime/guest/re_guest_cpu.c \
+  -o build/host-tests/test_re_guest_runtime
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_gl_imports.c \
+  runtime/guest/re_guest_gl_imports.c runtime/guest/re_guest_runtime.c \
+  runtime/guest/re_guest_imports.c runtime/guest/s3e_aapcs32.c runtime/guest/re_guest_cpu.c \
+  -o build/host-tests/test_re_guest_gl_imports
+"$CC" "${CFLAGS[@]}" -I runtime/archive tests/test_re_dtrz_vfs.c \
+  runtime/archive/re_dtrz_vfs.c -o build/host-tests/test_re_dtrz_vfs
+
+if pkg-config --exists liblzma; then
+  LZMA_CFLAGS=( $(pkg-config --cflags liblzma) )
+  LZMA_LIBS=( $(pkg-config --libs liblzma) )
+  "$CC" "${CFLAGS[@]}" "${LZMA_CFLAGS[@]}" -I runtime/archive \
+    tests/test_re_dtrz_lzma.c runtime/archive/re_dtrz_lzma.c \
+    "${LZMA_LIBS[@]}" -o build/host-tests/test_re_dtrz_lzma
+  "$CC" "${CFLAGS[@]}" "${LZMA_CFLAGS[@]}" -I runtime/archive \
+    tools/dtrz_native_verify.c runtime/archive/re_dtrz_vfs.c \
+    runtime/archive/re_dtrz_lzma.c "${LZMA_LIBS[@]}" \
+    -o build/host-tests/dtrz_native_verify
+else
+  echo "SKIP liblzma integration: install liblzma development package"
+fi
+
+"$CC" "${CFLAGS[@]}" -I app/src/main/cpp -I runtime/guest \
+  tests/test_re_file_adapter.c app/src/main/cpp/re_file_adapter.c \
+  -o build/host-tests/test_re_file_adapter
+"$CC" "${CFLAGS[@]}" -I runtime/archive -I app/src/main/cpp -I runtime/guest \
+  tests/test_re_dtrz_file_backend.c runtime/archive/re_dtrz_vfs.c \
+  runtime/archive/re_dtrz_file_backend.c app/src/main/cpp/re_file_adapter.c \
+  -o build/host-tests/test_re_dtrz_file_backend
+
+"$CC" "${CFLAGS[@]}" -I runtime/guest -I app/src/main/cpp \
+  tests/test_re_s3e_file_import_dispatch.c \
+  runtime/guest/re_guest_imports.c runtime/guest/s3e_aapcs32.c \
+  runtime/guest/re_guest_cpu.c app/src/main/cpp/re_s3e_file_api_audit.c \
+  app/src/main/cpp/re_s3e_file_read_contract.c \
+  -o build/host-tests/test_re_s3e_file_import_dispatch
+"$CC" "${CFLAGS[@]}" -I runtime/guest -I app/src/main/cpp \
+  tests/test_re_s3e_file_bridge.c app/src/main/cpp/re_s3e_file_bridge.c \
+  app/src/main/cpp/re_file_adapter.c app/src/main/cpp/re_s3e_file_api_audit.c \
+  app/src/main/cpp/re_s3e_file_read_contract.c \
+  -o build/host-tests/test_re_s3e_file_bridge
+"$CC" "${CFLAGS[@]}" -I runtime/guest -I app/src/main/cpp -I runtime/archive \
+  tests/test_re_s3e_file_bridge_dispatch_dtrz.c \
+  runtime/guest/re_guest_imports.c runtime/guest/s3e_aapcs32.c runtime/guest/re_guest_cpu.c \
+  runtime/archive/re_dtrz_vfs.c runtime/archive/re_dtrz_file_backend.c \
+  app/src/main/cpp/re_s3e_file_bridge.c app/src/main/cpp/re_file_adapter.c \
+  app/src/main/cpp/re_s3e_file_api_audit.c app/src/main/cpp/re_s3e_file_read_contract.c \
+  -o build/host-tests/test_re_s3e_file_bridge_dispatch_dtrz
+
+for test in build/host-tests/test_*; do
+  echo "RUN $test"
+  "$test"
+done

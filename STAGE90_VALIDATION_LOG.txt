@@ -1,0 +1,21 @@
+Stage 90 validation log
+=======================
+Python DTRZ parser unit tests: 5/5 PASS
+Native C host-mock syntax checks: 5 translation units PASS
+Stage60 guest CPU regression: PASS
+Stage71 guest import trampoline regression: 11 assertions PASS
+Stage72 guest runtime coordinator regression: 10 assertions PASS
+Stage73 verified GL adapter regression: 12 assertions PASS
+Stage89 s3eFileRead contract regression: 10 assertions PASS
+APK asset extraction helper: PASS (main.dz, app.icf, s3e.icf)
+Extracted asset SHA-256 values match the Stage83 inventory.
+Real supplied main.dz profile: PASS
+  size=14552804
+  sha256=1de13896c0f2b1805d3808e72d9e95a7f181b2805dfc966d4a606d134f77927e
+  root_names=47
+  path_records=35
+  metadata_offset=1629 (0x65d)
+  metadata_size=14551175
+Android Gradle/NDK build: NOT RUN (toolchain unavailable)
+Physical Android device test: NOT RUN
+Original game boot/gameplay: NOT achieved

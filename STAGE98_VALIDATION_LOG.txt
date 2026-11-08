@@ -1,0 +1,36 @@
+Stage 98 validation
+===================
+
+New bridge module:
+- app/src/main/cpp/re_s3e_file_bridge.h
+- app/src/main/cpp/re_s3e_file_bridge.c
+
+Build integration:
+- Android CMake source list updated.
+- Host mock syntax check updated.
+- Native bridge test added to tools/run_tests.sh.
+
+New test:
+- tests/test_re_s3e_file_bridge.c: 48 assertions PASS.
+- UndefinedBehaviorSanitizer build/run of the bridge test: PASS.
+
+Full host validation:
+- Python unittest discovery: 22 tests PASS.
+- Host mock C translation-unit syntax checks: PASS.
+- Stage 94 DTRZ file backend: 20 assertions PASS.
+- Native LZMA decoder: 6 scenarios PASS.
+- Native DTRZ VFS: 29 assertions PASS.
+- Generic file adapter: PASS.
+- Guest CPU: PASS.
+- GL imports: 12 assertions PASS.
+- Guest imports: 11 assertions PASS.
+- Guest runtime: 10 assertions PASS.
+- Stage 95 file API audit: 14 assertions PASS.
+- Stage 96 synthetic file import dispatch: 28 assertions PASS.
+- Stage 98 guest file bridge: 48 assertions PASS.
+- Stage 89 read argument contract: 10 assertions PASS.
+
+Activation status:
+- Production guest file imports remain disabled.
+- Exact partial-item and read-error semantics remain open.
+- Android NDK build, physical device, original game boot/gameplay not validated.

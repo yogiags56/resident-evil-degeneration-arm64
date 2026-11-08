@@ -1,0 +1,83 @@
+Stage 112 validation
+Python unittest suite: 72 passed
+Host native C regression suite: PASS (tools/run_tests.sh)
+Host CMake/liblzma smoke: 6 scenarios passed
+Shell syntax: 15 scripts passed bash -n
+Collector py_compile: PASS
+Workflow YAML parse: PASS (PyYAML; note YAML 1.1 treats key on as boolean)
+Toolchain doctor:
+{
+  "overall": "BLOCKED",
+  "checks": [
+    {
+      "name": "ndk_root",
+      "status": "FAIL",
+      "detail": "ANDROID_NDK_HOME/ROOT unset or source.properties missing"
+    },
+    {
+      "name": "ndk_clang",
+      "status": "FAIL",
+      "detail": "NDK host clang missing or host platform unsupported"
+    },
+    {
+      "name": "ndk_cmake_toolchain",
+      "status": "FAIL",
+      "detail": "android.toolchain.cmake not found"
+    },
+    {
+      "name": "ndk_llvm_tools",
+      "status": "FAIL",
+      "detail": "NDK llvm-readelf/llvm-ar missing"
+    },
+    {
+      "name": "cmake_ninja",
+      "status": "PASS",
+      "detail": "cmake version 3.31.6; 1.12.1"
+    },
+    {
+      "name": "java",
+      "status": "PASS",
+      "detail": "openjdk version \"21.0.12.1\" 2026-08-18"
+    },
+    {
+      "name": "gradle",
+      "status": "FAIL",
+      "detail": "gradlew+wrapper JAR and system Gradle both missing"
+    },
+    {
+      "name": "android_cli",
+      "status": "FAIL",
+      "detail": "Android CLI missing; install from developer.android.com/tools/agents/android-cli/download"
+    },
+    {
+      "name": "sdk_platform",
+      "status": "FAIL",
+      "detail": "ANDROID_SDK_ROOT/HOME must contain platforms/android-35/android.jar"
+    },
+    {
+      "name": "sdk_build_tools",
+      "status": "FAIL",
+      "detail": "Android Build Tools 35.0.0 missing"
+    },
+    {
+      "name": "sdk_cmake",
+      "status": "FAIL",
+      "detail": "SDK CMake 3.22.1 missing"
+    },
+    {
+      "name": "liblzma_files",
+      "status": "FAIL",
+      "detail": "ANDROID_LIBLZMA_ROOT unset"
+    },
+    {
+      "name": "liblzma_arch",
+      "status": "BLOCKED",
+      "detail": "requires NDK LLVM tools and liblzma prefix"
+    },
+    {
+      "name": "sdk_install_integrity",
+      "status": "FAIL",
+      "detail": "run tools/install_android_sdk_packages.sh and inspect package verification"
+    }
+  ]
+}

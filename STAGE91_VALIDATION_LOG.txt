@@ -1,0 +1,33 @@
+Stage 91 DTRZ/Derbh validation
+
+Local input (not included in repository): assets/main.dz
+Archive size: 14552804 bytes
+Archive SHA-256: 1de13896c0f2b1805d3808e72d9e95a7f181b2805dfc966d4a606d134f77927e
+Header file_count: 47
+Header folder_count including root: 35
+Attribute table offset: 0x65C
+Location header offset: 0x776
+Location table offset: 0x77A
+Payload offset: 0xA6A
+Location records: 47
+Observed method distribution: 47 x 0x200 (LZMA-alone)
+Payload windows decompressed: 47/47
+Decoded total bytes: 57976257
+Extracted files: 47
+Extracted total bytes: 57976257
+Decompression errors: 0
+Decoded-size mismatches: 0
+Path traversal checks: passed
+
+Automated repository tests:
+Python unit tests: 17 passed (12 new DTRZ extraction tests + 5 legacy inspector tests)
+Native C host-mock syntax checks: 5 translation units passed
+Guest CPU regression: passed
+Guest GL import regression: 12 assertions passed
+Guest import dispatcher regression: 11 assertions passed
+Guest runtime coordinator regression: 10 assertions passed
+s3eFileRead contract regression: 10 assertions passed (guest return remains quarantined)
+
+Android NDK build: not run (SDK/NDK/Gradle unavailable in this execution environment)
+Physical-device test: not run
+Original game boot/gameplay: not achieved

@@ -1,0 +1,15 @@
+Stage 104 validation log
+=======================
+
+PASS Python unit tests: 35
+PASS native C host mock syntax checks
+PASS C regression suite through Stage 99
+PASS CMake FindLibLZMA host smoke build (system liblzma 5.8.1)
+PASS production re_dtrz_lzma.c linked through LibLZMA::LibLZMA
+PASS decoder test: 6 scenarios
+PASS negative architecture verifier test: host x86_64 archive rejected as not AArch64
+PASS shell syntax for Android preflight/build, liblzma cross-build, archive verifier, ELF verifier, host smoke
+BLOCKED Android liblzma cross-build: Android NDK and XZ source unavailable
+BLOCKED Android application build: no Android NDK/liblzma prefix
+NOT RUN Android ELF inspection/device runtime
+NOT CLAIMED original game boot/playability

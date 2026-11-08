@@ -1,0 +1,12 @@
+Stage 101 validation log
+=======================
+
+PASS  python3 -m unittest discover -s tests -v (27 tests)
+PASS  bash tools/compile_host_mock.sh (all native C translation units)
+PASS  bash tools/run_tests.sh (host C regression suite through Stage 99)
+PASS  tools/stage_android_assets.py against supplied original APK (3 assets, 15,244,955 bytes)
+PASS  staged output SHA-256 manifest generated
+BLOCKED Android ARM64 preflight: ANDROID_NDK_HOME is not set
+NOT RUN Android CMake configure/build
+NOT RUN Android APK packaging/device runtime test
+NOT CLAIMED original game boot/playability

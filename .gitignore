@@ -1,0 +1,49 @@
+# Gradle / Android
+.gradle/
+**/build/
+local.properties
+.externalNativeBuild/
+.cxx/
+*.iml
+.idea/
+.DS_Store
+
+# Local copyrighted inputs and extracted assets
+/local-assets/*
+!/local-assets/.gitkeep
+/app/src/main/assets/*
+!/app/src/main/assets/.gitkeep
+*.apk
+*.aab
+*.dex
+*.so
+*.o
+*.bin
+*.dz
+*.icf
+*.mp4
+
+# Test outputs
+__pycache__/
+*.py[cod]
+dtrz-report.json
+
+# Proprietary game assets staged locally from the user-supplied APK.
+app/src/main/assets/main.dz
+app/src/main/assets/biohazard.s3e
+app/src/main/assets/s3e.icf
+app/src/main/assets/local-assets-manifest.json
+
+# Downloaded and extracted third-party build dependencies
+/.deps/
+
+# Local credentials and generated distribution outputs
+.env
+.env.*
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.key
+.pytest_cache/
+/dist/

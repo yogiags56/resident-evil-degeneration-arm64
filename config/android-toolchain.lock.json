@@ -1,0 +1,30 @@
+{
+  "android": {
+    "ndk_version": "30.0.16248370",
+    "abi": "arm64-v8a",
+    "min_api": 23,
+    "compile_sdk": 35,
+    "build_tools": "35.0.0",
+    "cmake": "3.22.1",
+    "ndk_linux_archive_size_bytes": 738633529,
+    "ndk_linux_sha1": "5107f898313790e449e87eee2183d9a20602dee9"
+  },
+  "gradle": {
+    "agp": "8.7.3",
+    "distribution": "8.9",
+    "distribution_sha256": "d725d707bfabd4dfdc958c624003b3c80accc03f7037b5122c4b1d0ef15cecab"
+  },
+  "java": {
+    "minimum": 17
+  },
+  "xz": {
+    "version": "5.8.4",
+    "source_url": "https://tukaani.org/xz/xz-5.8.4.tar.gz",
+    "archive": "xz-5.8.4.tar.gz",
+    "sha256": "0014c7886930454fe8bd4228665b51af55eeae560ea135c9c4cd33f55b2591d9",
+    "mirrors": [
+      "https://github.com/tukaani-project/xz/releases/download/v5.8.4/xz-5.8.4.tar.gz",
+      "https://downloads.sourceforge.net/project/lzmautils/xz-5.8.4.tar.gz"
+    ]
+  }
+}

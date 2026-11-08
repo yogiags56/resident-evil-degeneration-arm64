@@ -1,0 +1,16 @@
+Stage 103 validation log
+=======================
+
+PASS Python unit tests: 27
+PASS native C host mock syntax checks
+PASS C regression suite through Stage 99
+PASS shell syntax: android_arm64_preflight.sh
+PASS shell syntax: build_android_arm64.sh
+PASS shell syntax: build_liblzma_android_arm64.sh
+PASS shell syntax: verify_android_arm64_elf.sh
+PASS Python syntax: stage_android_assets.py
+BLOCKED liblzma Android cross-build: ANDROID_NDK_HOME and XZ_SOURCE_DIR unavailable
+BLOCKED Android Gradle build: NDK/liblzma prerequisites unavailable; system Gradle and wrapper absent
+NOT RUN ELF64/AArch64 inspection
+NOT RUN debug APK/device test
+NOT CLAIMED original game boot/playability

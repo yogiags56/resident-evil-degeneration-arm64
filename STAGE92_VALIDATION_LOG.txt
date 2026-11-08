@@ -1,0 +1,60 @@
+Stage 92 validation log
+========================
+Command: bash tools/run_tests.sh
+test_bad_magic_rejected (test_dtrz_extract.DTRZExtractTests.test_bad_magic_rejected) ... ok
+test_decoded_size_mismatch_rejected (test_dtrz_extract.DTRZExtractTests.test_decoded_size_mismatch_rejected) ... ok
+test_extract_writes_expected_paths (test_dtrz_extract.DTRZExtractTests.test_extract_writes_expected_paths) ... ok
+test_file_index_mismatch_rejected (test_dtrz_extract.DTRZExtractTests.test_file_index_mismatch_rejected) ... ok
+test_folder_index_out_of_range_rejected (test_dtrz_extract.DTRZExtractTests.test_folder_index_out_of_range_rejected) ... ok
+test_location_count_mismatch_rejected (test_dtrz_extract.DTRZExtractTests.test_location_count_mismatch_rejected) ... ok
+test_non_monotonic_payload_offsets_rejected (test_dtrz_extract.DTRZExtractTests.test_non_monotonic_payload_offsets_rejected) ... ok
+test_parse_and_decode_root_and_folder_entries (test_dtrz_extract.DTRZExtractTests.test_parse_and_decode_root_and_folder_entries) ... ok
+test_truncated_attribute_table_rejected (test_dtrz_extract.DTRZExtractTests.test_truncated_attribute_table_rejected) ... ok
+test_unknown_method_rejected (test_dtrz_extract.DTRZExtractTests.test_unknown_method_rejected) ... ok
+test_unsafe_filename_rejected (test_dtrz_extract.DTRZExtractTests.test_unsafe_filename_rejected) ... ok
+test_verify_reports_all_entries (test_dtrz_extract.DTRZExtractTests.test_verify_reports_all_entries) ... ok
+test_bad_magic_rejected (test_dtrz_inspect.DTRZInspectorTests.test_bad_magic_rejected) ... ok
+test_empty_root_rejected (test_dtrz_inspect.DTRZInspectorTests.test_empty_root_rejected) ... ok
+test_negative_count_rejected (test_dtrz_inspect.DTRZInspectorTests.test_negative_count_rejected) ... ok
+test_tables_and_boundary (test_dtrz_inspect.DTRZInspectorTests.test_tables_and_boundary) ... ok
+test_unterminated_table_rejected (test_dtrz_inspect.DTRZInspectorTests.test_unterminated_table_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.019s
+
+OK
+CHECK re_file_adapter.c
+CHECK re_android_asset_backend.c
+CHECK re_android_jni_assets.c
+CHECK native_probe.c
+CHECK re_s3e_file_read_contract.c
+PASS: native C translation units pass host mock-header syntax checks.
+RUN build/host-tests/test_re_dtrz_vfs
+test_re_dtrz_vfs: 29 assertions passed
+RUN build/host-tests/test_re_dtrz_vfs_ubsan
+test_re_dtrz_vfs: 29 assertions passed
+RUN build/host-tests/test_re_guest_cpu
+Stage60 guest CPU tests: PASS
+RUN build/host-tests/test_re_guest_gl_imports
+Verified GL import adapter tests: PASS (12 assertions)
+RUN build/host-tests/test_re_guest_imports
+Guest import trampoline tests: PASS (11 assertions)
+RUN build/host-tests/test_re_guest_runtime
+Guest runtime coordinator tests: PASS (10 assertions)
+RUN build/host-tests/test_s3e_file_read_contract
+Stage89 contract tests: 10 assertions passed; guest return remains quarantined.
+
+Command: clang -std=c11 -Wall -Wextra -Werror -fsanitize=undefined -fno-sanitize-recover=all -Iruntime/archive tests/test_re_dtrz_vfs.c runtime/archive/re_dtrz_vfs.c -o build/host-tests/test_re_dtrz_vfs_ubsan && ./build/host-tests/test_re_dtrz_vfs_ubsan
+test_re_dtrz_vfs: 29 assertions passed
+
+Native C vs Stage 91 Python profile comparison: 47/47 metadata records matched exactly.
+
+Command: native C metadata parser against local main.dz
+DTRZ files=47 folders_including_root=35 payload_offset=2666 archive_bytes=14552804
+00 console.bin offset=2666 packed=6098 decoded=18200 method=0x00000200
+01 localisation/english.dat offset=8764 packed=16902 decoded=48097 method=0x00000200
+02 localisation/french.dat offset=25666 packed=17196 decoded=52278 method=0x00000200
+03 localisation/german.dat offset=42862 packed=18114 decoded=52936 method=0x00000200
+44 levels/warehouse/warehouse.group.bin offset=14055235 packed=258249 decoded=3239131 method=0x00000200
+45 levels/warehouse/warehouse_story.group.bin offset=14313484 packed=3144 decoded=8651 method=0x00000200
+46 common/environment.group.bin offset=14316628 packed=236176 decoded=539602 method=0x00000200

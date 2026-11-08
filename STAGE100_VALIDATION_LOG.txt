@@ -1,0 +1,24 @@
+Stage 100 validation — 2026-11-08
+
+[PASS] python3 -m unittest discover -s tests -v
+      22 tests passed.
+[PASS] bash tools/compile_host_mock.sh
+      Native C translation units pass host mock-header syntax checks.
+[PASS] bash tools/run_tests.sh
+      All host test binaries passed, including Stage 94 (20 assertions),
+      Stage 95 (14), Stage 96 (28), Stage 98 (48), and Stage 99 (31).
+[PASS] cmake --list-presets
+      android-arm64 preset parses successfully.
+[PASS] Original APK XE3U audit via tools/s3e_binary_audit.py
+      227 API symbols; 238 external relocations.
+      s3eFileClose: symbol index 10, type-4 relocation cell 0x13B71C.
+      s3eFileRead: symbol index 57, type-4 relocation cell 0x13B7E0.
+      s3eFileOpen: symbol index 204, type-4 relocation cell 0x13BA50.
+      s3eFileGetChar: symbol index 211, type-4 relocation cell 0x13BA6C.
+[EXPECTED BLOCK] tools/android_arm64_preflight.sh
+      ANDROID_NDK_HOME is not configured and no Android NDK toolchain is installed.
+      Android ABI liblzma package prefix is also not configured.
+      The script stopped at the first missing prerequisite; no Android build ran.
+
+No Android .so, APK, physical-device run, original game boot, or gameplay is claimed.
+Production guest file imports remain disabled.

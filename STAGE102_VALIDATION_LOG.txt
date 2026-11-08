@@ -1,0 +1,17 @@
+Stage 102 validation log
+=======================
+
+PASS Python unit tests: 27
+PASS native C host mock syntax checks
+PASS C regression suite through Stage 99
+PASS shell syntax: android_arm64_preflight.sh
+PASS shell syntax: build_android_arm64.sh
+PASS shell syntax: verify_android_arm64_elf.sh
+PASS Python syntax: stage_android_assets.py
+PASS preflight reports missing ANDROID_NDK_HOME and ANDROID_LIBLZMA_ROOT
+BLOCKED Android NDK build: NDK unavailable
+BLOCKED Android liblzma: ARM64 prefix unavailable
+BLOCKED Gradle invocation: gradlew absent; Gradle installation not available/verified
+NOT RUN ELF64/AArch64 inspection (no Android shared object)
+NOT RUN debug APK/device test
+NOT CLAIMED original game boot/playability
