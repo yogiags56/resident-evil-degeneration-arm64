@@ -6,6 +6,7 @@
 #include <string.h>
 #include "re_android_asset_backend.h"
 #include "re_android_jni_assets.h"
+#include "re_guest_runtime.h"
 
 #define REPORT_CAP 2048
 static void append(char *out, size_t cap, const char *line) {
@@ -36,6 +37,31 @@ Java_org_example_redstage_MainActivity_nativeProbe(JNIEnv *env, jobject self,
     }
     append(report, sizeof(report), "PASS: JNI global-reference lifecycle initialized");
     manager = lifecycle.native_manager;
+
+    /* Execute one real guest Thumb instruction through the runtime coordinator. */
+    {
+        uint8_t guest_code[4] = {0x2A, 0x20, 0x00, 0x00}; /* MOVS r0,#42 */
+        REGUESTMEM guest_memory = {guest_code, sizeof(guest_code), 0x1000u};
+        REGUESTIMPORTTable guest_imports;
+        REGUESTRuntime guest_runtime;
+        if (re_guest_import_table_init(&guest_imports, 0x60000000u) != RE_IMPORT_OK) {
+            append(report, sizeof(report), "FAIL: guest import table initialization");
+            failures++;
+        } else {
+            re_guest_runtime_init(&guest_runtime, &guest_memory, &guest_imports,
+                                  0x6000F000u, 0x1000u, 1);
+            if (re_guest_runtime_step(&guest_runtime) == RE_RUNTIME_OK &&
+                guest_runtime.cpu.r[0] == 42u &&
+                guest_runtime.cpu_instructions == 1u &&
+                guest_runtime.dispatched_imports == 0u) {
+                append(report, sizeof(report),
+                       "PASS: native ARM64-hosted AArch32 runtime executed Thumb MOVS r0,#42");
+            } else {
+                append(report, sizeof(report), "FAIL: guest CPU/runtime smoke execution");
+                failures++;
+            }
+        }
+    }
 
     {
         const char *required[] = {"main.dz", "biohazard.s3e", "s3e.icf"};
