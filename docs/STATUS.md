@@ -32,3 +32,8 @@ Added an ABI-preserving CPU-facing adapter over the checked memory bus in `runti
 ## Stage 119G update
 
 Extended the CPU bus adapter with a checked instruction-fetch helper. ARM fetch uses one 32-bit EXEC access; Thumb fetch uses a 16-bit EXEC access and independently checks the second halfword for Thumb-2 32-bit prefixes. Tests cover permission denial including a Thumb-2 instruction split across adjacent regions with different permissions. The helper is registered in the host test runner. The production interpreter is **not yet migrated** and continues to fetch from legacy contiguous memory. See [Stage 119G report](STAGE119G_CHECKED_INSTRUCTION_FETCH.md).
+
+
+## Stage 119H update
+
+Added opt-in `re_guest_cpu_step_checked`. It fetches ARM/Thumb instructions through the checked EXEC memory bus, validates Thumb-2 second-halfword access, verifies instruction bytes match the legacy contiguous decoder view, then invokes the existing CPU step. Permission and mismatch failures return before CPU state advances. Added and registered `tests/test_re_guest_cpu_checked_step.c`. The legacy CPU entry point and public memory/CPU structure layouts remain unchanged. This is a transitional dual-view gate: instruction/data accesses inside the decoder still use contiguous legacy memory. See [Stage 119H report](STAGE119H_CHECKED_CPU_STEP.md).
