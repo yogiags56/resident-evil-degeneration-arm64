@@ -11,7 +11,6 @@ class AndroidArm64WorkflowTests(unittest.TestCase):
             "Install pinned Android command-line tools, SDK and NDK",
             "tools/install_android_sdk_packages.sh",
             "tools/install_gradle_distribution.sh",
-            "tools/provision_gradle_wrapper.sh",
             "tools/fetch_xz_source.sh",
             "tools/build_liblzma_android_arm64.sh",
             "tools/build_android_arm64.sh",
