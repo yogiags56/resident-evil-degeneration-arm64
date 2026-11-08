@@ -9,6 +9,18 @@
 #include "re_guest_runtime.h"
 
 #define REPORT_CAP 2048
+
+static REGUESTIMPORTStatus probe_add_handler(
+    const S3EAAPCS32Frame *frame, const REGUESTMEM *memory, void *user,
+    REGUESTIMPORTResult *result) {
+    (void)memory;
+    (void)user;
+    if (!frame || !result) return RE_IMPORT_E_HANDLER;
+    result->r0 = frame->r[0] + frame->r[1];
+    result->r1 = 0u;
+    return RE_IMPORT_OK;
+}
+
 static void append(char *out, size_t cap, const char *line) {
     size_t used = strlen(out);
     if (used < cap - 1) (void)snprintf(out + used, cap - used, "%s\n", line);
@@ -44,8 +56,11 @@ Java_org_example_redstage_MainActivity_nativeProbe(JNIEnv *env, jobject self,
         REGUESTMEM guest_memory = {guest_code, sizeof(guest_code), 0x1000u};
         REGUESTIMPORTTable guest_imports;
         REGUESTRuntime guest_runtime;
-        if (re_guest_import_table_init(&guest_imports, 0x60000000u) != RE_IMPORT_OK) {
-            append(report, sizeof(report), "FAIL: guest import table initialization");
+        uint32_t probe_trampoline = 0u;
+        if (re_guest_import_table_init(&guest_imports, 0x60000000u) != RE_IMPORT_OK ||
+            re_guest_import_bind(&guest_imports, 0x7FFFu, probe_add_handler,
+                                 NULL, &probe_trampoline) != RE_IMPORT_OK) {
+            append(report, sizeof(report), "FAIL: guest import table/handler initialization");
             failures++;
         } else {
             re_guest_runtime_init(&guest_runtime, &guest_memory, &guest_imports,
@@ -55,9 +70,25 @@ Java_org_example_redstage_MainActivity_nativeProbe(JNIEnv *env, jobject self,
                 guest_runtime.cpu_instructions == 1u &&
                 guest_runtime.dispatched_imports == 0u) {
                 append(report, sizeof(report),
-                       "PASS: native ARM64-hosted AArch32 runtime executed Thumb MOVS r0,#42");
+                       "PASS: AArch32 Thumb instruction executed on Android ARM64");
             } else {
                 append(report, sizeof(report), "FAIL: guest CPU/runtime smoke execution");
+                failures++;
+            }
+            guest_runtime.cpu.r[0] = 19u;
+            guest_runtime.cpu.r[1] = 23u;
+            guest_runtime.cpu.r[14] = 0x1003u;
+            guest_runtime.cpu.r[15] = probe_trampoline & ~1u;
+            guest_runtime.cpu.thumb = 1u;
+            if (re_guest_runtime_step(&guest_runtime) == RE_RUNTIME_OK &&
+                guest_runtime.cpu.r[0] == 42u &&
+                guest_runtime.cpu.r[15] == 0x1002u &&
+                guest_runtime.dispatched_imports == 1u &&
+                guest_runtime.cpu_instructions == 1u) {
+                append(report, sizeof(report),
+                       "PASS: AAPCS32 import trampoline dispatched and returned correctly");
+            } else {
+                append(report, sizeof(report), "FAIL: guest import dispatcher smoke execution");
                 failures++;
             }
         }
