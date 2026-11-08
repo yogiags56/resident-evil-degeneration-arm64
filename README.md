@@ -1,12 +1,12 @@
 # Resident Evil: Degeneration — Native ARM64 Port Research
 
-[![Stage](https://img.shields.io/badge/stage-114-blue)](#project-status)
+[![Stage](https://img.shields.io/badge/stage-118-blue)](#project-status)
 [![Platform](https://img.shields.io/badge/platform-Android%20ARM64-green)](#build-the-android-probe)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
 An engineering research project to run the original ARM32 Android game runtime on **native Android ARM64**, without an ARM32 emulator. The repository consolidates the verified guest CPU/import/runtime/GL source through Stage73, the file/JNI/AssetManager modules through Stage99, a verified Python DTRZ archive parser/extractor plus a native C DTRZ metadata parser, read-only VFS, optional bounded liblzma LZMA-alone decoding, and a DTRZ-backed guest file-adapter backend, alongside analysis tools, reproducible tests, and an Android asset-probe harness. It is a clean current-source baseline, not an archive of every intermediate experiment from Stages 1–89.
 
-> **Status:** research/prototype. The original game has **not** been booted or made playable by this repository. The Android NDK probe has not yet been built and run on a physical device in this environment.
+> **Status:** research/prototype. The original game has **not** been booted or made playable by this repository. The Android ARM64 native probe has been built and ELF-verified in GitHub Actions; execution on a physical device is still unverified.
 
 
 ## Android toolchain diagnostics (Stage 105)
@@ -331,3 +331,8 @@ bash tools/publish_github_repository.sh
 This creates `OWNER/resident-evil-degeneration-arm64` as a **private-only** repository, commits the current source tree if needed, pushes it to `main`, and dispatches the Android ARM64 workflow. The script refuses to repoint an existing `origin` remote and scans the Git index for proprietary game assets, generated binaries, and common credential/keystore files before committing. It requires `git`, `gh`, and a successful `gh auth login`; repository creation permissions must be granted to the authenticated GitHub account. Do not upload the original APK or extracted game assets.
 
 This automation script is provided because the connected GitHub integration in the current session does not expose repository-creation permission/action. Once the repository exists and is connected, the workflow can be run from its Actions tab or via an authorized workflow dispatch.
+
+
+## Stage 117–118 runtime foundation
+
+Stage 117 compiles the partial ARM32/Thumb CPU interpreter, AAPCS32 dispatcher, and runtime coordinator into the Android ARM64 native library. Its CI build and source checks passed on commit `b090f90`. Stage 118 adds runtime stop/fault diagnostics and tests for unresolved imports, failed import dispatch, and invalid guest instruction fetch. See [Stage 118 report and roadmap](docs/STAGE118_RUNTIME_DIAGNOSTICS_AND_ROADMAP.md). The native probe remains a research harness: no physical-device execution or original game boot is claimed.
