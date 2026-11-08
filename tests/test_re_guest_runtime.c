@@ -34,10 +34,27 @@ int main(void) {
     assert(rt.dispatched_imports==1 && rt.cpu_instructions==1 && rt.cpu.steps==2);
     rt.cpu.r[15]=0x4A000070u; rt.cpu.thumb=1;
     assert(re_guest_runtime_step(&rt)==RE_RUNTIME_E_UNRESOLVED_IMPORT);
+    assert(rt.fault_valid && rt.fault_pc==0x4A000070u &&
+           rt.fault_thumb==1u &&
+           rt.last_stop_status==RE_RUNTIME_E_UNRESOLVED_IMPORT &&
+           rt.last_import_status==RE_IMPORT_E_UNBOUND);
     re_guest_runtime_init(&rt,&mem,&imports,0x4A000070u,0x50000000u,1);
     assert(re_guest_runtime_run(&rt,1,&done)==RE_RUNTIME_OK && done==1);
     assert(re_guest_runtime_run(&rt,1,&done)==RE_RUNTIME_OK && done==1);
     assert(rt.cpu_instructions==2);
-    puts("Guest runtime coordinator tests: PASS (10 assertions)");
+    /* Import dispatch failure preserves the trampoline PC and ABI error. */
+    rt.cpu.r[15]=tramp&~1u; rt.cpu.thumb=1;
+    rt.cpu.r[13]=0x50000081u; rt.cpu.r[14]=0x50000021u;
+    assert(re_guest_runtime_step(&rt)==RE_RUNTIME_E_IMPORT);
+    assert(rt.fault_valid && rt.fault_pc==(tramp&~1u) &&
+           rt.last_import_status==RE_IMPORT_E_MEMORY &&
+           rt.last_stop_status==RE_RUNTIME_E_IMPORT);
+    /* Guest instruction fetch fault is distinguishable from import failure. */
+    re_guest_runtime_init(&rt,&mem,&imports,0x4A000070u,0x4FFFFFFEu,1);
+    assert(re_guest_runtime_step(&rt)==RE_RUNTIME_E_CPU);
+    assert(rt.fault_valid && rt.fault_pc==0x4FFFFFFEu &&
+           rt.last_cpu_status==RE_CPU_E_MEMORY &&
+           rt.last_stop_status==RE_RUNTIME_E_CPU);
+    puts("Guest runtime coordinator tests: PASS (expanded fault diagnostics)");
     return 0;
 }
