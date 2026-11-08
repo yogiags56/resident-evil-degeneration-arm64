@@ -10,16 +10,17 @@ add_library(re_asset_probe SHARED
     re_s3e_file_api_audit.c
     re_s3e_file_bridge.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/archive/re_dtrz_vfs.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/archive/re_dtrz_file_backend.c)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/archive/re_dtrz_file_backend.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_cpu.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_imports.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_runtime.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/s3e_aapcs32.c)
 
 option(RE_ENABLE_LIBLZMA "Enable LZMA-alone DTRZ decoding through liblzma" OFF)
 if(RE_ENABLE_LIBLZMA)
-    # Resolve the Android cross-compiled dependency only from its private
-    # install prefix; never select a host liblzma while using the NDK.
     if(NOT LibLZMA_ROOT)
         message(FATAL_ERROR "LibLZMA_ROOT must point to the Android ARM64 liblzma install prefix")
     endif()
-
     file(GLOB_RECURSE _liblzma_headers
         "${LibLZMA_ROOT}/lzma.h"
         "${LibLZMA_ROOT}/include/lzma.h"
@@ -30,24 +31,18 @@ if(RE_ENABLE_LIBLZMA)
         "${LibLZMA_ROOT}/lib64/liblzma.a"
         "${LibLZMA_ROOT}/lib/*/liblzma.a"
         "${LibLZMA_ROOT}/lib64/*/liblzma.a")
-
     list(LENGTH _liblzma_headers _header_count)
     list(LENGTH _liblzma_archives _archive_count)
     if(_header_count EQUAL 0 OR _archive_count EQUAL 0)
-        message(FATAL_ERROR
-            "Android liblzma files not found under '${LibLZMA_ROOT}' "
-            "(headers=${_header_count}, archives=${_archive_count})")
+        message(FATAL_ERROR "Android liblzma files not found under '${LibLZMA_ROOT}' (headers=${_header_count}, archives=${_archive_count})")
     endif()
-
     list(GET _liblzma_headers 0 LIBLZMA_INCLUDE_HEADER)
     list(GET _liblzma_archives 0 LIBLZMA_LIBRARY)
     get_filename_component(LIBLZMA_INCLUDE_DIR "${LIBLZMA_INCLUDE_HEADER}" DIRECTORY)
-
     add_library(LibLZMA::LibLZMA UNKNOWN IMPORTED)
     set_target_properties(LibLZMA::LibLZMA PROPERTIES
         IMPORTED_LOCATION "${LIBLZMA_LIBRARY}"
         INTERFACE_INCLUDE_DIRECTORIES "${LIBLZMA_INCLUDE_DIR}")
-
     target_sources(re_asset_probe PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/archive/re_dtrz_lzma.c)
     target_link_libraries(re_asset_probe LibLZMA::LibLZMA)
