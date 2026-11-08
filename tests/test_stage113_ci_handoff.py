@@ -24,11 +24,12 @@ class Stage113CIHandoffTests(unittest.TestCase):
         self.assertIn('test -n "${ANDROID_NDK_HOME:-}"', workflow)
         self.assertIn("Pkg.Revision = 30.0.16248370", workflow)
 
-    def test_artifact_collector_checks_apk_native_bytes_match_standalone_file(self):
+    def test_artifact_collector_exports_packaged_and_unstripped_native_files(self):
         collector = (ROOT / "tools/collect_android_build_artifacts.py").read_text()
-        self.assertIn("packaged_digest", collector)
-        self.assertIn("sha256(native)", collector)
-        self.assertIn("does not match the copy packaged in the APK", collector)
+        self.assertIn("packaged_native_bytes", collector)
+        self.assertIn("is_elf64_aarch64", collector)
+        self.assertIn("libre_asset_probe-unstripped.so", collector)
+        self.assertIn("libre_asset_probe.so", collector)
 
 
 if __name__ == "__main__":
