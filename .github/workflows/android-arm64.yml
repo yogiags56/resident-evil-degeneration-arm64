@@ -2,6 +2,17 @@ name: Android ARM64 native build
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "runtime/**"
+      - "tools/**"
+      - "config/**"
+      - "gradle/**"
+      - "CMakeLists.txt"
+      - "CMakePresets.json"
+      - ".github/workflows/android-arm64.yml"
   pull_request:
     paths:
       - "app/**"
