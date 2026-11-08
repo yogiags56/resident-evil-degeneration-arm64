@@ -12,9 +12,9 @@ class AndroidCliMigrationTests(unittest.TestCase):
         self.assertLess(script.index('"$ANDROID_CLI" --sdk="$SDK" sdk install'),
                         script.index('deprecated sdkmanager compatibility path'))
         self.assertIn("platforms/android-35",script)
-        self.assertIn("build-tools/35.0.0",script)
-        self.assertIn("cmake/3.22.1",script)
-        self.assertIn("ndk/30.0.16248370",script)
+        self.assertIn("build-tools@35.0.0",script)
+        self.assertIn("cmake@3.22.1",script)
+        self.assertIn("ndk@30.0.16248370",script)
 
     def test_doctor_accepts_android_cli_or_legacy_fallback(self):
         script=(ROOT/"tools/android_toolchain_doctor.sh").read_text()
@@ -68,8 +68,8 @@ touch "$SDK/ndk/30.0.16248370/build/cmake/android.toolchain.cmake"
             self.assertEqual(result.returncode,0,result.stdout)
             requested=(sdk/"packages.requested").read_text().splitlines()
             self.assertEqual(requested,[
-                "platform-tools","platforms/android-35","build-tools/35.0.0",
-                "cmake/3.22.1","ndk/30.0.16248370"])
+                "platform-tools","platforms/android-35","build-tools@35.0.0",
+                "cmake@3.22.1","ndk@30.0.16248370"])
             self.assertIn("all pinned Android SDK/NDK components verified",result.stdout)
             persisted=github_env.read_text()
             expected_ndk=str(sdk/"ndk/30.0.16248370")
