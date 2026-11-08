@@ -16,13 +16,19 @@ if [[ ! -f "$ARCHIVE" ]]; then
   rm -f "$TMP"
   PRIMARY_URL="https://services.gradle.org/distributions/gradle-$VERSION-bin.zip"
   FALLBACK_URL="https://downloads.gradle.org/distributions/gradle-$VERSION-bin.zip"
-  echo "Downloading pinned Gradle $VERSION from the primary official distribution endpoint."
+  MIRROR_URL="https://mirrors.aliyun.com/gradle/distributions/v$VERSION.0/gradle-$VERSION-bin.zip"
+  echo "Downloading pinned Gradle $VERSION from the primary distribution endpoint."
   if ! curl --fail --location --retry 2 --retry-all-errors --connect-timeout 20 \
       "$PRIMARY_URL" -o "$TMP"; then
-    echo "WARNING: primary Gradle endpoint failed; trying official downloads.gradle.org mirror." >&2
+    echo "WARNING: primary Gradle endpoint failed; trying downloads.gradle.org." >&2
     rm -f "$TMP"
-    curl --fail --location --retry 3 --retry-all-errors --connect-timeout 20 \
-      "$FALLBACK_URL" -o "$TMP"
+    if ! curl --fail --location --retry 2 --retry-all-errors --connect-timeout 20 \
+        "$FALLBACK_URL" -o "$TMP"; then
+      echo "WARNING: official Gradle endpoints failed; trying the Aliyun Gradle mirror." >&2
+      rm -f "$TMP"
+      curl --fail --location --retry 3 --retry-all-errors --connect-timeout 20 \
+        "$MIRROR_URL" -o "$TMP"
+    fi
   fi
   mv "$TMP" "$ARCHIVE"
 fi
