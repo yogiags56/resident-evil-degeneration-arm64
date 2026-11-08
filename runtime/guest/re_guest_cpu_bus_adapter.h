@@ -9,11 +9,11 @@ extern "C" {
 
 /* Transitional CPU-facing facade. It does not change REGUESTMEM or CPU ABI. */
 typedef struct {
-    const REGUESTMEMBUS *bus;
+    REGUESTMEMBUS *bus;
 } REGUESTCPUBUS;
 
 void re_guest_cpu_bus_init(REGUESTCPUBUS *cpu_bus,
-    const REGUESTMEMBUS *memory_bus);
+    REGUESTMEMBUS *memory_bus);
 
 REGUESTMEMStatus re_guest_cpu_fetch16(const REGUESTCPUBUS *cpu_bus,
     uint32_t address, uint16_t *value);
