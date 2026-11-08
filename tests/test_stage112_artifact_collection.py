@@ -13,16 +13,21 @@ SCRIPT = ROOT / "tools/collect_android_build_artifacts.py"
 
 class Stage112ArtifactCollectionTests(unittest.TestCase):
     def make_tree(self, root, include_proprietary=False):
+        elf = bytearray(64)
+        elf[:4] = b"\x7fELF"
+        elf[4] = 2  # ELFCLASS64
+        elf[5] = 1  # little-endian
+        elf[18:20] = (183).to_bytes(2, "little")  # EM_AARCH64
         apk = root / "app/build/outputs/apk/debug/app-debug.apk"
         apk.parent.mkdir(parents=True)
         with zipfile.ZipFile(apk, "w") as package:
             package.writestr("AndroidManifest.xml", b"manifest")
-            package.writestr("lib/arm64-v8a/libre_asset_probe.so", b"native")
+            package.writestr("lib/arm64-v8a/libre_asset_probe.so", bytes(elf))
             if include_proprietary:
                 package.writestr("assets/main.dz", b"private")
         native = root / "app/build/intermediates/cxx/RelWithDebInfo/obj/arm64-v8a/libre_asset_probe.so"
         native.parent.mkdir(parents=True)
-        native.write_bytes(b"native")
+        native.write_bytes(bytes(elf))
         archive = root / ".deps/install/liblzma-android-arm64/lib/liblzma.a"
         archive.parent.mkdir(parents=True)
         archive.write_bytes(b"archive")
@@ -44,7 +49,7 @@ class Stage112ArtifactCollectionTests(unittest.TestCase):
             manifest = json.loads((output / "BUILD_ARTIFACTS.json").read_text())
             self.assertFalse(manifest["game_ready"])
             self.assertFalse(manifest["proprietary_game_assets_included"])
-            self.assertEqual(len(manifest["files"]), 3)
+            self.assertEqual(len(manifest["files"]), 4)
             self.assertTrue((output / "SHA256SUMS.txt").is_file())
 
     def test_rejects_proprietary_game_assets_in_ci_apk(self):
@@ -56,7 +61,7 @@ class Stage112ArtifactCollectionTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("proprietary game assets", result.stderr)
 
-    def test_rejects_standalone_native_library_that_differs_from_apk_copy(self):
+    def test_accepts_stripped_standalone_native_library_that_differs_from_apk_copy(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp) / "repo"
             root.mkdir()
@@ -64,8 +69,9 @@ class Stage112ArtifactCollectionTests(unittest.TestCase):
             native = root / "app/build/intermediates/cxx/RelWithDebInfo/obj/arm64-v8a/libre_asset_probe.so"
             native.write_bytes(b"different native payload")
             result = self.run_collector(root, Path(temp) / "dist")
-            self.assertNotEqual(result.returncode, 0)
-            self.assertIn("does not match", result.stderr)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertTrue((Path(temp) / "dist/libre_asset_probe.so").is_file())
+            self.assertTrue((Path(temp) / "dist/libre_asset_probe-unstripped.so").is_file())
 
     def test_rejects_missing_arm64_library_inside_apk(self):
         with tempfile.TemporaryDirectory() as temp:
