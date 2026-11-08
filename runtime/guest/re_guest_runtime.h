@@ -20,6 +20,13 @@ typedef struct {
     uint32_t unresolved_placeholder_pc;
     uint64_t dispatched_imports;
     uint64_t cpu_instructions;
+    /* Last-stop diagnostics; guest addresses remain 32-bit values. */
+    uint32_t fault_pc;
+    uint8_t fault_thumb;
+    uint8_t fault_valid;
+    REGUESTCPUStatus last_cpu_status;
+    REGUESTIMPORTStatus last_import_status;
+    REGUESTRuntimeStatus last_stop_status;
 } REGUESTRuntime;
 
 void re_guest_runtime_init(REGUESTRuntime *runtime,
