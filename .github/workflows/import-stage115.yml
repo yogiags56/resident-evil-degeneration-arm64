@@ -60,8 +60,7 @@ jobs:
                                   break
                               dst.write(chunk)
 
-          archive.unlink()
-          print("Stage 115 source extracted successfully")
+          print("Stage 115 extraction completed")
           PY
 
       - name: Commit extracted source
@@ -72,6 +71,9 @@ jobs:
 
           git add -A
 
+          # Keep the Android workflow out of this import commit.
+          git reset -- .github/workflows/android-arm64.yml
+
           if git diff --cached --quiet; then
             echo "No source changes to commit"
             exit 0
@@ -79,4 +81,3 @@ jobs:
 
           git commit -m "Import Stage 115 source tree"
           git push origin HEAD:main
-          
