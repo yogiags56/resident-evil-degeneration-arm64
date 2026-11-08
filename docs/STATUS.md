@@ -47,3 +47,8 @@ Expanded `tests/test_re_guest_cpu_checked_step.c` with ARM MOV, Thumb-2 MOVW, IT
 ## Stage 119J update
 
 Added CPU-facing data-memory facade `re_guest_cpu_memory.h/.c` for checked byte/halfword/word reads and writes through the guest memory bus, with CPU error-status mapping. Added `tests/test_re_guest_cpu_memory.c`, registered it in the host test runner, and added the implementation to Android CMake. This does **not** migrate interpreter load/store opcodes yet; the legacy decoder still uses contiguous memory. Strict bus alignment behavior remains provisional pending ARMv7 alignment research. See [Stage 119J report](STAGE119J_CPU_DATA_MEMORY_FACADE.md).
+
+
+## Stage 119K update
+
+Added an isolated A32 immediate load/store helper (`re_guest_cpu_transfer.h/.c`) using the Stage 119J CPU memory facade. Initial supported forms are AL-condition LDR/STR word and LDRB/STRB, immediate offset, pre-index, no writeback, with PC operands rejected. Added `tests/test_re_guest_cpu_transfer.c`, registered it in `tools/run_tests.sh`, and included the helper in Android CMake. The helper is not wired into the production CPU interpreter; legacy decoder behavior remains unchanged. See [Stage 119K report](STAGE119K_A32_LOAD_STORE_HELPER.md).
