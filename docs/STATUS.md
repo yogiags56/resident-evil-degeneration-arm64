@@ -17,3 +17,8 @@ Initial guest memory manager committed. The new region table maps bounded 32-bit
 ## Stage 119C update
 
 Stage 119C hardens guest address arithmetic and adds a bounded single-region compatibility view for the legacy CPU memory structure. Tests cover the 4 GiB boundary, SIZE_MAX-sized requests, invalid permissions, region capacity, and adapter permission checks. The adapter is compiled in host tests and Android CMake. **It is not a multi-region memory bus and does not yet connect the region manager to CPU execution.** Full CPU access migration and XE3U loader fixtures remain Stage 119 exit criteria. See [Stage 119C report](STAGE119C_MEMORY_HARDENING.md).
+
+
+## Stage 119E update
+
+Added the checked multi-region guest memory bus in `runtime/guest/re_guest_memory_bus.h/.c`. It exposes separate instruction-fetch (EXEC), data-read (READ), and data-write (WRITE) accessors for 8/16/32-bit little-endian values, delegates complete-range and permission validation to the region manager, clears read outputs on failure, and rejects misaligned 16/32-bit accesses. A synthetic test maps executable code, read-only data, and writable data with unmapped gaps and boundary cases. The bus is compiled into Android CMake and the host test runner. **The CPU interpreter is not yet migrated to this bus**; its legacy contiguous memory interface remains active. See [Stage 119E report](STAGE119E_CHECKED_MEMORY_BUS.md).
