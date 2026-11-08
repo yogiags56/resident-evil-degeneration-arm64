@@ -22,3 +22,8 @@ Stage 119C hardens guest address arithmetic and adds a bounded single-region com
 ## Stage 119E update
 
 Added the checked multi-region guest memory bus in `runtime/guest/re_guest_memory_bus.h/.c`. It exposes separate instruction-fetch (EXEC), data-read (READ), and data-write (WRITE) accessors for 8/16/32-bit little-endian values, delegates complete-range and permission validation to the region manager, clears read outputs on failure, and rejects misaligned 16/32-bit accesses. A synthetic test maps executable code, read-only data, and writable data with unmapped gaps and boundary cases. The bus is compiled into Android CMake and the host test runner. **The CPU interpreter is not yet migrated to this bus**; its legacy contiguous memory interface remains active. See [Stage 119E report](STAGE119E_CHECKED_MEMORY_BUS.md).
+
+
+## Stage 119F update
+
+Added an ABI-preserving CPU-facing adapter over the checked memory bus in `runtime/guest/re_guest_cpu_bus_adapter.h/.c`. The adapter has distinct EXEC fetch, READ data, and WRITE data calls and is covered by a host regression test. It is compiled into Android CMake and registered in the host test runner. This does **not** change the CPU interpreter: `re_guest_cpu_step` still uses the legacy contiguous `REGUESTMEM` path. Stage 119F is therefore an adapter milestone, not completion of CPU memory migration. See [Stage 119F report](STAGE119F_CPU_BUS_ADAPTER.md).
