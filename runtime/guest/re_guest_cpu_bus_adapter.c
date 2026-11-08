@@ -43,7 +43,7 @@ REGUESTMEMStatus re_guest_cpu_fetch_instruction(
         (first & 0xf800u) == 0xf000u ||
         (first & 0xf800u) == 0xf800u) {
         if (address > UINT32_MAX - 2u) return RE_GUEST_MEM_E_RANGE;
-        status = re_guest_memory_fetch16(cpu_bus, address + 2u, &second);
+        status = re_guest_memory_fetch16(cpu_bus->bus, address + 2u, &second);
         if (status != RE_GUEST_MEM_OK) return status;
         *instruction = ((uint32_t)first << 16) | second;
         *width = 4u;
