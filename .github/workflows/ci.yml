@@ -1,0 +1,31 @@
+
+name: Source checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  host-tests:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Clang and liblzma
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang liblzma-dev pkg-config
+
+      - name: Run host tests
+        run: bash ./tools/run_tests.sh
+        
