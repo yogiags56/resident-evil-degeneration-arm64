@@ -12,9 +12,9 @@ class AndroidCliMigrationTests(unittest.TestCase):
         self.assertLess(script.index('"$ANDROID_CLI" --sdk="$SDK" sdk install'),
                         script.index('deprecated sdkmanager compatibility path'))
         self.assertIn("platforms/android-35",script)
-        self.assertIn("build-tools@35.0.0",script)
-        self.assertIn("cmake@3.22.1",script)
-        self.assertIn("ndk@30.0.16248370",script)
+        self.assertIn("build-tools/35.0.0",script)
+        self.assertIn("cmake/3.22.1",script)
+        self.assertIn("ndk/30.0.16248370",script)
 
     def test_doctor_accepts_android_cli_or_legacy_fallback(self):
         script=(ROOT/"tools/android_toolchain_doctor.sh").read_text()
