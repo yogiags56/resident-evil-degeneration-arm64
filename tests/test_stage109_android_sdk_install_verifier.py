@@ -22,8 +22,10 @@ class AndroidSdkInstallVerifierTests(unittest.TestCase):
         script = (ROOT / "tools/install_android_sdk_packages.sh").read_text()
         self.assertIn("verify_android_sdk_install.sh", script)
         self.assertIn("ndk;30.0.16248370", script)
-        self.assertIn("sdk install", script)
-        self.assertIn("deprecated sdkmanager compatibility path", script)
+        self.assertIn("sdkmanager", script)
+        self.assertIn("cmdline-tools/latest", script)
+        self.assertIn('"build-tools;35.0.0"', script)
+        self.assertIn('"cmake;3.22.1"', script)
 
     def test_doctor_reports_consolidated_sdk_integrity(self):
         script = (ROOT / "tools/android_toolchain_doctor.sh").read_text()
