@@ -10,7 +10,7 @@ REGUESTCPUStatus re_guest_cpu_arm_transfer_imm(
     if (!cpu || !memory) return RE_CPU_E_ARGUMENT;
 
     /* A32 single data transfer, immediate offset, pre-index, no writeback. */
-    if ((instruction & 0x0f600000u) != 0x05000000u)
+    if ((instruction & 0x0f200000u) != 0x05000000u)
         return RE_CPU_E_UNIMPLEMENTED;
 
     /* Only AL condition is enabled in this first isolated migration step. */
