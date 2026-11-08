@@ -14,8 +14,16 @@ if [[ ! -f "$ARCHIVE" ]]; then
   command -v curl >/dev/null 2>&1 || { echo "ERROR: curl is required to download Gradle" >&2; exit 2; }
   TMP="$ARCHIVE.part"
   rm -f "$TMP"
-  curl --fail --location --retry 2 --connect-timeout 20 \
-    "https://services.gradle.org/distributions/gradle-$VERSION-bin.zip" -o "$TMP"
+  PRIMARY_URL="https://services.gradle.org/distributions/gradle-$VERSION-bin.zip"
+  FALLBACK_URL="https://downloads.gradle.org/distributions/gradle-$VERSION-bin.zip"
+  echo "Downloading pinned Gradle $VERSION from the primary official distribution endpoint."
+  if ! curl --fail --location --retry 2 --retry-all-errors --connect-timeout 20 \
+      "$PRIMARY_URL" -o "$TMP"; then
+    echo "WARNING: primary Gradle endpoint failed; trying official downloads.gradle.org mirror." >&2
+    rm -f "$TMP"
+    curl --fail --location --retry 3 --retry-all-errors --connect-timeout 20 \
+      "$FALLBACK_URL" -o "$TMP"
+  fi
   mv "$TMP" "$ARCHIVE"
 fi
 
