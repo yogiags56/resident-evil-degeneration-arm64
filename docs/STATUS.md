@@ -27,3 +27,8 @@ Added the checked multi-region guest memory bus in `runtime/guest/re_guest_memor
 ## Stage 119F update
 
 Added an ABI-preserving CPU-facing adapter over the checked memory bus in `runtime/guest/re_guest_cpu_bus_adapter.h/.c`. The adapter has distinct EXEC fetch, READ data, and WRITE data calls and is covered by a host regression test. It is compiled into Android CMake and registered in the host test runner. This does **not** change the CPU interpreter: `re_guest_cpu_step` still uses the legacy contiguous `REGUESTMEM` path. Stage 119F is therefore an adapter milestone, not completion of CPU memory migration. See [Stage 119F report](STAGE119F_CPU_BUS_ADAPTER.md).
+
+
+## Stage 119G update
+
+Extended the CPU bus adapter with a checked instruction-fetch helper. ARM fetch uses one 32-bit EXEC access; Thumb fetch uses a 16-bit EXEC access and independently checks the second halfword for Thumb-2 32-bit prefixes. Tests cover permission denial including a Thumb-2 instruction split across adjacent regions with different permissions. The helper is registered in the host test runner. The production interpreter is **not yet migrated** and continues to fetch from legacy contiguous memory. See [Stage 119G report](STAGE119G_CHECKED_INSTRUCTION_FETCH.md).
