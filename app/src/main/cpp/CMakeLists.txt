@@ -15,7 +15,27 @@ add_library(re_asset_probe SHARED
 # for Android and enable this option only when that dependency is available.
 option(RE_ENABLE_LIBLZMA "Enable LZMA-alone DTRZ decoding through liblzma" OFF)
 if(RE_ENABLE_LIBLZMA)
-    find_package(LibLZMA REQUIRED)
+    # Android cross-compilation must use the explicitly built ARM64 prefix.
+    # FindLibLZMA's host-oriented defaults can miss this prefix under the NDK
+    # sysroot, so resolve the header and archive directly and expose an
+    # imported target with the exact paths.
+    if(NOT LibLZMA_ROOT)
+        message(FATAL_ERROR "LibLZMA_ROOT must point to the Android ARM64 liblzma install prefix")
+    endif()
+    find_path(LIBLZMA_INCLUDE_DIR
+        NAMES lzma.h
+        PATHS "${LibLZMA_ROOT}/include"
+        NO_DEFAULT_PATH
+        REQUIRED)
+    find_library(LIBLZMA_LIBRARY
+        NAMES lzma
+        PATHS "${LibLZMA_ROOT}/lib" "${LibLZMA_ROOT}/lib64"
+        NO_DEFAULT_PATH
+        REQUIRED)
+    add_library(LibLZMA::LibLZMA UNKNOWN IMPORTED)
+    set_target_properties(LibLZMA::LibLZMA PROPERTIES
+        IMPORTED_LOCATION "${LIBLZMA_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES "${LIBLZMA_INCLUDE_DIR}")
     target_sources(re_asset_probe PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/archive/re_dtrz_lzma.c)
     target_link_libraries(re_asset_probe LibLZMA::LibLZMA)
