@@ -12,7 +12,7 @@ from guest_arm_aps2_relocation_audit import audit as audit_aps2
 from guest_arm_relr_audit import audit as audit_relr
 from guest_arm_pt_dynamic_audit import parse_program_headers
 from guest_arm_relocation_target_audit import audit_target_ranges
-from guest_arm_relocation_abi import get_spec
+from guest_arm_relocation_abi import get_spec, SPECS
 ET_EXEC,ET_DYN=2,3
 
 def _section_tables(report, elf):
@@ -155,7 +155,7 @@ def audit(data):
         "dynamic_symbol_resolution":dyn.get("symbol_resolution"),
         "aps2_symbol_resolution":aps.get("symbol_resolution"),"relr_relocation_count":relr.get("relocation_count",0) if relr else 0,"tables":tables,
         "reconciliation":reconciliation,"target_range_audit":target_ranges,
-        "relocation_abi":{"registry_entry_count":len(__import__("guest_arm_relocation_abi").SPECS),
+        "relocation_abi":{"registry_entry_count":len(SPECS),
             "known_relocation_count":abi_known,"unknown_relocation_count":sum(abi_counts.values())-abi_known,
             "type_counts":abi_counts,"unknown_types_preserved":True},
         "evidence_limits":[
