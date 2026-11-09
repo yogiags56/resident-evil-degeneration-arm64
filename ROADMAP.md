@@ -49,13 +49,19 @@ See STAGE120Q_REPORT.md and docs/STAGE120Q_RELR_DIFFERENTIAL_VALIDATION.md.
 
 Stage 120R added a section-header-independent PT_DYNAMIC RELR fixture, a GNU readelf differential test, and unified reconciliation checks. CI validation is tracked in PR #19 and must pass before the stage is marked complete.
 
-## Next milestone: Stage 120S — ELF32 ARM PT_LOAD segment mapping and memory layout planning
+## Implemented milestone: Stage 120S — ELF32 ARM PT_LOAD segment mapping and memory layout planning
+
+A read-only PT_LOAD planner reports file-backed, memory, BSS zero-fill, page-rounded ranges, page overlaps, and combined permissions. CI validation remains pending in PR #20.
+
+## Next milestone: Stage 120T — Guest memory mapping transaction
 
 1. Validate PT_LOAD file-backed and memory ranges, including BSS zero-fill boundaries.
 2. Calculate page-rounded ranges without allocating guest memory or modifying file contents.
 3. Report page overlaps and combined permissions, especially writable/executable page combinations.
 4. Keep ET_EXEC fixed-address and ET_DYN load-bias requirements explicit; do not choose a bias.
 5. Add malformed-range, overflow, alignment, and entry-point regression fixtures.
+
+Stage 120T introduces rollback-safe multi-region guest mapping. Failed requests remove only mappings created by the transaction; pre-existing regions remain intact. CI validation is pending.
 
 ## Remaining major gates
 
