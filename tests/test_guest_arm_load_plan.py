@@ -55,7 +55,7 @@ class LoadPlanTests(unittest.TestCase):
     def test_reports_page_overlap_and_combined_wx_permissions(self):
         segments = [
             (0x1000, 0x1000, 0x100, 0x500, 5, 0x1000),
-            (0x2000, 0x1400, 0x100, 0x300, 6, 0x1000),
+            (0x1400, 0x1400, 0x100, 0x300, 6, 0x1000),
         ]
         report = module.plan_load_segments(fixture(segments=segments))
         self.assertEqual(report["page_overlap_count"], 1)
@@ -95,3 +95,8 @@ class LoadPlanTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+    def test_accepts_exclusive_end_at_elf32_address_limit(self):
+        segments = [(0, 0xfffff000, 0, 0x1000, 4, 0x1000)]
+        report = module.plan_load_segments(fixture(segments=segments, entry=0xfffff000))
+        self.assertEqual(report["segments"][0]["page_range"], [0xfffff000, 0x100000000])
