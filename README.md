@@ -483,3 +483,12 @@ See STAGE120L_REPORT.md and docs/STAGE120L_RELOCATION_CONTRACTS.md. This remains
 
 
 Stage 120L is complete. Conservative per-relocation contracts now cover symbol-index policy, processing applicability, and target policy. Special cases preserve R_ARM_RELATIVE's symbol-free rule, nullable TLS DTPMOD32/TPOFF32, R_ARM_NONE's unconstrained symbol index, and ET_REL section-relative targets. GitHub Actions run 42603875912 passed 206 Python tests plus host C/native regressions. See STAGE120L_REPORT.md and STAGE120L_VALIDATION_LOG.txt.
+
+
+## Stage 120M — Independent ELF cross-check and COPY symbol-size validation
+
+Added `tools/guest_arm_relocation_independent_crosscheck.py` to compare section-backed ELF32 ARM relocation offset/type inventories against GNU readelf or LLVM llvm-readelf. It reports missing/unexpected entries and unsupported external names; absence of both tools produces an explicit skip. The CI tests include a real independent-tool invocation when available.
+
+The relocation inventory now carries bounded symbol `st_size` and definition provenance from SHT_SYMTAB and PT_DYNAMIC symbol tables. R_ARM_COPY target width is resolved only for a nonzero symbol index, a defined symbol, positive `st_size`, and an explicit symbol-table namespace. Otherwise its width remains unknown. APS2 symbol-size provenance remains unresolved.
+
+See STAGE120M_REPORT.md and docs/STAGE120M_INDEPENDENT_ELF_CROSSCHECK.md. No relocation is applied and no game boot is claimed.
