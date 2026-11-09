@@ -227,3 +227,19 @@ Later milestones: guest system control/MMU semantics, narrow checked-step integr
 3. Determine whether the existing SCTLR.A policy can be tied to actual guest system-control state.
 4. Keep unknown control bits conservative and avoid inventing reset values.
 5. Do not enable production instruction dispatch until control-state and exception behavior are evidence-backed.
+
+## Stage 119S — Guest ARM architecture-profile evidence audit
+
+- Confirmed ARM32/Thumb guest code and AAPCS32 import argument convention from existing repository analysis.
+- Distinguished Android ARM64 host ABI from the emulated ARM32 guest.
+- Identified unproven target attributes: exact ARM revision/profile, optional ISA extensions, VFP/NEON, endianness control, privilege/MMU model, and SCTLR reset/write semantics.
+- Decided not to invent a guest CPU profile or SCTLR reset state.
+- Documentation-only stage; original guest executable/metadata is not present as a reproducible repository input.
+
+### Next — Stage 119T: guest binary metadata and instruction inventory
+
+1. When a permitted original guest executable or sample is available, extract ELF class, endianness, machine, ABI flags, program headers and ARM attributes.
+2. Inventory A32/T32 instruction features and optional VFP/NEON use.
+3. Trace runtime startup/system-control initialization where evidence exists.
+4. Separate binary ABI evidence from runtime register reset behavior.
+5. Do not add production SCTLR state based on guesses.
