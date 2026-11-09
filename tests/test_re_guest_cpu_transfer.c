@@ -46,7 +46,7 @@ static void differential_case(uint32_t instruction, uint32_t base,
 
     REGUESTCPUStatus legacy_status = re_guest_cpu_step(&legacy_cpu, &legacy_memory);
     if (legacy_status != RE_CPU_OK) {
-        fprintf(stderr, "legacy decoder failed instruction=0x%08x status=%d\\n",
+        fprintf(stderr, "legacy decoder failed instruction=0x%08x status=%d\n",
             instruction, (int)legacy_status);
     }
     assert(legacy_status == RE_CPU_OK);
@@ -104,7 +104,7 @@ int main(void) {
     differential_case(0xe5910004u, 0x8000u, 0u, 0x12345678u);
     differential_case(0xe5110004u, 0x8004u, 0u, 0x12345678u);
     differential_case(0xe5810004u, 0x8000u, 0xa1b2c3d4u, 0u);
-    differential_case(0xe5010001u, 0x8004u, 0xa1b2c3d4u, 0u);
+    differential_case(0xe5410001u, 0x8004u, 0xa1b2c3d4u, 0u);
     differential_case(0xe5d10002u, 0x8000u, 0u, 0x78563412u);
     differential_case(0xe5c10003u, 0x8000u, 0xa1b2c3d4u, 0u);
 
