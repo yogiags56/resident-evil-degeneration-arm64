@@ -30,7 +30,7 @@ jobs:
         run: bash ./tools/run_tests.sh
         
 
-      - name: Report Stage 120N-120Y source SHA-256
+      - name: Report Stage 120N-120Z source SHA-256
         if: always()
         run: |
           sha256sum \
@@ -60,6 +60,8 @@ jobs:
             tests/test_re_guest_symbol_resolve.c docs/STAGE120X_SYMBOL_RESOLUTION.md \
             tools/guest_arm_symbol_adapter.py tests/test_guest_arm_symbol_adapter.py \
             docs/STAGE120Y_SYMBOL_TABLE_INTEGRATION.md \
+            tools/guest_arm_dependency_graph.py tests/test_guest_arm_dependency_graph.py \
+            docs/STAGE120Z_DEPENDENCY_GRAPH.md STAGE120Z_REPORT.md STAGE120Z_VALIDATION_LOG.txt \
             STAGE120X_REPORT.md STAGE120X_VALIDATION_LOG.txt \
             STAGE120W_REPORT.md STAGE120W_VALIDATION_LOG.txt \
             STAGE120V_REPORT.md STAGE120V_VALIDATION_LOG.txt \
