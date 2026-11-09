@@ -12,7 +12,15 @@ GitHub Actions run 42614083636 passed 229 Python tests plus host C/native regres
 
 See STAGE120N_REPORT.md and docs/STAGE120N_PACKED_DYNAMIC_SYMBOL_PARITY.md.
 
-## Next milestone: Stage 120O — Independent APS2 conformance fixtures and malformed-input hardening
+## Current milestone: Stage 120O — Independent APS2 conformance and malformed-input hardening
+
+- Added exact signed 32-bit SLEB128 fifth-byte validation.
+- Added complete legal REL/RELA group-flag matrix tests and illegal combinations.
+- Added cross-group addend reset/accumulation and offset state tests.
+- Added resource-limit, truncation, malformed flag, and overlong encoding tests.
+- See STAGE120O_REPORT.md and docs/STAGE120O_APS2_CONFORMANCE.md.
+
+## Next milestone: Stage 120P — APS2/RELR coexistence and independent toolchain differential validation
 
 1. Add differential APS2 vectors transcribed from the AOSP/LLVM format examples.
 2. Test all legal group-flag combinations for REL and RELA.
