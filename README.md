@@ -534,3 +534,8 @@ Added a read-only PT_LOAD layout planner that reports file-backed, memory, BSS z
 ## Stage 120T — Guest memory mapping transaction
 
 Added a rollback-safe multi-region mapping API. Failed requests remove only mappings created by that transaction while preserving pre-existing regions. See `docs/STAGE120T_GUEST_MAP_TRANSACTION.md`.
+
+
+## Stage 120U — ELF segment materialization
+
+Added a preflighted segment materializer that copies file-backed bytes and zero-fills BSS tails in already-mapped writable guest regions. Every segment is validated before any destination bytes are changed. No mapping, allocation, relocation, or guest execution is performed. See `docs/STAGE120U_ELF_MATERIALIZATION.md`.

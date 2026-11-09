@@ -63,6 +63,10 @@ A read-only PT_LOAD planner reports file-backed, memory, BSS zero-fill, page-rou
 
 Stage 120T introduces rollback-safe multi-region guest mapping. Failed requests remove only mappings created by the transaction; pre-existing regions remain intact. CI validation is pending.
 
+## Stage 120U — ELF segment materialization
+
+Added a preflighted helper to copy file-backed segment bytes and zero-fill BSS in existing writable guest mappings. It rejects invalid source ranges, file_size > memory_size, guest-address overflow, overlapping destination segments, and inaccessible destinations before modifying guest memory. CI validation is pending.
+
 ## Remaining major gates
 
 1. Build liblzma for Android ARM64 and complete a real Android NDK build.
