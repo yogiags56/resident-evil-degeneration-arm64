@@ -20,6 +20,19 @@ def fixture(endian="<",include_hash=True):
     struct.pack_into(endian+"IIIBBH",data,0x1e0,1,0,0,0x12,0,0)
     struct.pack_into(endian+"II",data,0x200,0x1300,(1<<8)|22)
     return bytes(data)
+
+
+def gnu_fixture():
+    data=bytearray(fixture(include_hash=False))
+    # Replace DT_HASH with DT_GNU_HASH; keep all other dynamic metadata intact.
+    struct.pack_into("<iI",data,0x100+6*8,0x6ffffef5,0x1220)
+    h=5381
+    for byte in b"foo":
+        h=((h<<5)+h+byte)&0xffffffff
+    bloom=(1<<(h%32))|(1<<((h>>5)%32))
+    struct.pack_into("<IIIIIII",data,0x220,1,1,1,5,bloom,1,h|1)
+    return bytes(data)
+
 class DynamicRelocationSegmentTests(unittest.TestCase):
     def test_maps_rel_and_jmprel_through_pt_load_and_resolves_symbol(self):
         report=module.audit(fixture())
@@ -49,6 +62,33 @@ class DynamicRelocationSegmentTests(unittest.TestCase):
         report=module.audit(fixture(">"))
         self.assertEqual(report["endianness"],"big")
         self.assertEqual(report["relocation_tables"][0]["entries"][0]["symbol"],"foo")
+
+    def test_gnu_hash_only_bounds_and_resolves_dynamic_symbols(self):
+        report=module.audit(gnu_fixture())
+        self.assertTrue(report["symbol_resolution"]["available"])
+        self.assertEqual(report["symbol_resolution"]["hash_source"],"gnu_hash_only")
+        self.assertEqual(report["symbol_resolution"]["symbol_count"],2)
+        self.assertEqual(report["relocation_tables"][0]["entries"][0]["symbol"],"foo")
+        self.assertEqual(report["symbol_resolution"]["gnu_hash"]["bucket_count"],1)
+
+    def test_rejects_gnu_hash_bloom_filter_missing_symbol_bits(self):
+        data=bytearray(gnu_fixture())
+        struct.pack_into("<I",data,0x230,0)
+        with self.assertRaises(module.ELFAuditError):
+            module.audit(bytes(data))
+
+    def test_rejects_gnu_hash_chain_hash_mismatch(self):
+        data=bytearray(gnu_fixture())
+        struct.pack_into("<I",data,0x238,0x12345679)
+        with self.assertRaises(module.ELFAuditError):
+            module.audit(bytes(data))
+
+    def test_rejects_non_power_of_two_gnu_bloom_size(self):
+        data=bytearray(gnu_fixture())
+        struct.pack_into("<I",data,0x22c,3)
+        with self.assertRaises(module.ELFAuditError):
+            module.audit(bytes(data))
+
     def test_rejects_invalid_rel_entry_size(self):
         data=bytearray(fixture()); struct.pack_into("<I",data,0x100+2*8+4,12)
         with self.assertRaises(module.ELFAuditError): module.audit(bytes(data))
