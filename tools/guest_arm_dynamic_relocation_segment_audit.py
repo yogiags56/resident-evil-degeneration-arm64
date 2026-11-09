@@ -8,6 +8,7 @@ from guest_arm_pt_dynamic_audit import parse_program_headers, map_vaddr, PT_LOAD
 DT_NULL=0; DT_HASH=4; DT_STRTAB=5; DT_SYMTAB=6; DT_RELA=7; DT_RELASZ=8
 DT_RELAENT=9; DT_STRSZ=10; DT_SYMENT=11; DT_REL=17; DT_RELSZ=18
 DT_RELENT=19; DT_PLTREL=20; DT_JMPREL=23; DT_PLTRELSZ=2
+DT_GNU_HASH=0x6ffffef5
 TAGS={0:"DT_NULL",2:"DT_PLTRELSZ",4:"DT_HASH",5:"DT_STRTAB",6:"DT_SYMTAB",
 7:"DT_RELA",8:"DT_RELASZ",9:"DT_RELAENT",10:"DT_STRSZ",11:"DT_SYMENT",
 17:"DT_REL",18:"DT_RELSZ",19:"DT_RELENT",20:"DT_PLTREL",23:"DT_JMPREL",DT_GNU_HASH:"DT_GNU_HASH"}
@@ -39,7 +40,6 @@ def _mapped(data,vaddr,size,loads,label):
     try: off=map_vaddr(vaddr,size,loads)
     except ELFAuditError as exc: raise ELFAuditError(f"{label}: {exc}") from exc
     return off,data[off:off+size]
-DT_GNU_HASH=0x6ffffef5
 MAX_HASH_DIMENSION=1_000_000
 
 def _gnu_hash(data, address, loads, endian):
