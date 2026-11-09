@@ -492,3 +492,10 @@ Added `tools/guest_arm_relocation_independent_crosscheck.py` to compare section-
 The relocation inventory now carries bounded symbol `st_size` and definition provenance from SHT_SYMTAB and PT_DYNAMIC symbol tables. R_ARM_COPY target width is resolved only for a nonzero symbol index, a defined symbol, positive `st_size`, and an explicit symbol-table namespace. Otherwise its width remains unknown. APS2 symbol-size provenance remains unresolved.
 
 See STAGE120M_REPORT.md, STAGE120M_VALIDATION_LOG.txt, and docs/STAGE120M_INDEPENDENT_ELF_CROSSCHECK.md. GitHub Actions run 42605382359 passed 218 Python tests, including real readelf invocation when available, plus host C/native regressions. No relocation is applied and no game boot is claimed.
+
+
+## Stage 120N — Packed and dynamic relocation metadata parity
+
+APS2 entries now preserve bounded symbol size, definition state, section index, and version metadata. Unified reconciliation marks the DT_SYMTAB namespace unresolved unless symbol-table bounds are proven. R_ARM_COPY width can be resolved for APS2 only with a nonzero defined symbol, positive st_size, and proven namespace.
+
+Cross-checking against Android Bionic also corrected APS2 decoding: r_info is absolute (not cumulative), grouped info is reused across the group, grouped addend delta is applied once, per-entry addend deltas accumulate, and RELA groups without HAS_ADDEND reset the addend to zero. See STAGE120N_REPORT.md and docs/STAGE120N_PACKED_DYNAMIC_SYMBOL_PARITY.md.
