@@ -394,3 +394,8 @@ Added ELF32 ARM STT_FUNC inventory with $a/$t/$d overlap classification, Thumb s
 ## Stage 120A — Dynamic import inventory
 
 Added a read-only ELF32 ARM dynamic metadata auditor for DYNSYM undefined symbols, DT_NEEDED dependencies, SHT_DYNAMIC tags, and SHT_REL/SHT_RELA sections linked to dynamic symbol tables. No relocation is applied and undefined symbols are not guessed to be S3E imports. See docs/STAGE120A_DYNAMIC_IMPORT_INVENTORY.md.
+
+
+## Stage 120B — PLT/GOT cross-reference
+
+Added a conservative PLT/GOT report for section-backed ELF32 ARM dynamic relocations. It identifies R_ARM_JUMP_SLOT entries, correlates them to undefined dynamic symbols, and preserves DT_PLTGOT/DT_JMPREL/DT_PLTRELSZ/DT_PLTREL when present. It does not infer resolved GOT contents or apply relocations. See docs/STAGE120B_PLT_GOT_CROSS_REFERENCE.md.
