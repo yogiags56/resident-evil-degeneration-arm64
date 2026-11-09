@@ -196,3 +196,19 @@ Later milestones: broader ARM/Thumb migration, guest SCTLR/system-control emulat
 5. Keep production CPU dispatch unchanged until differential and exception behavior evidence is sufficient.
 
 Later milestones: guest system control/MMU semantics, narrow checked-step integration, broader ARM/Thumb migration, XE3U loader/relocations, import table, renderer/audio/input, and physical-device boot/gameplay validation.
+
+## Stage 119Q — A32 scalar differential reference tests
+
+- Added deterministic independent byte-array reference model.
+- Runs 512 reproducible cases over word/byte/halfword and signed load/store forms.
+- Compares all CPU registers and the full guest-memory fixture after each operation.
+- Registered in the host test runner.
+- CI pending; no production CPU dispatch changes.
+
+### Next — Stage 119R: directed decoder and fault validation
+
+1. Verify the latest Stage 119P regression vectors and fix instruction-encoding/offset mistakes.
+2. Expand directed negative tests for unsupported condition codes, register offsets, post-index, writeback, PC operands, and invalid extra-transfer encodings.
+3. Test read-only store rejection, unmapped loads, and destination preservation using the A32 decoder API.
+4. Check address wraparound and boundary behavior.
+5. Keep the helper isolated until host CI and Android ARM64 build pass on the same source revision.
