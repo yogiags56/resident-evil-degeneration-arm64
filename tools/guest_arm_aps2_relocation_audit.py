@@ -62,6 +62,7 @@ def decode_aps2(blob: bytes, kind: str, max_relocations: int = MAX_RELOCATIONS) 
     if offset < 0 or offset > 0xffffffff:
         raise ELFAuditError("APS2 initial relocation offset is outside ELF32 range")
     entries = []
+    info = 0
     addend = 0
     while len(entries) < count:
         group_size, pos = _sleb128(blob, pos, "group size")
