@@ -40,7 +40,7 @@ class GuestArmElfAuditTests(unittest.TestCase):
         r=audit.audit_elf(make_elf32({32:(1,"ArmCompiler"),64:None,67:"2025Q4"}))
         attrs=r["arm_attributes"]["file_attributes"]
         self.assertEqual(attrs["compatibility"],{"flag":1,"vendor":"ArmCompiler"})
-        self.assertTrue(attrs["tag_64"])
+        self.assertTrue(attrs["nodefaults"])
         self.assertEqual(attrs["conformance"],"2025Q4")
     def test_section_and_symbol_scopes(self):
         def scope(tag, attrs, indexes=()):
