@@ -436,3 +436,12 @@ Added bounded DT_GNU_HASH parsing for ELF32 EM_ARM. The auditor validates the he
     python3 tools/guest_arm_dynamic_relocation_segment_audit.py /path/to/guest.elf --json /tmp/dynamic-relocations.json
 
 The parser remains read-only and does not apply relocations or resolve runtime library providers.
+
+
+## Stage 120H — ELF dynamic symbol version metadata
+
+Added bounded ELF32 symbol version parsing for DT_VERSYM, DT_VERDEF/DT_VERDEFNUM, and DT_VERNEED/DT_VERNEEDNUM. Symbol entries now retain local/global, definition/requirement, version name, library, and hidden-bit identity. Dynamic REL/RELA/JMPREL, APS2, and relocation reconciliation preserve version identity rather than treating matching symbol indices as proof of ABI identity.
+
+    python3 tools/guest_arm_dynamic_relocation_segment_audit.py /path/to/guest.elf --json /tmp/dynamic-relocations.json
+
+See STAGE120H_REPORT.md and docs/STAGE120H_ELF_SYMBOL_VERSIONING.md. GitHub Actions Source checks passed 165 Python tests plus host C/native regressions. This remains metadata analysis only; no provider compatibility or game boot is claimed.
