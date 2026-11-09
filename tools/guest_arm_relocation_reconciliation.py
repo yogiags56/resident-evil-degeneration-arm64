@@ -9,6 +9,7 @@ from guest_arm_elf_audit import audit_elf, ELFAuditError
 from guest_arm_relocation_audit import audit_relocations
 from guest_arm_dynamic_relocation_segment_audit import audit as audit_dynamic, _read_dynamic
 from guest_arm_aps2_relocation_audit import audit as audit_aps2
+from guest_arm_relr_audit import audit as audit_relr
 from guest_arm_pt_dynamic_audit import parse_program_headers
 ET_EXEC,ET_DYN=2,3
 
@@ -43,6 +44,20 @@ def _convert(report, namespace, packed=False):
             "size":table["packed_size"] if packed else table["size"],
             "entry_count":len(entries),"entries":entries})
     return result
+
+
+def _convert_relr(report):
+    table=report["relr_table"]
+    entries=[]
+    for item in table["entries"]:
+        entries.append({"index":item["index"],"target_domain":"virtual",
+          "target":item["target_offset"],"symbol_index":None,"symbol":None,
+          "type":23,"type_name":"R_ARM_RELATIVE","addend":None,
+          "symbol_namespace":"RELR:relative-only","symbol_version":None,
+          "relr_encoding":item["encoding"],"table_entry_index":item["table_entry_index"]})
+    return [{"source_table":"DT_RELR","encoding":"RELR","kind":"RELR",
+      "file_offset":table["file_offset"],"size":table["size"],
+      "entry_count":len(entries),"entries":entries}]
 
 def _version_identity(e):
     version=e.get("symbol_version")
@@ -116,20 +131,22 @@ def audit(data):
     dyn=audit_dynamic(data)
     _,tags,_,_=_read_dynamic(data,ph)
     has_aps2=any(tag in tags for tag in (0x6000000f,0x60000011))
+    has_relr=any(tag in tags for tag in (35,36,37))
     aps=audit_aps2(data) if has_aps2 else {"packed_relocation_tables":[],"symbol_resolution":{"available":False,"reason":"no APS2 dynamic tags"}}
+    relr=audit_relr(data) if has_relr else None
     symaddr=dyn.get("dynamic_tags",{}).get("DT_SYMTAB")
     namespace=f"DT_SYMTAB@0x{symaddr:08x}" if symaddr is not None else "DT_SYMTAB:unavailable"
-    tables=sec_tables+_convert(dyn,namespace)+_convert(aps,namespace,packed=True)
+    tables=sec_tables+_convert(dyn,namespace)+_convert(aps,namespace,packed=True)+( _convert_relr(relr) if relr else [])
     return {"source_size":len(data),"sha256":hashlib.sha256(data).hexdigest(),
         "elf_class":32,"machine":"ARM","endianness":ph["endianness"],"elf_type":ph["type"],
         "section_headers_present":ph["section_headers_present"],"section_backed_audit":sec_status,
         "dynamic_symbol_resolution":dyn.get("symbol_resolution"),
-        "aps2_symbol_resolution":aps.get("symbol_resolution"),"tables":tables,
+        "aps2_symbol_resolution":aps.get("symbol_resolution"),"relr_relocation_count":relr.get("relocation_count",0) if relr else 0,"tables":tables,
         "reconciliation":reconcile_tables(tables),
         "evidence_limits":[
             "ELF32 EM_ARM only; input is parsed read-only.",
             "Section-backed reconciliation uses the conventional SHT_SYMTAB Stage 119X parser; unsupported combinations are reported unavailable.",
-            "Dynamic and APS2 inventories use PT_DYNAMIC/PT_LOAD and bounded SysV DT_HASH symbol resolution.",
+            "Dynamic, APS2, and RELR inventories use PT_DYNAMIC/PT_LOAD; RELR has no symbol index or addend.",
             "Different symbol-table namespaces are never equated by index alone.",
             "REL implicit addends are not reconstructed from target memory.",
             "No relocation is applied, no target is dereferenced, and no provider or game boot is inferred."]}
