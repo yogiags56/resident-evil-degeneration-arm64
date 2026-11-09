@@ -67,7 +67,7 @@ int main(void) {
  /* Invalid arguments and address-space overflow fail closed. */
  assert(re_guest_cpu_scalar_read16(&scalar,0x1000u,NULL)==RE_CPU_E_ARGUMENT);
  assert(re_guest_cpu_scalar_read32(NULL,0x1000u,&w)==RE_CPU_E_ARGUMENT);
- assert(re_guest_cpu_scalar_read32(&scalar,0xffffffffu,&w)==RE_CPU_E_MEMORY);
+ assert(re_guest_cpu_scalar_read32(&scalar,0xffffffffu,&w)==RE_CPU_E_ALIGNMENT);
 
  /* Strict policy can be restored. */
  re_guest_alignment_policy_set_sctlr_a(&policy,1u);
