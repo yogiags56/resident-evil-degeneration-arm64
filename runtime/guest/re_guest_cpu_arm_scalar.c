@@ -59,7 +59,8 @@ REGUESTCPUStatus re_guest_cpu_arm_scalar_transfer(
      * Ordinary A32 single data transfer, immediate, pre-index, no writeback.
      * Excludes register-offset and post-index forms.
      */
-    if ((instruction & 0x0f200000u) == 0x05000000u) {
+    if ((instruction & 0x0f200000u) == 0x05000000u &&
+        !(instruction & (1u << 25))) {
         rn=(instruction>>16)&15u;
         rd=(instruction>>12)&15u;
         if (rn==15u || rd==15u) return RE_CPU_E_UNIMPLEMENTED;
