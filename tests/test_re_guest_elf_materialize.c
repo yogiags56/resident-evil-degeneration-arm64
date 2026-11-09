@@ -6,7 +6,7 @@
 
 int main(void) {
     REGUESTMEMORY memory;
-    uint8_t elf[64], text[32], data[32];
+    uint8_t elf[64], text[32], data[32], readonly[16];
     REGUESTELFSEGMENT segments[2];
     size_t failed = 999;
 
