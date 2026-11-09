@@ -1,6 +1,6 @@
 # Current Status
 
-**Current source milestone: Stage 119Q — A32 scalar differential reference tests added on branch `stage-119q-a32-scalar-differential`; host CI passed on commit `c4325e6` (run 42584673737). Android ARM64 build is still running.** Stage 117 integrated a partial ARM32/Thumb guest CPU, AAPCS32 dispatcher, runtime coordinator, and ABI support into the Android ARM64 native target. A prior Android ARM64 workflow passed on commit `b090f90`; this is not validation of the current branch.
+**Current source milestone: Stage 119R — directed A32 scalar decoder/fault tests added on branch `stage-119r-a32-directed-fault-tests`; CI pending. Stage 119Q host CI passed on commit `c4325e6` (run 42584673737).** Stage 117 integrated a partial ARM32/Thumb guest CPU, AAPCS32 dispatcher, runtime coordinator, and ABI support into the Android ARM64 native target. A prior Android ARM64 workflow passed on commit `b090f90`; this is not validation of the current branch.
 
 Stage 118 adds guest runtime stop diagnostics. Stages 119A–119L introduced guest memory management, checked bus, CPU adapters, checked instruction fetch, CPU data facade, isolated transfer helper, and fault regressions. Stage 119M documented ARMv7-A/R alignment. Stage 119N added memory attributes and strict-by-default SCTLR.A policy; host CI passed on commit `529a7ee`.
 
@@ -36,3 +36,8 @@ Added isolated A32 scalar instruction decoding for ordinary immediate pre-indexe
 ## Stage 119Q update
 
 Added a deterministic independent byte-array reference model covering 512 A32 scalar transfer cases across word/byte/halfword and signed loads. The test compares all CPU registers and the complete memory region after every operation. It is registered in the host test runner. Host CI passed on commit `c4325e6` (run 42584673737), including all 75 Python checks, native C syntax checks, Stage 119P integration tests, and all 512 differential cases. Android ARM64 build remains in progress. The model is not an external hardware oracle and the helper remains isolated from production CPU dispatch.
+
+
+## Stage 119R update
+
+Added directed A32 scalar permission, cross-region, address-wrap/underflow, and unsupported-encoding tests. The tests verify no partial backing-memory mutation and preservation of destination registers on failed loads. Host CI pending.
