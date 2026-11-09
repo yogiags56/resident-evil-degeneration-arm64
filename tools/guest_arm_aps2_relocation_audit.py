@@ -99,10 +99,12 @@ def decode_aps2(blob: bytes, kind: str, max_relocations: int = MAX_RELOCATIONS) 
                 raise ELFAuditError("APS2 relocation offset overflows ELF32")
             if grouped_info is None:
                 info_delta, pos = _sleb128(blob, pos, "relocation info delta")
-            else:
-                info_delta = grouped_info
-            # APS2 stores r_info deltas, not absolute r_info values.
-            info += info_delta
+                # APS2 stores r_info deltas, not absolute r_info values.
+                info += info_delta
+            elif _ == 0:
+                # GROUPED_BY_INFO supplies one r_info delta for the entire
+                # group. Apply it once, then reuse the resulting r_info.
+                info += grouped_info
             if info < 0 or info > 0xffffffff:
                 raise ELFAuditError("APS2 cumulative relocation info exceeds ELF32 range")
             if has_addend:
