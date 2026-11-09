@@ -384,3 +384,8 @@ Added a read-only ELF32 EM_ARM REL/RELA relocation auditor. It validates relocat
 ## Stage 119Y — Relocation/mapping cross-check
 
 Added a report correlating ELF32 ARM relocation sites with local ARM/Thumb/data mapping-symbol ranges. CALL/JUMP relocations outside mapped ARM/Thumb code are flagged; undefined symbols remain external/undefined rather than guessed as Marmalade imports. No relocations are applied. See docs/STAGE119Y_RELOCATION_MAPPING_CROSSCHECK.md.
+
+
+## Stage 119Z — Function-symbol inventory
+
+Added ELF32 ARM STT_FUNC inventory with $a/$t/$d overlap classification, Thumb state-bit reporting, and CALL/JUMP relocation correlation by exact symbol-table and symbol index. Zero-size and out-of-section extents remain explicit. See docs/STAGE119Z_FUNCTION_SYMBOL_INVENTORY.md.

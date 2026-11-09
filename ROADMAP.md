@@ -338,3 +338,20 @@ Later milestones: guest system control/MMU semantics, narrow checked-step integr
 3. Annotate call/jump relocation symbol references and report unresolved/undefined symbols.
 4. Add ET_EXEC/ET_DYN target-address validation and malformed ELF tests.
 5. Preserve symbol provenance; do not infer absent names.
+
+
+## Stage 119Z — Function-symbol inventory
+
+- Parse ELF32 ARM STT_FUNC records from conventional SYMTAB/DYNSYM.
+- Preserve binding, visibility, section index, symbol value, size, and Thumb state bit.
+- Compare declared function extents against $a/$t/$d ranges.
+- Report mixed-mode, data-overlap, unknown, zero-size, and out-of-section cases without repairing metadata.
+- Correlate CALL/JUMP relocation references using symbol-table section index plus symbol index, not symbol names alone.
+- Never apply relocations or infer final control-flow targets.
+
+### Next — Stage 120A: Runtime import symbol inventory
+
+1. Inventory undefined dynamic symbols and associated symbol versions.
+2. Inspect .dynsym, .dynstr, .dynamic, PLT/GOT and dynamic relocation sections.
+3. Identify import names only when explicitly present in binary metadata.
+4. Keep S3E/Marmalade import identities provisional until matching known ABI/API evidence exists.
