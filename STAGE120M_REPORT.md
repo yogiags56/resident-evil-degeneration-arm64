@@ -1,6 +1,6 @@
 # Stage 120M Report — Independent ELF Cross-Check and COPY Symbol-Size Validation
 
-Status: implementation and CI validation in progress.
+Status: implementation complete; GitHub Actions Source checks passed.
 
 ## Delivered
 
@@ -15,6 +15,16 @@ Status: implementation and CI validation in progress.
 ## Usage
 
     python3 tools/guest_arm_relocation_independent_crosscheck.py guest.elf --json /tmp/readelf-crosscheck.json
+
+## Validation result
+
+GitHub Actions run 42605382359 completed successfully:
+- 218 Python tests passed (18.876 seconds).
+- Real independent readelf invocation test passed when available.
+- COPY size provenance and rejection cases passed.
+- Host C mock compilation and native C regression checks passed.
+
+See STAGE120M_VALIDATION_LOG.txt for details.
 
 ## Normative reference
 
