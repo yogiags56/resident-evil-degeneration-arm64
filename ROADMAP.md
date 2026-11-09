@@ -33,12 +33,23 @@ GitHub Actions run 42619189507 passed 272 Python tests and host C/native regress
 
 See STAGE120P_REPORT.md and docs/STAGE120P_APS2_RELR_COEXISTENCE.md.
 
-## Next milestone: Stage 120Q — Independent RELR differential validation and relocation-source reconciliation
+## Completed milestone: Stage 120Q — Canonical RELR decoder and cross-audit parity
 
-1. Compare RELR expansion against independent toolchain/Bionic-produced vectors.
-2. Validate DT_ANDROID_RELRCOUNT and mixed alias behavior across Bionic/API revisions.
-3. Reconcile standard REL, PLT, APS2, and RELR target sets with provenance.
-4. Preserve collision evidence and do not silently discard duplicate target reports.
+- Consolidated standalone and dynamic/APS2 RELR decoding on one canonical implementation.
+- Preserved encoded-entry provenance (direct/bitmap, table entry index, bitmap bit).
+- Aligned empty-bitmap and zero-sized-table handling.
+- Added standard, Android, and mixed RELR aliases to standalone audit and full reconciliation.
+- Added regression tests for decoder parity and Android-tagged reconciliation.
+- CI validation is pending.
+
+See STAGE120Q_REPORT.md and docs/STAGE120Q_RELR_CANONICAL_DECODER.md.
+
+## Next milestone: Stage 120R — Independent RELR differential fixtures and Bionic compatibility matrix
+
+1. Compare against independently generated ELF32 RELR fixtures and readelf/Bionic output.
+2. Exercise bitmap boundary and cursor edge cases against a separate reference implementation.
+3. Record behavior by Bionic/API revision where source or binaries permit.
+4. Reconcile standard REL, PLT, APS2, and RELR source provenance without dropping raw records.
 5. Keep all audits read-only; no relocation application or runtime load-bias calculation.
 
 ## Remaining major gates
