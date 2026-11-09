@@ -70,6 +70,11 @@ class LoadPlanTests(unittest.TestCase):
         with self.assertRaises(ELFAuditError):
             module.plan_load_segments(fixture(segments=segments))
 
+    def test_rejects_page_incongruent_virtual_address_and_file_offset(self):
+        segments = [(0x1000, 0x1800, 0x100, 0x180, 5, 1)]
+        with self.assertRaises(ELFAuditError):
+            module.plan_load_segments(fixture(segments=segments))
+
     def test_rejects_non_power_of_two_page_size(self):
         with self.assertRaises(ELFAuditError):
             module.plan_load_segments(fixture(), page_size=3000)
