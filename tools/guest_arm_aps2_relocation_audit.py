@@ -198,6 +198,7 @@ def audit(data: bytes) -> dict:
         "relocation_count": sum(x["entry_count"] for x in decoded),
         "relr_tables": relr_tables,
         "relr_relocation_count": sum(x["relocation_count"] for x in relr_tables),
+        "android_relr_count_hint": tags.get(0x6fffe005),
         "cross_format_target_overlaps": cross_format_overlaps,
         "evidence_limits": [
             "Only ELF32 EM_ARM Android APS2 REL/RELA streams described by PT_DYNAMIC are supported.",
