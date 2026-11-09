@@ -10,7 +10,7 @@ DT_RELAENT=9; DT_STRSZ=10; DT_SYMENT=11; DT_REL=17; DT_RELSZ=18
 DT_RELENT=19; DT_PLTREL=20; DT_JMPREL=23; DT_PLTRELSZ=2
 TAGS={0:"DT_NULL",2:"DT_PLTRELSZ",4:"DT_HASH",5:"DT_STRTAB",6:"DT_SYMTAB",
 7:"DT_RELA",8:"DT_RELASZ",9:"DT_RELAENT",10:"DT_STRSZ",11:"DT_SYMENT",
-17:"DT_REL",18:"DT_RELSZ",19:"DT_RELENT",20:"DT_PLTREL",23:"DT_JMPREL"}
+17:"DT_REL",18:"DT_RELSZ",19:"DT_RELENT",20:"DT_PLTREL",23:"DT_JMPREL",DT_GNU_HASH:"DT_GNU_HASH"}
 RELOCS={0:"R_ARM_NONE",1:"R_ARM_PC24",2:"R_ARM_ABS32",3:"R_ARM_REL32",
 10:"R_ARM_THM_CALL",21:"R_ARM_GLOB_DAT",22:"R_ARM_JUMP_SLOT",23:"R_ARM_RELATIVE",
 28:"R_ARM_CALL",29:"R_ARM_JUMP24",30:"R_ARM_THM_JUMP24",38:"R_ARM_TARGET1",
@@ -39,34 +39,155 @@ def _mapped(data,vaddr,size,loads,label):
     try: off=map_vaddr(vaddr,size,loads)
     except ELFAuditError as exc: raise ELFAuditError(f"{label}: {exc}") from exc
     return off,data[off:off+size]
+DT_GNU_HASH=0x6ffffef5
+MAX_HASH_DIMENSION=1_000_000
+
+def _gnu_hash(data, address, loads, endian):
+    _, header = _mapped(data, address, 16, loads, "DT_GNU_HASH header")
+    nbucket, symoffset, bloom_size, bloom_shift = struct.unpack(endian+"IIII", header)
+    if not nbucket or not bloom_size:
+        raise ELFAuditError("DT_GNU_HASH bucket and bloom dimensions must be nonzero")
+    if nbucket > MAX_HASH_DIMENSION or bloom_size > MAX_HASH_DIMENSION:
+        raise ELFAuditError("DT_GNU_HASH dimensions exceed safety limit")
+    if bloom_size & (bloom_size-1):
+        raise ELFAuditError("DT_GNU_HASH bloom_size must be a power of two")
+    if symoffset > MAX_HASH_DIMENSION:
+        raise ELFAuditError("DT_GNU_HASH symoffset exceeds safety limit")
+    bloom_addr=address+16
+    bloom_size_bytes=bloom_size*4
+    _, bloom_raw=_mapped(data,bloom_addr,bloom_size_bytes,loads,"DT_GNU_HASH bloom filter")
+    bloom=struct.unpack(endian+("I"*bloom_size),bloom_raw)
+    bucket_addr=bloom_addr+bloom_size_bytes
+    _, bucket_raw=_mapped(data,bucket_addr,nbucket*4,loads,"DT_GNU_HASH buckets")
+    buckets=struct.unpack(endian+("I"*nbucket),bucket_raw)
+    chain_addr=bucket_addr+nbucket*4
+    # Find the unique PT_LOAD file-backed segment containing the first chain word.
+    candidates=[]
+    for seg in loads:
+        if chain_addr>=seg["vaddr"] and chain_addr<seg["vaddr"]+seg["filesz"]:
+            candidates.append(seg)
+    if len(candidates)!=1:
+        raise ELFAuditError("DT_GNU_HASH chain does not map to a unique PT_LOAD file range")
+    available=candidates[0]["vaddr"]+candidates[0]["filesz"]-chain_addr
+    chain_words=min(available//4,MAX_HASH_DIMENSION)
+    if chain_words<=0:
+        raise ELFAuditError("DT_GNU_HASH chain has no file-backed words")
+    _, chain_raw=_mapped(data,chain_addr,chain_words*4,loads,"DT_GNU_HASH chain bounds")
+    chains=struct.unpack(endian+("I"*chain_words),chain_raw)
+    max_symbol=symoffset-1
+    chain_records={}
+    for bucket in buckets:
+        if bucket==0:
+            continue
+        if bucket<symoffset:
+            raise ELFAuditError("DT_GNU_HASH bucket precedes symoffset")
+        index=bucket-symoffset
+        if index>=chain_words:
+            raise ELFAuditError("DT_GNU_HASH bucket points outside bounded chain")
+        symbol=bucket
+        while True:
+            chain_index=symbol-symoffset
+            if chain_index>=chain_words:
+                raise ELFAuditError("DT_GNU_HASH chain has no terminator within PT_LOAD bounds")
+            value=chains[chain_index]
+            chain_records[symbol]=value
+            max_symbol=max(max_symbol,symbol)
+            if value&1:
+                break
+            symbol+=1
+            if symbol-symoffset>=MAX_HASH_DIMENSION:
+                raise ELFAuditError("DT_GNU_HASH chain exceeds safety limit")
+    symbol_count=max(symoffset,max_symbol+1)
+    return {
+        "symbol_count":symbol_count,
+        "bucket_count":nbucket,
+        "symoffset":symoffset,
+        "bloom_size":bloom_size,
+        "bloom_shift":bloom_shift,
+        "bloom_words":list(bloom),
+        "buckets":list(buckets),
+        "chain_records":chain_records,
+    }
+
+def _gnu_name_hash(name):
+    value=5381
+    for byte in name.encode("utf-8"):
+        value=((value<<5)+value+byte)&0xffffffff
+    return value
+
 def _parse_symbols(data,tags,loads,endian,max_index):
-    required=(DT_SYMTAB,DT_SYMENT,DT_STRTAB,DT_STRSZ,DT_HASH)
+    required=(DT_SYMTAB,DT_SYMENT,DT_STRTAB,DT_STRSZ)
     if any(x not in tags for x in required):
-        return None,{"available":False,"reason":"DT_HASH/DT_SYMTAB/DT_STRTAB metadata incomplete"}
-    if tags[DT_SYMENT]!=16: raise ELFAuditError("DT_SYMENT must be 16 for ELF32")
-    _,hashhead=_mapped(data,tags[DT_HASH],8,loads,"DT_HASH header")
-    nbucket,nchain=struct.unpack(endian+"II",hashhead)
-    if nchain>1_000_000 or nbucket>1_000_000: raise ELFAuditError("DT_HASH dimensions exceed safety limit")
-    hash_size=8+4*(nbucket+nchain)
-    _mapped(data,tags[DT_HASH],hash_size,loads,"DT_HASH table")
-    if max_index>=nchain: raise ELFAuditError(f"relocation symbol index {max_index} exceeds DT_HASH nchain {nchain}")
-    sym_size=nchain*16
+        return None,{"available":False,"reason":"DT_SYMTAB/DT_SYMENT/DT_STRTAB/DT_STRSZ metadata incomplete"}
+    if tags[DT_SYMENT]!=16:
+        raise ELFAuditError("DT_SYMENT must be 16 for ELF32")
+    sysv_count=None
+    if DT_HASH in tags:
+        _,hashhead=_mapped(data,tags[DT_HASH],8,loads,"DT_HASH header")
+        nbucket,nchain=struct.unpack(endian+"II",hashhead)
+        if nchain>MAX_HASH_DIMENSION or nbucket>MAX_HASH_DIMENSION:
+            raise ELFAuditError("DT_HASH dimensions exceed safety limit")
+        hash_size=8+4*(nbucket+nchain)
+        _mapped(data,tags[DT_HASH],hash_size,loads,"DT_HASH table")
+        sysv_count=nchain
+    gnu_info=None
+    if DT_GNU_HASH in tags:
+        gnu_info=_gnu_hash(data,tags[DT_GNU_HASH],loads,endian)
+    if sysv_count is None and gnu_info is None:
+        return None,{"available":False,"reason":"neither bounded DT_HASH nor DT_GNU_HASH is available"}
+    if sysv_count is not None and gnu_info is not None:
+        if gnu_info["symbol_count"]>sysv_count:
+            raise ELFAuditError("DT_GNU_HASH symbol bound exceeds SysV DT_HASH nchain")
+        symbol_count=sysv_count
+        comparison="gnu_bound_within_sysv_nchain" if gnu_info["symbol_count"]==sysv_count else "gnu_bound_lower_than_sysv_nchain"
+    elif sysv_count is not None:
+        symbol_count=sysv_count
+        comparison="sysv_hash_only"
+    else:
+        symbol_count=gnu_info["symbol_count"]
+        comparison="gnu_hash_only"
+    if max_index>=symbol_count:
+        raise ELFAuditError(f"relocation symbol index {max_index} exceeds bounded dynamic symbol count {symbol_count}")
+    sym_size=symbol_count*16
     _,symraw=_mapped(data,tags[DT_SYMTAB],sym_size,loads,"DT_SYMTAB")
     _,strraw=_mapped(data,tags[DT_STRTAB],tags[DT_STRSZ],loads,"DT_STRTAB")
     symbols=[]
-    for index in range(nchain):
+    for index in range(symbol_count):
         name,value,size,info,other,shndx=struct.unpack_from(endian+"IIIBBH",symraw,index*16)
-        if name>=len(strraw): raise ELFAuditError("dynamic symbol name offset exceeds DT_STRSZ")
+        if name>=len(strraw):
+            raise ELFAuditError("dynamic symbol name offset exceeds DT_STRSZ")
         if name:
             end=strraw.find(b"\0",name)
-            if end<0: raise ELFAuditError("unterminated dynamic symbol name")
+            if end<0:
+                raise ELFAuditError("unterminated dynamic symbol name")
             try: symbol_name=strraw[name:end].decode("utf-8")
             except UnicodeDecodeError as exc: raise ELFAuditError("invalid dynamic symbol name encoding") from exc
-        else: symbol_name=""
+        else:
+            symbol_name=""
         symbols.append({"index":index,"name":symbol_name,"value":f"0x{value:x}",
           "size":size,"binding":info>>4,"type":info&15,"visibility":other&3,
           "section_index":shndx,"undefined":shndx==0})
-    return symbols,{"available":True,"symbol_count":nchain,"hash_buckets":nbucket}
+    if gnu_info is not None:
+        bloom=list(gnu_info["bloom_words"])
+        for index,chain_hash in gnu_info["chain_records"].items():
+            if index>=len(symbols):
+                raise ELFAuditError("DT_GNU_HASH chain references a symbol outside bounded DT_SYMTAB")
+            name=symbols[index]["name"]
+            h=_gnu_name_hash(name)
+            if (chain_hash & 0xfffffffe)!=(h & 0xfffffffe):
+                raise ELFAuditError(f"DT_GNU_HASH chain hash disagrees with symbol {index}")
+            word_index=(h//32)&(gnu_info["bloom_size"]-1)
+            bit1=h%32
+            bit2=(h>>gnu_info["bloom_shift"])%32
+            mask=(1<<bit1)|(1<<bit2)
+            if bloom[word_index]&mask!=mask:
+                raise ELFAuditError(f"DT_GNU_HASH bloom filter omits symbol {index}")
+    info={"available":True,"symbol_count":symbol_count,"hash_source":comparison}
+    if sysv_count is not None:
+        info["sysv_symbol_count"]=sysv_count
+    if gnu_info is not None:
+        info["gnu_hash"]={k:v for k,v in gnu_info.items() if k!="chain_records"}
+    return symbols,info
 def _reloc_table(data,address,size,entry_size,kind,loads,endian,label,symbols):
     expected=8 if kind=="REL" else 12
     if entry_size!=expected: raise ELFAuditError(f"{label}: entry size must be {expected}")
