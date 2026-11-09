@@ -44,12 +44,12 @@ class DynamicImportInventoryTests(unittest.TestCase):
         raw=bytearray(data); struct.pack_into("<iI",raw,dynamic["offset"],0x60001234,7)
         report=module.inventory(bytes(raw))
         tag=report["dynamic_sections"][0]["entries"][0]
-        self.assertEqual(tag["tag_name"],"DT_UNKNOWN_1610621492")
+        self.assertEqual(tag["tag_name"],"DT_UNKNOWN_1610617396")
     def test_rejects_invalid_dynamic_symbol_string_table_link(self):
         data=bytearray(make_elf()); elf=module.audit_elf(bytes(data))
         dynsym=next(s for s in elf["sections"] if s["type"]==11)
         shoff=struct.unpack_from("<I",data,32)[0]
-        struct.pack_into("<I",data,shoff+dynsym["index"]*40+24,1)
+        struct.pack_into("<I",data,shoff+dynsym["index"]*40+24,2)
         with self.assertRaises(module.ELFAuditError): module.inventory(bytes(data))
     def test_rejects_dynamic_table_without_dt_null(self):
         data=bytearray(make_elf()); elf=module.audit_elf(bytes(data))
