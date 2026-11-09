@@ -360,3 +360,12 @@ Expanded public AEABI attribute parsing to file, section, and symbol scopes, inc
     python3 tools/guest_arm_elf_evidence.py /path/to/guest.elf --tool auto --json /tmp/guest-evidence.json
 
 See [Stage 119U report](docs/STAGE119U_ARM_ATTRIBUTES_EVIDENCE.md). Review evidence output before sharing because it can contain symbol names and local paths. The tool does not execute the supplied ELF.
+
+
+## Stage 119V — ARM/Thumb instruction inventory
+
+Added an optional Capstone-based instruction inventory for ELF32 EM_ARM executable sections. The mode is explicit (--mode arm or --mode thumb); mixed-mode mapping symbols are not yet interpreted. Reports include raw/decoded byte counts, undecoded ranges, mnemonic counts, capped instruction samples, decoder version, and input SHA-256.
+
+    python3 tools/guest_arm_instruction_inventory.py /path/to/guest.elf --mode thumb --json /tmp/thumb-inventory.json
+
+See docs/STAGE119V_ARM_THUMB_INSTRUCTION_INVENTORY.md. Original game binary remains absent; no game instruction profile is claimed.
