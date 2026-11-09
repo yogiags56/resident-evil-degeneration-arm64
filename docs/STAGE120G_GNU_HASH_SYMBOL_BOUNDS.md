@@ -23,8 +23,8 @@ Support safe dynamic-symbol bounds for ELF32 EM_ARM binaries that provide DT_GNU
 
 ## Validation
 
-GitHub Actions Source checks run 42599248679 passed:
-- 154 Python tests.
+GitHub Actions Source checks run 42599401095 passed:
+- 157 Python tests.
 - GNU-hash-only fixture resolves foo without DT_HASH.
 - Corrupt bloom filter rejected.
 - Corrupt chain hash rejected.
