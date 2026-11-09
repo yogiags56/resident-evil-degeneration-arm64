@@ -513,3 +513,6 @@ The ELF32 ARM audit now expands standard and Android RELR direct/bitmap entries 
 
 
 Stage 120P is complete: ELF32 RELR direct/bitmap decoding now coexists with APS2 and ordinary REL/RELA inventories. Standard and Android RELR aliases, mixed alias tags, malformed inputs, resource limits, and cross-format target collisions are covered. GitHub Actions run 42619189507 passed 272 Python tests and host C/native regressions. See STAGE120P_REPORT.md and STAGE120P_VALIDATION_LOG.txt.
+
+
+Stage 120Q adds an independent GNU readelf differential check for ELF32 SHT_RELR and aligns DT_ANDROID_RELRCOUNT handling with Android Bionic. The count hint is preserved as non-authoritative metadata in both audit outputs. See STAGE120Q_REPORT.md and STAGE120Q_VALIDATION_LOG.txt.
