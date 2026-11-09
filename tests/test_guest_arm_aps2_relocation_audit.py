@@ -76,6 +76,18 @@ class SlebTests(unittest.TestCase):
         for value in (-2147483648, -8193, -65, -64, -1, 0, 63, 64, 8192, 2147483647):
             self.assertEqual(module._sleb128(sleb(value), 0)[0], value)
 
+
+    def test_signed_32_bit_sleb_fifth_byte_boundaries(self):
+        self.assertEqual(module._sleb128(b"\x80\x80\x80\x80\x07", 0)[0], 0x70000000)
+        self.assertEqual(module._sleb128(b"\x80\x80\x80\x80\x78", 0)[0], -0x80000000)
+        for last in (0x08, 0x77):
+            with self.subTest(last=last), self.assertRaises(module.ELFAuditError):
+                module._sleb128(b"\x80\x80\x80\x80" + bytes([last]), 0)
+
+    def test_rejects_fifth_byte_continuation_even_with_valid_payload(self):
+        with self.assertRaises(module.ELFAuditError):
+            module._sleb128(b"\x80\x80\x80\x80\x87", 0)
+
     def test_rejects_truncated_and_overlong_values(self):
         with self.assertRaises(module.ELFAuditError):
             module._sleb128(b"\x80", 0)
@@ -189,6 +201,100 @@ class APS2DecodeTests(unittest.TestCase):
         blob += sleb(4) + sleb((1 << 8) | 22)
         entries = module.decode_aps2(blob, "RELA")
         self.assertEqual([e["addend"] for e in entries], [5, 0])
+
+
+    @staticmethod
+    def _group_blob(kind, flags):
+        out = bytearray(b"APS2")
+        out += sleb(2) + sleb(0x1000)
+        out += sleb(2) + sleb(flags)
+        if flags & module.GROUPED_BY_OFFSET_DELTA:
+            out += sleb(4)
+        if flags & module.GROUPED_BY_INFO:
+            out += sleb((1 << 8) | 22)
+        if kind == "RELA" and flags & module.HAS_ADDEND and flags & module.GROUPED_BY_ADDEND:
+            out += sleb(5)
+        for index in range(2):
+            if not flags & module.GROUPED_BY_OFFSET_DELTA:
+                out += sleb(4 if index == 0 else 8)
+            if not flags & module.GROUPED_BY_INFO:
+                out += sleb(((1 + index) << 8) | (22 + index))
+            if kind == "RELA" and flags & module.HAS_ADDEND and not flags & module.GROUPED_BY_ADDEND:
+                out += sleb(5 if index == 0 else 3)
+        return bytes(out)
+
+    def test_all_legal_rel_group_flag_combinations(self):
+        for flags in (0, 1, 2, 3):
+            with self.subTest(flags=flags):
+                entries = module.decode_aps2(self._group_blob("REL", flags), "REL")
+                self.assertEqual([e["target_address"] for e in entries], ["0x00001004", "0x0000100c"])
+                if flags & module.GROUPED_BY_INFO:
+                    self.assertEqual([(e["symbol_index"], e["type"]) for e in entries], [(1, 22), (1, 22)])
+                else:
+                    self.assertEqual([(e["symbol_index"], e["type"]) for e in entries], [(1, 22), (2, 23)])
+
+    def test_all_legal_rela_group_flag_combinations(self):
+        legal = (0, 1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 15)
+        for flags in legal:
+            with self.subTest(flags=flags):
+                entries = module.decode_aps2(self._group_blob("RELA", flags), "RELA")
+                self.assertEqual(len(entries), 2)
+                if flags & module.HAS_ADDEND:
+                    if flags & module.GROUPED_BY_ADDEND:
+                        self.assertEqual([e["addend"] for e in entries], [5, 5])
+                    else:
+                        self.assertEqual([e["addend"] for e in entries], [5, 8])
+                else:
+                    self.assertEqual([e["addend"] for e in entries], [0, 0])
+
+    def test_rejects_every_illegal_rel_group_flag_combination(self):
+        for flags in (4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15):
+            with self.subTest(flags=flags), self.assertRaises(module.ELFAuditError):
+                module.decode_aps2(self._group_blob("REL", flags), "REL")
+
+    def test_rejects_rela_grouped_addend_without_has_addend(self):
+        for flags in (4, 5, 6, 7):
+            with self.subTest(flags=flags), self.assertRaises(module.ELFAuditError):
+                module.decode_aps2(self._group_blob("RELA", flags), "RELA")
+
+    def test_rela_addend_state_transitions_across_groups(self):
+        blob = b"APS2" + sleb(3) + sleb(0x2000)
+        # First group: per-entry addend deltas +5, then +3.
+        blob += sleb(2) + sleb(8)
+        blob += sleb(4) + sleb((1 << 8) | 22) + sleb(5)
+        blob += sleb(4) + sleb((1 << 8) | 22) + sleb(3)
+        # Second group: HAS_ADDEND absent resets the accumulated addend.
+        blob += sleb(1) + sleb(0)
+        blob += sleb(4) + sleb((1 << 8) | 22)
+        # Third group: grouped delta is applied to the reset value.
+        blob += sleb(1) + sleb(13) + sleb((1 << 8) | 22) + sleb(-2)
+        entries = module.decode_aps2(blob, "RELA")
+        self.assertEqual([e["addend"] for e in entries], [5, 8, 0])
+
+    def test_offset_delta_accumulation_across_groups(self):
+        blob = b"APS2" + sleb(3) + sleb(0x1000)
+        blob += sleb(2) + sleb(3) + sleb(4) + sleb((1 << 8) | 22)
+        blob += sleb(1) + sleb(0) + sleb(8) + sleb((2 << 8) | 23)
+        entries = module.decode_aps2(blob, "REL")
+        self.assertEqual([e["target_address"] for e in entries],
+                         ["0x00001004", "0x00001008", "0x00001010"])
+
+    def test_rejects_group_size_larger_than_remaining_count(self):
+        blob = b"APS2" + sleb(1) + sleb(0) + sleb(2) + sleb(0)
+        with self.assertRaises(module.ELFAuditError):
+            module.decode_aps2(blob, "REL")
+
+    def test_rejects_truncated_group_header_and_each_payload_field(self):
+        cases = (
+            b"APS2" + sleb(1) + sleb(0),
+            b"APS2" + sleb(1) + sleb(0) + sleb(1),
+            b"APS2" + sleb(1) + sleb(0) + sleb(1) + sleb(2),
+            b"APS2" + sleb(1) + sleb(0) + sleb(1) + sleb(1),
+            b"APS2" + sleb(1) + sleb(0) + sleb(1) + sleb(0) + sleb(4),
+        )
+        for blob in cases:
+            with self.subTest(blob=blob), self.assertRaises(module.ELFAuditError):
+                module.decode_aps2(blob, "REL")
 
     def test_signed_sleb_r_info_preserves_elf32_bit_pattern(self):
         blob = b"APS2" + sleb(1) + sleb(0)
