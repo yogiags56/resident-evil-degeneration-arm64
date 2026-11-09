@@ -516,3 +516,6 @@ Stage 120P is complete: ELF32 RELR direct/bitmap decoding now coexists with APS2
 
 
 Stage 120Q adds an independent GNU readelf differential check for ELF32 SHT_RELR and aligns DT_ANDROID_RELRCOUNT handling with Android Bionic. The count hint is preserved as non-authoritative metadata in both audit outputs. See STAGE120Q_REPORT.md and STAGE120Q_VALIDATION_LOG.txt.
+
+
+Stage 120Q is complete. The ELF32 ARM RELR decoder now has an independent GNU readelf differential test, and Android DT_ANDROID_RELRCOUNT behavior matches Bionic's ignored-metadata semantics. CI passed 273 Python tests plus host C/native regressions. See STAGE120Q_REPORT.md and STAGE120Q_VALIDATION_LOG.txt.
