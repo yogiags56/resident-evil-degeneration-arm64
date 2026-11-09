@@ -29,3 +29,14 @@ jobs:
       - name: Run host tests
         run: bash ./tools/run_tests.sh
         
+
+      - name: Report Stage 120O source SHA-256
+        if: always()
+        run: |
+          sha256sum \
+            .github/workflows/ci.yml \
+            README.md ROADMAP.md \
+            STAGE120O_REPORT.md STAGE120O_VALIDATION_LOG.txt \
+            docs/STAGE120O_APS2_CONFORMANCE.md \
+            tools/guest_arm_aps2_relocation_audit.py \
+            tests/test_guest_arm_aps2_relocation_audit.py
