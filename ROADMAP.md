@@ -1,12 +1,17 @@
 # Project Roadmap
 
-## Current milestone: Stage 120I — ELF32 RELR decoding complete
+## Current milestone: Stage 120J — Relocation target range validation
 
-The static ELF investigation pipeline now covers section-backed relocations, PT_DYNAMIC REL/RELA/JMPREL, Android APS2, GNU hash dynamic symbol bounds, ELF symbol version metadata, and ELF32 RELR. Stage 120I adds direct/bitmap RELR decoding and includes relative-only records in the unified relocation reconciliation. The latest verified host suite passed 177 Python tests plus host C/native regressions.
+The unified ELF relocation inventory now maps target addresses against PT_LOAD memory ranges, distinguishing file-backed bytes, BSS/zero-fill, cross-boundary targets, ambiguous overlapping segments, and out-of-range addresses. Known relocation widths are validated; unknown types remain unknown.
 
-## Next milestone: Stage 120J — Relocation target segment and memory-range validation
+## Next milestone: Stage 120K — Relocation semantic coverage and ARM ABI validation
 
-Map each relocation target against PT_LOAD memory ranges, distinguish file-backed bytes from zero-fill/BSS, and report ambiguous or out-of-range targets. Unknown relocation widths must remain unknown; no target memory is read or modified.
+1. Review supported R_ARM relocation type widths and semantics against the ARM ELF ABI.
+2. Expand known relocation coverage only when target width and semantics are documented.
+3. Keep unknown and processor-specific relocation types explicit.
+4. Add cross-check fixtures against independent ELF tooling where available.
+5. Preserve version, symbol namespace, encoding, and PT_LOAD range provenance.
+6. Do not read or patch target bytes or calculate load bias.
 
 ## Remaining major gates
 
