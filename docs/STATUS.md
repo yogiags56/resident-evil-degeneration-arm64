@@ -1,12 +1,12 @@
 # Current Status
 
-**Current source milestone: Stage 118 implementation committed; CI pending.** Stage 117 integrated the partial ARM32/Thumb guest CPU, AAPCS32 dispatcher, runtime coordinator, and ABI support into the Android ARM64 native target. The Android ARM64 workflow passed on commit `b090f90`: SDK/NDK provisioning, ARM64 liblzma compilation, APK assembly, ELF verification, artifact collection, and upload. Source Checks passed on the same commit.
+**Current source milestone: Stage 119M research report committed on branch `stage-119m-armv7-alignment`; host CI not yet run for this branch.** Stage 117 integrated the partial ARM32/Thumb guest CPU, AAPCS32 dispatcher, runtime coordinator, and ABI support into the Android ARM64 native target. A prior Android ARM64 workflow passed on commit `b090f90`; that is not a validation of this Stage 119M branch.
 
-Stage 118 adds guest runtime stop diagnostics: fault PC, ARM/Thumb state, CPU status, import status, and stop reason. Tests cover unresolved imports, import-dispatch failure due to invalid guest stack alignment, and guest instruction fetch outside mapped memory. The Stage 118 report documents the forward roadmap and outstanding research. Its CI validation is pending.
+Stage 118 adds guest runtime stop diagnostics. Stages 119A–119L progressively introduced the guest memory manager, checked multi-region bus, CPU bus adapters, checked instruction fetch, CPU data-memory facade, isolated A32 transfer helper, and transfer fault regressions. Stage 119M records ARMv7-A/R alignment behavior and explicitly preserves strict alignment until memory attributes and guest SCTLR.A state are modeled.
 
-**Still blocked / unverified:** full ARM/Thumb instruction coverage; XE3U loader and relocation engine; guest address-space map; production file-import activation and exact partial-read/error behavior; complete S3E import table; renderer/audio/input; physical-device execution; original game boot/gameplay. The original APK and game executable are not distributed in the repository.
+**Still blocked / unverified:** full ARM/Thumb instruction coverage; XE3U loader and relocation engine; guest address-space map and memory attributes; production file-import activation and exact partial-read/error behavior; complete S3E import table; renderer/audio/input; physical-device execution; original game boot/gameplay. The original APK and game executable are not distributed in the repository.
 
-See [Stage 118 report](STAGE118_RUNTIME_DIAGNOSTICS_AND_ROADMAP.md).
+See [Stage 119M research report](STAGE119M_ARMV7_UNALIGNED_ACCESS_RESEARCH.md) and [Stage 118 report](STAGE118_RUNTIME_DIAGNOSTICS_AND_ROADMAP.md).
 
 
 ## Stage 119 update
@@ -16,44 +16,16 @@ Initial guest memory manager committed. The new region table maps bounded 32-bit
 
 ## Stage 119C update
 
-Stage 119C hardens guest address arithmetic and adds a bounded single-region compatibility view for the legacy CPU memory structure. Tests cover the 4 GiB boundary, SIZE_MAX-sized requests, invalid permissions, region capacity, and adapter permission checks. The adapter is compiled in host tests and Android CMake. **It is not a multi-region memory bus and does not yet connect the region manager to CPU execution.** Full CPU access migration and XE3U loader fixtures remain Stage 119 exit criteria. See [Stage 119C report](STAGE119C_MEMORY_HARDENING.md).
+Stage 119C hardens guest address arithmetic and adds a bounded single-region compatibility view for the legacy CPU memory structure. Tests cover the 4 GiB boundary, SIZE_MAX-sized requests, invalid permissions, region capacity, and adapter permission checks. The adapter is compiled in host tests and Android CMake. It is not a multi-region memory bus and does not yet connect the region manager to CPU execution. See [Stage 119C report](STAGE119C_MEMORY_HARDENING.md).
 
 
-## Stage 119E update
+## Stage 119E–119L updates
 
-Added the checked multi-region guest memory bus in `runtime/guest/re_guest_memory_bus.h/.c`. It exposes separate instruction-fetch (EXEC), data-read (READ), and data-write (WRITE) accessors for 8/16/32-bit little-endian values, delegates complete-range and permission validation to the region manager, clears read outputs on failure, and rejects misaligned 16/32-bit accesses. A synthetic test maps executable code, read-only data, and writable data with unmapped gaps and boundary cases. The bus is compiled into Android CMake and the host test runner. **The CPU interpreter is not yet migrated to this bus**; its legacy contiguous memory interface remains active. See [Stage 119E report](STAGE119E_CHECKED_MEMORY_BUS.md).
-
-
-## Stage 119F update
-
-Added an ABI-preserving CPU-facing adapter over the checked memory bus in `runtime/guest/re_guest_cpu_bus_adapter.h/.c`. The adapter has distinct EXEC fetch, READ data, and WRITE data calls and is covered by a host regression test. It is compiled into Android CMake and registered in the host test runner. This does **not** change the CPU interpreter: `re_guest_cpu_step` still uses the legacy contiguous `REGUESTMEM` path. Stage 119F is therefore an adapter milestone, not completion of CPU memory migration. See [Stage 119F report](STAGE119F_CPU_BUS_ADAPTER.md).
+Stages 119E–119G added the checked multi-region bus, CPU bus adapter, and checked ARM/Thumb instruction fetch. Stages 119H–119I added an opt-in checked CPU step and regression cases. Stage 119J added the CPU-facing data-memory facade; 119K added an isolated A32 immediate LDR/STR and LDRB/STRB helper; 119L added permission and unmapped-access fault regressions. These remain isolated from the production CPU interpreter; legacy contiguous-memory execution is still active. See the individual Stage 119 reports.
 
 
-## Stage 119G update
+## Stage 119M update
 
-Extended the CPU bus adapter with a checked instruction-fetch helper. ARM fetch uses one 32-bit EXEC access; Thumb fetch uses a 16-bit EXEC access and independently checks the second halfword for Thumb-2 32-bit prefixes. Tests cover permission denial including a Thumb-2 instruction split across adjacent regions with different permissions. The helper is registered in the host test runner. The production interpreter is **not yet migrated** and continues to fetch from legacy contiguous memory. See [Stage 119G report](STAGE119G_CHECKED_INSTRUCTION_FETCH.md).
+Added `docs/STAGE119M_ARMV7_UNALIGNED_ACCESS_RESEARCH.md`. The ARMv7-A/R architecture table distinguishes byte, halfword, word, exclusive, doubleword, multiple-register, and coprocessor/vector transfers, and shows that SCTLR.A controls unaligned Normal-memory LDR/STR and halfword operations. Exclusive and several multi-register/doubleword families remain alignment-faulting regardless of SCTLR.A. Device and Strongly-ordered memory restrictions and the lack of single-copy atomicity for unaligned accesses are also recorded.
 
-
-## Stage 119H update
-
-Added opt-in `re_guest_cpu_step_checked`. It fetches ARM/Thumb instructions through the checked EXEC memory bus, validates Thumb-2 second-halfword access, verifies instruction bytes match the legacy contiguous decoder view, then invokes the existing CPU step. Permission and mismatch failures return before CPU state advances. Added and registered `tests/test_re_guest_cpu_checked_step.c`. The legacy CPU entry point and public memory/CPU structure layouts remain unchanged. This is a transitional dual-view gate: instruction/data accesses inside the decoder still use contiguous legacy memory. See [Stage 119H report](STAGE119H_CHECKED_CPU_STEP.md).
-
-
-## Stage 119I update
-
-Expanded `tests/test_re_guest_cpu_checked_step.c` with ARM MOV, Thumb-2 MOVW, IT EQ true/false execution, and Thumb-2 second-halfword EXEC-permission denial. Existing Thumb-1, fetch parity, and permission-denial checks remain. The test remains opt-in and does not switch production runtime to the checked path. See [Stage 119I report](STAGE119I_CHECKED_CPU_REGRESSION.md).
-
-
-## Stage 119J update
-
-Added CPU-facing data-memory facade `re_guest_cpu_memory.h/.c` for checked byte/halfword/word reads and writes through the guest memory bus, with CPU error-status mapping. Added `tests/test_re_guest_cpu_memory.c`, registered it in the host test runner, and added the implementation to Android CMake. This does **not** migrate interpreter load/store opcodes yet; the legacy decoder still uses contiguous memory. Strict bus alignment behavior remains provisional pending ARMv7 alignment research. See [Stage 119J report](STAGE119J_CPU_DATA_MEMORY_FACADE.md).
-
-
-## Stage 119K update
-
-Added an isolated A32 immediate load/store helper (`re_guest_cpu_transfer.h/.c`) using the Stage 119J CPU memory facade. Initial supported forms are AL-condition LDR/STR word and LDRB/STRB, immediate offset, pre-index, no writeback, with PC operands rejected. Added `tests/test_re_guest_cpu_transfer.c`, registered it in `tools/run_tests.sh`, and included the helper in Android CMake. The test now includes seven differential cases against the legacy interpreter. CI caught and helped correct test-fixture issues; the latest differential test run is pending. The helper is not wired into the production CPU interpreter; legacy decoder behavior remains unchanged. See [Stage 119K report](STAGE119K_A32_LOAD_STORE_HELPER.md).
-
-
-## Stage 119L update
-
-Extended `tests/test_re_guest_cpu_transfer.c` with write-permission rejection, unmapped-load destination preservation, and unmapped-store memory-preservation cases. These supplement the seven Stage 119K differential cases. CI is pending for the latest source revision. The helper remains isolated and is not connected to the production CPU interpreter.
+No C implementation or runtime behavior changed. Stage 119J's strict alignment remains the safe default because the current region map does not model memory type and the checked CPU path does not yet model guest SCTLR.A. The next milestone is Stage 119N: add conservative memory attributes and an explicit alignment policy, with tests, before enabling any permissive unaligned access. Stage 119M is a documentation/research completion only; CI validation for its branch is pending.
