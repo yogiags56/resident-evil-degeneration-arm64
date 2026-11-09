@@ -38,6 +38,11 @@ class ArmRelocationAbiTests(unittest.TestCase):
         self.assertEqual(module.get_spec(38)["kind"],"platform_specific")
 
 
+    def test_none_relocation_does_not_impose_symbol_index_policy(self):
+        spec=module.contract_for(0,symbol_index=7)
+        self.assertEqual(spec["symbol_policy"],"may_be_zero")
+        self.assertEqual(spec["contract_issues"],[])
+
     def test_relative_relocation_requires_no_symbol(self):
         spec=module.contract_for(23,symbol_index=1)
         self.assertEqual(spec["symbol_policy"],"must_be_zero_or_absent")
