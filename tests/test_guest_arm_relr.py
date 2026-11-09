@@ -141,11 +141,10 @@ class RELRTagTests(unittest.TestCase):
             module.collect_relr_tables(b"", tags, [], "<", self.mapper)
 
 
-    def test_rejects_android_relr_count_without_relr_table(self):
-        with self.assertRaises(ELFAuditError):
-            module.collect_relr_tables(
-                b"", {module.DT_ANDROID_RELRCOUNT: 2}, [], "<", self.mapper
-            )
+    def test_android_relr_count_without_table_is_preserved_as_metadata(self):
+        tags = {module.DT_ANDROID_RELRCOUNT: 2}
+        self.assertEqual(module.collect_relr_tables(b"", tags, [], "<", self.mapper), [])
+        self.assertEqual(tags[module.DT_ANDROID_RELRCOUNT], 2)
 
     def test_rejects_invalid_entry_size(self):
         tags = {module.DT_RELR: 0x1200, module.DT_RELRSZ: 4, module.DT_RELRENT: 8}
