@@ -177,3 +177,22 @@ Stage 119P+ will migrate narrow instruction families behind checked execution, f
 4. Do not connect the new path to production `re_guest_cpu_step` until differential coverage and exception behavior are adequate.
 
 Later milestones: broader ARM/Thumb migration, guest SCTLR/system-control emulation, XE3U loader/relocations, import table, renderer/audio/input, and device boot/gameplay verification.
+
+## Stage 119P — Isolated A32 scalar transfer integration
+
+- Added opt-in A32 helper for AL-condition immediate pre-index/no-writeback scalar transfers.
+- Supports ordinary LDR/STR word and byte, plus LDRH/STRH/LDRSB/LDRSH.
+- Uses Stage 119O checked scalar memory operations and Stage 119N alignment/memory attributes.
+- Signed loads sign-extend; destination registers are committed only after successful loads.
+- Added regression tests and Android CMake/host runner registration.
+- Not connected to production `re_guest_cpu_step`; current CI pending.
+
+### Next — Stage 119Q: differential and architectural corner-case validation
+
+1. Build broader differential coverage for the supported A32 instruction subset against the legacy interpreter/reference model.
+2. Verify positive/negative offsets, register preservation, signed loads, byte/halfword/word data patterns, and all fault cases.
+3. Add tests for condition-code behavior and reject unsupported encodings before side effects.
+4. Research guest SCTLR reset/write semantics and the exact target architecture profile.
+5. Keep production CPU dispatch unchanged until differential and exception behavior evidence is sufficient.
+
+Later milestones: guest system control/MMU semantics, narrow checked-step integration, broader ARM/Thumb migration, XE3U loader/relocations, import table, renderer/audio/input, and physical-device boot/gameplay validation.
