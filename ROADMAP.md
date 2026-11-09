@@ -1,12 +1,12 @@
 # Project Roadmap
 
-## Current milestone: Stage 108 complete
+## Current milestone: Stage 120I — ELF32 RELR decoding complete
 
-The project now has a standalone offline-testable XZ archive verifier covering checksum, tar paths/links, and version identity; the fetcher delegates to it, and the toolchain doctor checks sdkmanager availability. Android SDK/NDK provisioning and ARM64 liblzma remain pending.
+The static ELF investigation pipeline now covers section-backed relocations, PT_DYNAMIC REL/RELA/JMPREL, Android APS2, GNU hash dynamic symbol bounds, ELF symbol version metadata, and ELF32 RELR. Stage 120I adds direct/bitmap RELR decoding and includes relative-only records in the unified relocation reconciliation. The latest verified host suite passed 177 Python tests plus host C/native regressions.
 
-## Next milestone: Stage 109 — Android SDK/NDK Provisioning + ARM64 liblzma Build
+## Next milestone: Stage 120J — Relocation target segment and memory-range validation
 
-Provision Android SDK/NDK and Gradle wrapper, fetch and verify XZ Utils 5.8.4, build `liblzma.a` for `arm64-v8a` API 23, and verify each archive member as ELF64/AArch64 before attempting the application build.
+Map each relocation target against PT_LOAD memory ranges, distinguish file-backed bytes from zero-fill/BSS, and report ambiguous or out-of-range targets. Unknown relocation widths must remain unknown; no target memory is read or modified.
 
 ## Remaining major gates
 
