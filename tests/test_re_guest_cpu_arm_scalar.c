@@ -50,10 +50,10 @@ int main(void) {
 
  /* Signed byte and signed halfword loads. */
  data[14]=0x80u;
- assert(re_guest_cpu_arm_scalar_transfer(&cpu,&scalar,0xe1d140dau)==RE_CPU_OK);
+ assert(re_guest_cpu_arm_scalar_transfer(&cpu,&scalar,0xe1d140deu)==RE_CPU_OK);
  assert(cpu.r[4]==0xffffff80u);
  data[16]=0x00u;data[17]=0x80u;
- assert(re_guest_cpu_arm_scalar_transfer(&cpu,&scalar,0xe1d150f2u)==RE_CPU_OK);
+ assert(re_guest_cpu_arm_scalar_transfer(&cpu,&scalar,0xe1d151f0u)==RE_CPU_OK);
  assert(cpu.r[5]==0xffff8000u);
 
  /* SCTLR.A clear permits ordinary unaligned Normal-memory scalar transfers. */
