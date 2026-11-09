@@ -43,6 +43,24 @@ def both_hash_fixture():
     struct.pack_into("<II",data,84+16,104,104)
     return bytes(data)
 
+
+def versioned_fixture():
+    data=bytearray(fixture())
+    # Extend PT_DYNAMIC with DT_VERSYM, DT_VERNEED, DT_VERNEEDNUM and DT_NULL.
+    struct.pack_into("<II",data,84+16,120,120)
+    struct.pack_into("<iI",data,0x100+11*8,0x6ffffff0,0x1230)
+    struct.pack_into("<iI",data,0x100+12*8,0x6ffffffe,0x1210)
+    struct.pack_into("<iI",data,0x100+13*8,0x6fffffff,1)
+    struct.pack_into("<iI",data,0x100+14*8,0,0)
+    # Extend DT_STRSZ; offsets: 5 => libfoo.so, 15 => VER_1.
+    struct.pack_into("<I",data,0x100+10*8+4,21)
+    data[0x185:0x195]=b"libfoo.so\0VER_1\0"
+    # Elf32_Verneed at file offset 0x210; one Elf32_Vernaux at 0x220.
+    struct.pack_into("<HHIII",data,0x210,1,1,5,16,0)
+    struct.pack_into("<IHHII",data,0x220,0,0,2,15,0)
+    struct.pack_into("<HH",data,0x230,0,2)
+    return bytes(data)
+
 class DynamicRelocationSegmentTests(unittest.TestCase):
     def test_maps_rel_and_jmprel_through_pt_load_and_resolves_symbol(self):
         report=module.audit(fixture())
@@ -139,6 +157,37 @@ class DynamicRelocationSegmentTests(unittest.TestCase):
         # so use a nonzero value that is lower than symoffset only when symoffset > 1.
         struct.pack_into("<I",data,0x224,2)
         struct.pack_into("<I",data,0x234,1)
+        with self.assertRaises(module.ELFAuditError):
+            module.audit(bytes(data))
+
+
+    def test_resolves_versioned_dynamic_symbol_requirement(self):
+        report=module.audit(versioned_fixture())
+        self.assertTrue(report["symbol_versioning"]["available"])
+        self.assertEqual(report["symbol_versioning"]["versym_entries"],2)
+        self.assertEqual(report["symbol_versioning"]["requirements"][0]["library"],"libfoo.so")
+        symbol=report["relocation_tables"][0]["entries"][0]
+        self.assertEqual(symbol["symbol"],"foo")
+        self.assertEqual(symbol["symbol_version"]["name"],"VER_1")
+        self.assertEqual(symbol["symbol_version"]["kind"],"requirement")
+        self.assertFalse(symbol["symbol_version"]["hidden"])
+
+    def test_rejects_versym_index_without_version_record(self):
+        data=bytearray(versioned_fixture())
+        struct.pack_into("<H",data,0x232,3)
+        with self.assertRaises(module.ELFAuditError):
+            module.audit(bytes(data))
+
+    def test_rejects_malformed_verneed_auxiliary_offset(self):
+        data=bytearray(versioned_fixture())
+        struct.pack_into("<I",data,0x210+8,4)
+        with self.assertRaises(module.ELFAuditError):
+            module.audit(bytes(data))
+
+    def test_rejects_unterminated_version_name(self):
+        data=bytearray(versioned_fixture())
+        data[0x185:0x195]=b"libfoo.so\0VER_1X"
+        struct.pack_into("<I",data,0x224,15)
         with self.assertRaises(module.ELFAuditError):
             module.audit(bytes(data))
 
