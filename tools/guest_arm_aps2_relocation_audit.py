@@ -56,11 +56,10 @@ def decode_aps2(blob: bytes, kind: str, max_relocations: int = MAX_RELOCATIONS) 
         raise ELFAuditError("invalid APS2 magic")
     pos = 4
     count, pos = _sleb128(blob, pos, "relocation count")
-    offset, pos = _sleb128(blob, pos, "initial relocation offset")
+    offset_raw, pos = _sleb128(blob, pos, "initial relocation offset")
+    offset = offset_raw & 0xffffffff
     if count < 0 or count > max_relocations:
         raise ELFAuditError("APS2 relocation count is outside the supported limit")
-    if offset < 0 or offset > 0xffffffff:
-        raise ELFAuditError("APS2 initial relocation offset is outside ELF32 range")
     entries = []
     info = 0
     addend = 0
