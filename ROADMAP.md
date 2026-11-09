@@ -40,7 +40,7 @@ See STAGE120P_REPORT.md and docs/STAGE120P_APS2_RELR_COEXISTENCE.md.
 - Aligned empty-bitmap and zero-sized-table handling.
 - Added standard, Android, and mixed RELR aliases to standalone audit and full reconciliation.
 - Added regression tests for decoder parity and Android-tagged reconciliation.
-- CI validation is pending.
+- GitHub Actions run 42638644884 passed 277 Python tests plus host C/native regressions. See STAGE120Q_VALIDATION_LOG.txt.
 
 See STAGE120Q_REPORT.md and docs/STAGE120Q_RELR_CANONICAL_DECODER.md.
 
