@@ -9,6 +9,20 @@ ARM_WIDTHS=known_widths()
 MAX_TARGETS=4_000_000
 ADDRESS_LIMIT=0x100000000
 
+def resolve_access_width(entry, spec):
+    """Resolve fixed width, or COPY st_size only with a defined namespaced symbol."""
+    if spec is None:
+        return None, "unknown"
+    width=spec["width"]
+    if entry.get("type")==20:
+        size=entry.get("symbol_size")
+        if (isinstance(size,int) and size>0 and entry.get("symbol_defined") is True
+            and isinstance(entry.get("symbol_index"),int) and entry["symbol_index"]>0
+            and entry.get("symbol_namespace") not in (None,"","unknown")):
+            return size, "validated_symbol_st_size"
+        return None, "unresolved_copy_symbol_size"
+    return width, "abi_fixed" if width is not None else "unknown"
+
 def classify_target(target, width, loads, alignment=1):
     if not isinstance(alignment,int) or alignment<=0:
         raise ELFAuditError("relocation target alignment must be positive")
@@ -71,18 +85,7 @@ def audit_target_ranges(reconciliation, program_headers):
             else:
                 typ=entry.get("type")
                 spec=get_spec(typ)
-                width=spec["width"] if spec else None
-                width_source="abi_fixed" if spec and width is not None else "unknown"
-                if typ==20:
-                    sym_size=entry.get("symbol_size")
-                    if (isinstance(sym_size,int) and sym_size>0 and entry.get("symbol_defined") is True
-                        and isinstance(entry.get("symbol_index"),int) and entry["symbol_index"]>0
-                        and entry.get("symbol_namespace") not in (None,"","unknown")):
-                        width=sym_size
-                        width_source="validated_symbol_st_size"
-                    else:
-                        width=None
-                        width_source="unresolved_copy_symbol_size"
+                width,width_source=resolve_access_width(entry,spec)
                 alignment=spec["alignment"] if spec else 1
                 if entry.get("encoding")=="RELR" or table.get("encoding")=="RELR":
                     width=4
