@@ -71,7 +71,6 @@ int main(void) {
         unsigned base_index=128u;
         unsigned address=add?base_index+offset:base_index-offset;
         uint32_t instruction;
-        uint32_t initial[16];
 
         for(unsigned i=0;i<sizeof(actual);i++)
             actual[i]=(uint8_t)rnd();
@@ -79,9 +78,8 @@ int main(void) {
 
         re_guest_cpu_reset(&cpu,0x1000u,0);
         for(unsigned r=0;r<16u;r++)
-            cpu.r[r]=initial[r]=rnd();
+            cpu.r[r]=rnd();
         cpu.r[rn]=0x8000u+base_index;
-        memcpy(initial,cpu.r,sizeof(initial));
         reference=cpu;
 
         if(kind<=3u)
