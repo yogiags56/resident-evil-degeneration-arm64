@@ -155,11 +155,11 @@ class RELRTagTests(unittest.TestCase):
 
     def test_reports_overlapping_targets_across_distinct_formats(self):
         overlaps = module.find_cross_format_overlaps([
-            ("DT_ANDROID_REL", ["0x00001000", "0x00001004"]),
-            ("DT_RELR", ["0x00001004", "0x00001008"]),
+            ("REL", ["0x00001000", "0x00001004"]),
+            ("RELR", ["0x00001004", "0x00001008"]),
         ])
         self.assertEqual(overlaps, [
-            {"target_address": "0x00001004", "formats": ["DT_ANDROID_REL", "DT_RELR"]}
+            {"target_address": "0x00001004", "formats": ["REL", "RELR"]}
         ])
 
     def test_does_not_report_duplicates_within_one_format(self):
