@@ -549,3 +549,8 @@ Added an atomic permission finalization API for exact existing guest mappings. I
 ## Stage 120W — ARM32 relocation application
 
 Added a bounded, preflighted relocation helper for R_ARM_RELATIVE, R_ARM_ABS32, R_ARM_GLOB_DAT, and R_ARM_JUMP_SLOT. It requires caller-provided symbol values, rejects duplicate/unaligned/unmapped targets, and applies no writes until all entries validate. This is not a dynamic linker. See `docs/STAGE120W_RELOCATION_APPLICATION.md`.
+
+
+## Stage 120X — Dynamic symbol resolution
+
+Added a bounded resolver for caller-verified ELF32 provider symbols, with exact names and requested versions, optional explicit unversioned fallback, SONAME constraint, visibility filtering, GLOBAL-over-WEAK selection, ambiguity rejection, and atomic batch results. ELF parsing and dependency loading remain in a separate adapter. See `docs/STAGE120X_SYMBOL_RESOLUTION.md`.

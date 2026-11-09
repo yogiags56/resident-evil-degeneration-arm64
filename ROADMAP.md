@@ -75,6 +75,10 @@ Added an atomic all-or-nothing permission metadata update for exact guest mappin
 
 Added an all-or-nothing relocation subset for R_ARM_RELATIVE, R_ARM_ABS32, R_ARM_GLOB_DAT, and R_ARM_JUMP_SLOT. Symbol values are caller-supplied; no symbol lookup or shared-library loading is performed. CI validation is pending.
 
+## Stage 120X — Dynamic symbol resolution
+
+Added a bounded, version-aware resolver for pre-parsed provider symbols. It filters undefined/local/hidden/internal definitions, prefers a unique GLOBAL definition over WEAK, rejects multiple strong matches, and resolves batches atomically. ELF parsing, GNU version index translation, and dependency loading remain out of scope. CI validation pending.
+
 ## Remaining major gates
 
 1. Build liblzma for Android ARM64 and complete a real Android NDK build.
