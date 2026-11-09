@@ -38,6 +38,23 @@ class ReconciliationTests(unittest.TestCase):
         self.assertEqual(r["tables"][0]["encoding"],"APS2_REL")
         self.assertFalse(r["section_backed_audit"]["available"])
         self.assertIn("no section headers",r["section_backed_audit"]["reason"])
+
+    def test_symbol_versions_participate_in_duplicate_identity(self):
+        old=entry(); old["symbol_version"]={"index":2,"kind":"requirement","name":"VER_1","library":"libfoo.so","hidden":False}
+        new=dict(old); new["symbol_version"]={"index":3,"kind":"requirement","name":"VER_2","library":"libfoo.so","hidden":False}
+        r=module.reconcile_tables([table("DT_REL",0x200,8,[old]),table("DT_JMPREL",0x200,8,[new])])
+        self.assertEqual(r["duplicate_group_count"],0)
+        self.assertEqual(r["namespace_ambiguous_match_count"],0)
+
+    def test_same_version_different_namespaces_remains_candidate_only(self):
+        a=entry(namespace="DT_SYMTAB@0x1000")
+        b=entry(namespace="SHT_SYMTAB:3")
+        version={"index":2,"kind":"requirement","name":"VER_1","library":"libfoo.so","hidden":False}
+        a["symbol_version"]=version; b["symbol_version"]=dict(version)
+        r=module.reconcile_tables([table("DT_REL",0x200,8,[a]),table("SHT_REL:.rel.dyn",0x200,8,[b])])
+        self.assertEqual(r["duplicate_group_count"],0)
+        self.assertEqual(r["namespace_ambiguous_match_count"],1)
+
     def test_rejects_non_elf(self):
         with self.assertRaises(module.ELFAuditError): module.audit(b"not ELF")
 
