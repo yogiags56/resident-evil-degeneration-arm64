@@ -80,7 +80,20 @@ class DynamicRelocationSegmentTests(unittest.TestCase):
         self.assertEqual(entry["type_name"],"R_ARM_JUMP_SLOT")
         self.assertEqual(entry["symbol"],"foo")
         self.assertTrue(entry["symbol_undefined"])
+        self.assertEqual(entry["symbol_size"],0)
+        self.assertFalse(entry["symbol_defined"])
+        self.assertEqual(entry["symbol_section_index"],0)
         self.assertEqual(report["relocation_tables"][0]["file_offset"],0x200)
+    def test_defined_dynamic_symbol_exposes_size_and_section_index(self):
+        data=bytearray(fixture())
+        struct.pack_into("<I",data,0x1e0+8,37)
+        struct.pack_into("<H",data,0x1e0+14,2)
+        report=module.audit(bytes(data))
+        entry=report["relocation_tables"][0]["entries"][0]
+        self.assertEqual(entry["symbol_size"],37)
+        self.assertTrue(entry["symbol_defined"])
+        self.assertEqual(entry["symbol_section_index"],2)
+
     def test_missing_sysv_hash_keeps_symbol_identity_unresolved(self):
         report=module.audit(fixture(include_hash=False))
         self.assertFalse(report["symbol_resolution"]["available"])
