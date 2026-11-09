@@ -445,3 +445,13 @@ Added bounded ELF32 symbol version parsing for DT_VERSYM, DT_VERDEF/DT_VERDEFNUM
     python3 tools/guest_arm_dynamic_relocation_segment_audit.py /path/to/guest.elf --json /tmp/dynamic-relocations.json
 
 See STAGE120H_REPORT.md and docs/STAGE120H_ELF_SYMBOL_VERSIONING.md. GitHub Actions Source checks passed 165 Python tests plus host C/native regressions. This remains metadata analysis only; no provider compatibility or game boot is claimed.
+
+
+## Stage 120I — ELF32 RELR relative relocation decoding
+
+Added a read-only ELF32 EM_ARM decoder for DT_RELR/DT_RELRSZ/DT_RELRENT. It expands direct offsets and bitmap entries with alignment, file-backed table bounds, and 32-bit overflow checks. RELR targets are integrated into relocation reconciliation as relative-only records with no fabricated symbol index or addend.
+
+    python3 tools/guest_arm_relr_audit.py /path/to/guest.elf --json /tmp/relr.json
+    python3 tools/guest_arm_relocation_reconciliation.py /path/to/guest.elf --json /tmp/relocation-reconciliation.json
+
+See STAGE120I_REPORT.md and docs/STAGE120I_ELF32_RELR_DECODING.md. GitHub Actions Source checks passed 177 Python tests plus host C/native regressions. No relocation is applied and no game boot is claimed.
