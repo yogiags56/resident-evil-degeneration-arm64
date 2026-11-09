@@ -55,7 +55,7 @@ int main(void) {
     assert(failed == 1);
 
     segments[0] = (REGUESTELFSEGMENT){0x1000, 0, 8, 16};
-    segments[1] = (REGUESTELFSEGMENT){0x3000, 8, 8, 16};
+    segments[1] = (REGUESTELFSEGMENT){0x4000, 8, 8, 16};
     assert(re_guest_elf_materialize(&memory, elf, sizeof(elf), segments, 2,
         &failed) == RE_GUEST_ELF_MATERIALIZE_E_GUEST_RANGE);
     assert(failed == 1);
