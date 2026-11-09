@@ -66,6 +66,20 @@ class ReconciliationTests(unittest.TestCase):
         self.assertIsNone(relr["entries"][0]["addend"])
         self.assertEqual(relr["entries"][1]["relr_encoding"],"bitmap")
 
+
+    def test_integrates_target_range_report_and_bss_classification(self):
+        data=bytearray(relr_fixture())
+        # PT_LOAD p_memsz extends beyond p_filesz, creating a BSS range.
+        import struct
+        struct.pack_into("<I",data,52+20,0x500)
+        report=module.audit(bytes(data))
+        targets=report["target_range_audit"]["targets"]
+        self.assertEqual(report["target_range_audit"]["target_count"],4)
+        self.assertEqual(targets[0]["status"],"zero_fill_bss")
+        relr=[t for t in report["tables"] if t["encoding"]=="RELR"][0]
+        self.assertEqual(relr["entries"][0]["target_range"]["status"],"zero_fill_bss")
+        self.assertEqual(relr["entries"][0]["target_access_width"],4)
+
     def test_rejects_non_elf(self):
         with self.assertRaises(module.ELFAuditError): module.audit(b"not ELF")
 
