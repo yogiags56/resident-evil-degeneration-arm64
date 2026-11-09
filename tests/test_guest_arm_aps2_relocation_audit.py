@@ -20,12 +20,12 @@ def sleb(value):
     return bytes(out)
 
 
-def packed(kind="REL"):
+def packed(kind="REL", reloc_type=22):
     out = bytearray(b"APS2")
     out += sleb(2) + sleb(0x1300)
     flags = 3 if kind == "REL" else 15
     out += sleb(2) + sleb(flags)
-    out += sleb(4) + sleb((1 << 8) | 22)
+    out += sleb(4) + sleb((1 << 8) | reloc_type)
     if kind == "RELA":
         out += sleb(5)
     return bytes(out)
@@ -43,6 +43,30 @@ def elf_fixture(kind="REL"):
     for i, (tag, value) in enumerate(tags):
         struct.pack_into("<iI", data, 0x100 + i * 8, tag, value)
     blob = packed(kind)
+    data[0x220:0x220 + len(blob)] = blob
+    return bytes(data)
+
+
+def elf_fixture_with_symbols(kind="REL", reloc_type=20, symbol_size=37, section_index=2):
+    data = bytearray(elf_fixture(kind))
+    tags = [
+        (0x6000000f if kind == "REL" else 0x60000011, 0x1220),
+        (0x60000010 if kind == "REL" else 0x60000012, len(packed(kind, reloc_type))),
+        (4, 0x11c0),   # DT_HASH
+        (6, 0x11d0),   # DT_SYMTAB
+        (11, 16),      # DT_SYMENT
+        (5, 0x1180),   # DT_STRTAB
+        (10, 5),       # DT_STRSZ
+        (0, 0),
+    ]
+    struct.pack_into("<IIIIIIII", data, 84, 2, 0x100, 0x1100, 0, len(tags) * 8, len(tags) * 8, 4, 4)
+    for i, (tag, value) in enumerate(tags):
+        struct.pack_into("<iI", data, 0x100 + i * 8, tag, value)
+    data[0x180:0x185] = b"\0foo\0"
+    struct.pack_into("<IIII", data, 0x1c0, 1, 2, 1, 0)
+    struct.pack_into("<IIIBBH", data, 0x1d0, 0, 0, 0, 0, 0, 0)
+    struct.pack_into("<IIIBBH", data, 0x1e0, 1, 0x1300, symbol_size, 0x12, 0, section_index)
+    blob = packed(kind, reloc_type)
     data[0x220:0x220 + len(blob)] = blob
     return bytes(data)
 
@@ -102,6 +126,20 @@ class APS2DecodeTests(unittest.TestCase):
             self.assertEqual(report["relocation_count"], 2)
             self.assertEqual(report["packed_relocation_tables"][0]["kind"], kind)
             self.assertEqual(report["packed_relocation_tables"][0]["file_offset"], 0x220)
+
+    def test_aps2_entries_preserve_symbol_size_and_definition_state(self):
+        report = module.audit(elf_fixture_with_symbols())
+        entry = report["packed_relocation_tables"][0]["entries"][0]
+        self.assertEqual(entry["symbol"], "foo")
+        self.assertEqual(entry["symbol_size"], 37)
+        self.assertTrue(entry["symbol_defined"])
+        self.assertEqual(entry["symbol_section_index"], 2)
+
+    def test_aps2_keeps_copy_size_unresolved_without_bounded_symbol_table(self):
+        report = module.audit(elf_fixture("REL"))
+        entry = report["packed_relocation_tables"][0]["entries"][0]
+        self.assertIsNone(entry["symbol_size"])
+        self.assertIsNone(entry["symbol_defined"])
 
     def test_requires_paired_dynamic_tags(self):
         data = bytearray(elf_fixture())
