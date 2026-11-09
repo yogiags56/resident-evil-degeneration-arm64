@@ -1,0 +1,6 @@
+Stage 120P validation record
+============================
+
+Status: pending final CI run.
+
+The final implementation adds ELF32 RELR decoding and integrates it with standard REL/RELA and Android APS2 reports. The final run ID and test totals will be recorded after GitHub Actions completes.
