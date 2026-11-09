@@ -26,7 +26,7 @@ Cross-validation against the Android Bionic linker source identified incorrect a
 - GROUPED_BY_ADDEND supplies one addend delta applied once per group.
 - HAS_ADDEND without GROUPED_BY_ADDEND supplies an addend delta per relocation.
 - For RELA groups without HAS_ADDEND, the group's addend is zero.
-- SLEB128 signed decoding is converted back to the ELF32 32-bit r_info bit pattern.
+- SLEB128 signed decoding is converted back to the ELF32 32-bit r_info bit pattern. Initial offsets are also interpreted as unsigned ELF32 addresses, including values with the high bit set.
 
 The decoder now follows these rules and rejects invalid REL/RELA flag combinations, malformed streams, overflow, and trailing data.
 
