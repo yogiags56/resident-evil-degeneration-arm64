@@ -36,7 +36,8 @@ class ReconciliationTests(unittest.TestCase):
         r=module.audit(elf_fixture("REL"))
         self.assertEqual(r["reconciliation"]["raw_relocation_count"],2)
         self.assertEqual(r["tables"][0]["encoding"],"APS2_REL")
-        self.assertFalse(r["section_backed_audit"]["available"])\n        self.assertIn("no section headers",r["section_backed_audit"]["reason"])
+        self.assertFalse(r["section_backed_audit"]["available"])
+        self.assertIn("no section headers",r["section_backed_audit"]["reason"])
     def test_rejects_non_elf(self):
         with self.assertRaises(module.ELFAuditError): module.audit(b"not ELF")
 
