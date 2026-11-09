@@ -87,7 +87,7 @@ REGUESTCPUStatus re_guest_cpu_arm_scalar_transfer(
      * bits[27:25]=000, bit[7]=1, bit[4]=1, I=1, P=1, W=0.
      * SH=01: LDRH/STRH; SH=10: LDRSB; SH=11: LDRSH.
      */
-    if ((instruction & 0x0e500090u) != 0x00500090u ||
+    if ((instruction & 0x0e000090u) != 0x00000090u ||
         !(instruction&(1u<<22)) ||
         !(instruction&(1u<<24)) ||
         (instruction&(1u<<21)))
