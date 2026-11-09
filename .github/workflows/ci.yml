@@ -62,6 +62,7 @@ jobs:
             docs/STAGE120Y_SYMBOL_TABLE_INTEGRATION.md \
             tools/guest_arm_dependency_graph.py tests/test_guest_arm_dependency_graph.py \
             docs/STAGE120Z_DEPENDENCY_GRAPH.md STAGE120Z_REPORT.md STAGE120Z_VALIDATION_LOG.txt \
+            STAGE120Y_REPORT.md STAGE120Y_VALIDATION_LOG.txt \
             STAGE120X_REPORT.md STAGE120X_VALIDATION_LOG.txt \
             STAGE120W_REPORT.md STAGE120W_VALIDATION_LOG.txt \
             STAGE120V_REPORT.md STAGE120V_VALIDATION_LOG.txt \
