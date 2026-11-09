@@ -76,7 +76,7 @@ class RELRTagTests(unittest.TestCase):
         tags = {module.DT_RELR: 0x1200, module.DT_RELRSZ: 8, module.DT_RELRENT: 4}
         tables = module.collect_relr_tables(bytes(data), tags, [], "<", self.mapper)
         self.assertEqual(tables[0]["targets"], ["0x00001300", "0x00001304", "0x0000130c"])
-        self.assertEqual(tables[0]["source_tags"], ["DT_RELR"])
+        self.assertEqual(tables[0]["source_tags"], ["DT_RELR", "DT_RELRSZ", "DT_RELRENT"])
 
     def test_android_relr_triplet_maps_and_decodes(self):
         data = bytearray(0x400)
@@ -84,7 +84,7 @@ class RELRTagTests(unittest.TestCase):
         tags = {module.DT_ANDROID_RELR: 0x1200,
                 module.DT_ANDROID_RELRSZ: 4, module.DT_ANDROID_RELRENT: 4}
         tables = module.collect_relr_tables(bytes(data), tags, [], "<", self.mapper)
-        self.assertEqual(tables[0]["source_tags"], ["DT_ANDROID_RELR"])
+        self.assertEqual(tables[0]["source_tags"], ["DT_ANDROID_RELR", "DT_ANDROID_RELRSZ", "DT_ANDROID_RELRENT"])
 
     def test_identical_standard_and_android_triplets_are_reported_once(self):
         data = bytearray(0x400)
@@ -94,7 +94,7 @@ class RELRTagTests(unittest.TestCase):
                 module.DT_ANDROID_RELRSZ: 4, module.DT_ANDROID_RELRENT: 4}
         tables = module.collect_relr_tables(bytes(data), tags, [], "<", self.mapper)
         self.assertEqual(len(tables), 1)
-        self.assertEqual(tables[0]["source_tags"], ["DT_RELR", "DT_ANDROID_RELR"])
+        self.assertEqual(tables[0]["source_tags"], ["DT_RELR", "DT_RELRSZ", "DT_RELRENT", "DT_ANDROID_RELR", "DT_ANDROID_RELRSZ", "DT_ANDROID_RELRENT"])
 
     def test_rejects_conflicting_standard_and_android_triplets(self):
         data = bytearray(0x400)
@@ -104,6 +104,26 @@ class RELRTagTests(unittest.TestCase):
                 module.DT_ANDROID_RELRSZ: 4, module.DT_ANDROID_RELRENT: 4}
         with self.assertRaises(ELFAuditError):
             module.collect_relr_tables(bytes(data), tags, [], "<", self.mapper)
+
+
+    def test_accepts_mixed_standard_and_android_tag_aliases(self):
+        data = bytearray(0x400)
+        data[0x200:0x204] = words([0x1300])
+        tags = {module.DT_RELR: 0x1200, module.DT_ANDROID_RELRSZ: 4,
+                module.DT_RELRENT: 4}
+        tables = module.collect_relr_tables(bytes(data), tags, [], "<", self.mapper)
+        self.assertEqual(tables[0]["targets"], ["0x00001300"])
+        self.assertEqual(tables[0]["source_tags"],
+                         ["DT_RELR", "DT_RELRENT", "DT_ANDROID_RELRSZ"])
+
+    def test_preserves_android_relr_count_hint_without_using_it_as_table_size(self):
+        data = bytearray(0x400)
+        data[0x200:0x204] = words([0x1300])
+        tags = {module.DT_RELR: 0x1200, module.DT_RELRSZ: 4, module.DT_RELRENT: 4,
+                module.DT_ANDROID_RELRCOUNT: 99}
+        tables = module.collect_relr_tables(bytes(data), tags, [], "<", self.mapper)
+        self.assertEqual(tables[0]["relocation_count"], 1)
+        self.assertEqual(tables[0]["android_relr_count_hint"], 99)
 
     def test_rejects_incomplete_standard_tag_triplet(self):
         tags = {module.DT_RELR: 0x1200, module.DT_RELRSZ: 4}
