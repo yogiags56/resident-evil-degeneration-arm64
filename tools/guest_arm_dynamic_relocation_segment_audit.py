@@ -6,6 +6,7 @@ from pathlib import Path
 from guest_arm_elf_audit import ELFAuditError
 from guest_arm_relocation_abi import SPECS
 from guest_arm_pt_dynamic_audit import parse_program_headers, map_vaddr, PT_LOAD, PT_DYNAMIC
+from guest_arm_relr import (collect_relr_tables, DT_ANDROID_RELR, DT_ANDROID_RELRSZ, DT_ANDROID_RELRENT)
 DT_NULL=0; DT_HASH=4; DT_STRTAB=5; DT_SYMTAB=6; DT_RELA=7; DT_RELASZ=8
 DT_RELAENT=9; DT_STRSZ=10; DT_SYMENT=11; DT_REL=17; DT_RELSZ=18
 DT_RELENT=19; DT_PLTREL=20; DT_JMPREL=23; DT_PLTRELSZ=2
@@ -14,7 +15,7 @@ DT_VERSYM=0x6ffffff0; DT_VERDEF=0x6ffffffc; DT_VERDEFNUM=0x6ffffffd
 DT_VERNEED=0x6ffffffe; DT_VERNEEDNUM=0x6fffffff
 TAGS={0:"DT_NULL",2:"DT_PLTRELSZ",4:"DT_HASH",5:"DT_STRTAB",6:"DT_SYMTAB",
 7:"DT_RELA",8:"DT_RELASZ",9:"DT_RELAENT",10:"DT_STRSZ",11:"DT_SYMENT",
-17:"DT_REL",18:"DT_RELSZ",19:"DT_RELENT",20:"DT_PLTREL",23:"DT_JMPREL",35:"DT_RELRSZ",36:"DT_RELR",37:"DT_RELRENT",DT_GNU_HASH:"DT_GNU_HASH",DT_VERSYM:"DT_VERSYM",DT_VERDEF:"DT_VERDEF",DT_VERDEFNUM:"DT_VERDEFNUM",DT_VERNEED:"DT_VERNEED",DT_VERNEEDNUM:"DT_VERNEEDNUM"}
+17:"DT_REL",18:"DT_RELSZ",19:"DT_RELENT",20:"DT_PLTREL",23:"DT_JMPREL",35:"DT_RELRSZ",36:"DT_RELR",37:"DT_RELRENT",DT_ANDROID_RELR:"DT_ANDROID_RELR",DT_ANDROID_RELRSZ:"DT_ANDROID_RELRSZ",DT_ANDROID_RELRENT:"DT_ANDROID_RELRENT",DT_GNU_HASH:"DT_GNU_HASH",DT_VERSYM:"DT_VERSYM",DT_VERDEF:"DT_VERDEF",DT_VERDEFNUM:"DT_VERDEFNUM",DT_VERNEED:"DT_VERNEED",DT_VERNEEDNUM:"DT_VERNEEDNUM"}
 RELOCS={0:"R_ARM_NONE",1:"R_ARM_PC24",2:"R_ARM_ABS32",3:"R_ARM_REL32",
 10:"R_ARM_THM_CALL",21:"R_ARM_GLOB_DAT",22:"R_ARM_JUMP_SLOT",23:"R_ARM_RELATIVE",
 28:"R_ARM_CALL",29:"R_ARM_JUMP24",30:"R_ARM_THM_JUMP24",38:"R_ARM_TARGET1",
@@ -370,6 +371,7 @@ def audit(data):
             max_index=max(max_index,info>>8)
     symbols,symbol_info=_parse_symbols(data,tags,loads,endian,max_index) if raw_specs or DT_VERSYM in tags else (None,{"available":False,"reason":"no dynamic relocation tables or version symbol table"})
     version_info=_parse_symbol_versions(data,tags,loads,endian,symbols,symbol_info)
+    relr_tables=collect_relr_tables(data,tags,loads,endian,_mapped)
     tables=[]
     for label,address,size,ent,kind,_ in raw_specs:
         tables.append({"source_tag":label,**_reloc_table(data,address,size,ent,kind,loads,endian,label,symbols)})
@@ -379,12 +381,15 @@ def audit(data):
       "dynamic_tags":{TAGS.get(k,f"DT_UNKNOWN_{k}"):v for k,v in tags.items()},
       "symbol_resolution":symbol_info,"symbol_versioning":version_info,"relocation_tables":tables,
       "relocation_count":sum(x["entry_count"] for x in tables),
+      "relr_tables":relr_tables,
+      "relr_relocation_count":sum(x["relocation_count"] for x in relr_tables),
       "evidence_limits":["Only ELF32 EM_ARM dynamic REL/RELA tables described by PT_DYNAMIC are supported.",
       "Symbol names require bounded SysV DT_HASH or DT_GNU_HASH metadata and safe DT_SYMTAB/DT_STRTAB ranges.",
       "Symbol versions are decoded only from bounded DT_VERSYM/DT_VERDEF/DT_VERNEED metadata; no provider compatibility is inferred.",
       "DT_JMPREL is reported separately and may overlap another declared range; this stage does not apply or deduplicate relocations.",
       "Relocation target addresses are reported, not dereferenced or modified.",
-      "No relocation is applied, no runtime address is calculated, and no library provider is inferred."]}
+      "No relocation is applied, no runtime address is calculated, and no library provider is inferred.",
+      "RELR direct and bitmap entries are expanded as target addresses only; target contents are never dereferenced or modified."]}
 def main():
     p=argparse.ArgumentParser(description=__doc__); p.add_argument("input",type=Path); p.add_argument("--json",type=Path); a=p.parse_args()
     try:
