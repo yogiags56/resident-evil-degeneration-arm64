@@ -183,8 +183,8 @@ def audit(data: bytes) -> dict:
                 entry["symbol_defined"] = None
                 entry["symbol_section_index"] = None
                 entry["symbol_version"] = None
-    overlap_groups = [(table["source_tag"], [entry["target_address"] for entry in table["entries"]]) for table in decoded]
-    overlap_groups += [(table["source_tag"], table["targets"]) for table in relr_tables]
+    overlap_groups = [(f"APS2_{table['kind']}", [entry["target_address"] for entry in table["entries"]]) for table in decoded]
+    overlap_groups += [("RELR", table["targets"]) for table in relr_tables]
     cross_format_overlaps = find_cross_format_overlaps(overlap_groups)
     return {
         "source_size": len(data), "sha256": hashlib.sha256(data).hexdigest(),
