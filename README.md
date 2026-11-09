@@ -369,3 +369,8 @@ Added an optional Capstone-based instruction inventory for ELF32 EM_ARM executab
     python3 tools/guest_arm_instruction_inventory.py /path/to/guest.elf --mode thumb --json /tmp/thumb-inventory.json
 
 See docs/STAGE119V_ARM_THUMB_INSTRUCTION_INVENTORY.md. Original game binary remains absent; no game instruction profile is claimed.
+
+
+## Stage 119W — ARM mapping symbols
+
+Instruction inventory now reads ELF32 local mapping symbols ($a/$t/$d) and splits executable sections into ARM, Thumb, data, and unknown ranges. Unknown prefixes are not guessed. Sections without mapping symbols require an explicit fallback mode. See docs/STAGE119W_ARM_MAPPING_SYMBOLS.md.
