@@ -22,15 +22,15 @@ def fixture(endian="<",include_hash=True):
     return bytes(data)
 
 
-def gnu_fixture():
-    data=bytearray(fixture())
+def gnu_fixture(endian="<"):
+    data=bytearray(fixture(endian=endian))
     # Replace DT_HASH with DT_GNU_HASH; keep all other dynamic metadata intact.
-    struct.pack_into("<iI",data,0x100+6*8,0x6ffffef5,0x1220)
+    struct.pack_into(endian+"iI",data,0x100+6*8,0x6ffffef5,0x1220)
     h=5381
     for byte in b"foo":
         h=((h<<5)+h+byte)&0xffffffff
     bloom=(1<<(h%32))|(1<<((h>>5)%32))
-    struct.pack_into("<IIIIIII",data,0x220,1,1,1,5,bloom,1,h|1)
+    struct.pack_into(endian+"IIIIIII",data,0x220,1,1,1,5,bloom,1,h|1)
     return bytes(data)
 
 
@@ -116,6 +116,29 @@ class DynamicRelocationSegmentTests(unittest.TestCase):
     def test_rejects_gnu_symbol_bound_larger_than_sysv_nchain(self):
         data=bytearray(both_hash_fixture())
         struct.pack_into("<I",data,0x1c4,1)
+        with self.assertRaises(module.ELFAuditError):
+            module.audit(bytes(data))
+
+
+    def test_gnu_hash_only_supports_big_endian_elf(self):
+        report=module.audit(gnu_fixture(">"))
+        self.assertEqual(report["endianness"],"big")
+        self.assertEqual(report["relocation_tables"][0]["entries"][0]["symbol"],"foo")
+
+    def test_rejects_unterminated_gnu_hash_chain(self):
+        data=bytearray(gnu_fixture())
+        struct.pack_into("<I",data,0x238,0x12345678)
+        struct.pack_into("<I",data,0x23c,0x12345678)
+        with self.assertRaises(module.ELFAuditError):
+            module.audit(bytes(data))
+
+    def test_rejects_gnu_hash_bucket_before_symoffset(self):
+        data=bytearray(gnu_fixture())
+        struct.pack_into("<I",data,0x234,0)
+        # A nonzero bucket below symoffset is invalid; zero is the empty-bucket marker,
+        # so use a nonzero value that is lower than symoffset only when symoffset > 1.
+        struct.pack_into("<I",data,0x224,2)
+        struct.pack_into("<I",data,0x234,1)
         with self.assertRaises(module.ELFAuditError):
             module.audit(bytes(data))
 
