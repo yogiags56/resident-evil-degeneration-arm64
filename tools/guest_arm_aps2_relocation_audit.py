@@ -87,7 +87,7 @@ def decode_aps2(blob: bytes, kind: str, max_relocations: int = MAX_RELOCATIONS) 
             grouped_info, pos = _sleb128(blob, pos, "grouped relocation info")
         if has_addend and flags & GROUPED_BY_ADDEND:
             grouped_addend, pos = _sleb128(blob, pos, "grouped addend delta")
-        for _ in range(group_size):
+        for group_index in range(group_size):
             if grouped_delta is None:
                 delta, pos = _sleb128(blob, pos, "relocation offset delta")
             else:
@@ -101,7 +101,7 @@ def decode_aps2(blob: bytes, kind: str, max_relocations: int = MAX_RELOCATIONS) 
                 info_delta, pos = _sleb128(blob, pos, "relocation info delta")
                 # APS2 stores r_info deltas, not absolute r_info values.
                 info += info_delta
-            elif _ == 0:
+            elif group_index == 0:
                 # GROUPED_BY_INFO supplies one r_info delta for the entire
                 # group. Apply it once, then reuse the resulting r_info.
                 info += grouped_info
