@@ -499,3 +499,6 @@ See STAGE120M_REPORT.md, STAGE120M_VALIDATION_LOG.txt, and docs/STAGE120M_INDEPE
 APS2 entries now preserve bounded symbol size, definition state, section index, and version metadata. Unified reconciliation marks the DT_SYMTAB namespace unresolved unless symbol-table bounds are proven. R_ARM_COPY width can be resolved for APS2 only with a nonzero defined symbol, positive st_size, and proven namespace.
 
 Cross-checking against Android Bionic also corrected APS2 decoding: r_info is absolute (not cumulative), grouped info is reused across the group, grouped addend delta is applied once, per-entry addend deltas accumulate, and RELA groups without HAS_ADDEND reset the addend to zero. See STAGE120N_REPORT.md and docs/STAGE120N_PACKED_DYNAMIC_SYMBOL_PARITY.md.
+
+
+Stage 120N is complete. GitHub Actions run 42614083636 passed 229 Python tests and host C/native regressions. APS2 now preserves bounded symbol metadata and follows Android Bionic's absolute r_info and grouped-addend semantics. See STAGE120N_REPORT.md and STAGE120N_VALIDATION_LOG.txt.
