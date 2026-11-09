@@ -37,6 +37,35 @@ class ArmRelocationAbiTests(unittest.TestCase):
     def test_platform_specific_target1_is_not_claimed_universal(self):
         self.assertEqual(module.get_spec(38)["kind"],"platform_specific")
 
+
+    def test_relative_relocation_requires_no_symbol(self):
+        spec=module.contract_for(23,symbol_index=1)
+        self.assertEqual(spec["symbol_policy"],"must_be_zero_or_absent")
+        self.assertIn("unexpected_symbol_index_for_symbol_free_relocation",spec["contract_issues"])
+
+    def test_jump_slot_requires_nonzero_symbol(self):
+        spec=module.contract_for(22,symbol_index=0)
+        self.assertIn("required_symbol_index_is_zero",spec["contract_issues"])
+
+    def test_tls_dtpmod_allows_null_symbol(self):
+        spec=module.contract_for(17,symbol_index=0)
+        self.assertEqual(spec["symbol_policy"],"may_be_zero")
+        self.assertEqual(spec["contract_issues"],[])
+
+    def test_copy_requires_symbol_and_variable_size(self):
+        spec=module.contract_for(20,symbol_index=0)
+        self.assertIn("required_symbol_index_is_zero",spec["contract_issues"])
+        self.assertEqual(module.get_spec(20)["width_source"],"symbol_st_size")
+
+    def test_et_rel_section_domain_is_valid(self):
+        spec=module.contract_for(2,symbol_index=1,target_domain="section:4")
+        self.assertEqual(spec["contract_issues"],[])
+
+    def test_unknown_type_contract_is_not_guessed(self):
+        spec=module.contract_for(250,symbol_index=1)
+        self.assertFalse(spec["known"])
+        self.assertEqual(spec["symbol_policy"],"unknown")
+
     def test_registry_entries_have_required_metadata(self):
         for code,spec in module.SPECS.items():
             self.assertIn("name",spec)
