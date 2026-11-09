@@ -524,3 +524,8 @@ Stage 120Q is complete. The ELF32 ARM RELR decoder now has an independent GNU re
 ## Stage 120R — PT_DYNAMIC RELR differential validation
 
 Added an ELF32 EM_ARM fixture exposing one RELR stream through PT_DYNAMIC/PT_LOAD and a matching SHT_RELR section. The dynamic decoder is checked against GNU `readelf -rW`, and unified reconciliation verifies that RELR entries remain relative-only with no fabricated symbol index or addend. See `STAGE120R_REPORT.md` and `docs/STAGE120R_DYNAMIC_RELR_DIFFERENTIAL.md`.
+
+
+## Stage 120S — ELF32 ARM PT_LOAD load-plan preparation
+
+Added a read-only PT_LOAD layout planner that reports file-backed, memory, BSS zero-fill, and page-rounded ranges, detects page overlaps and combined W+X permissions, and preserves ET_DYN load-bias selection as a later runtime decision. No memory is allocated or modified. See `STAGE120S_REPORT.md` and `docs/STAGE120S_PT_LOAD_LOAD_PLAN.md`.
