@@ -29,7 +29,7 @@ class DynamicRelocationSegmentTests(unittest.TestCase):
         self.assertEqual(entry["type_name"],"R_ARM_JUMP_SLOT")
         self.assertEqual(entry["symbol"],"foo")
         self.assertTrue(entry["symbol_undefined"])
-        self.assertEqual(entry["file_offset"],0x200)
+        self.assertEqual(report["relocation_tables"][0]["file_offset"],0x200)
     def test_missing_sysv_hash_keeps_symbol_identity_unresolved(self):
         report=module.audit(fixture(include_hash=False))
         self.assertFalse(report["symbol_resolution"]["available"])
