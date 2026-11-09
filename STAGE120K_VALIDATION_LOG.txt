@@ -1,0 +1,25 @@
+Stage 120K validation record
+============================
+
+GitHub Actions workflow: Source checks
+Run ID: 42602775178
+Validated commit: 0e47c78724e38f789dd8d827d521f18c001cac89
+Result: success
+
+Observed:
+- python3 -m unittest discover -s tests -v
+- 199 Python tests passed (4.916 seconds)
+- ABI metadata tests cover ABS8, ABS16, ABS32, Thumb16, Thumb32, COPY, NONE, TARGET1, and unknown types.
+- Target alignment metadata tests passed, including Thumb32 2-byte alignment and ARM 4-byte alignment mismatch.
+- Unified relocation report exposes ABI registry size and known/unknown per-type counts.
+- bash ./tools/compile_host_mock.sh completed successfully.
+- Native host C regression executables completed successfully.
+
+Normative reference:
+https://github.com/ARM-software/abi-aa/blob/main/aaelf32/aaelf32.rst
+
+Not tested:
+- Android ARM64 NDK build or APK installation in this run.
+- Physical-device execution.
+- Original game boot or gameplay.
+- Proprietary original ELF/APK analysis.
