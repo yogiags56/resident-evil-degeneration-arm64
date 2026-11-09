@@ -464,3 +464,12 @@ Unified relocation reconciliation now annotates each target against ELF32 PT_LOA
     python3 tools/guest_arm_relocation_reconciliation.py /path/to/guest.elf --json /tmp/relocation-reconciliation.json
 
 See STAGE120J_REPORT.md and docs/STAGE120J_RELOCATION_TARGET_RANGE_AUDIT.md. GitHub Actions Source checks passed 188 Python tests plus host C/native regressions. The audit does not read or modify target bytes, calculate load bias, apply relocations, or claim game boot.
+
+
+## Stage 120K — ARM ELF32 relocation semantics and ABI metadata
+
+Added an explicit AAELF32-backed registry of 60 ARM relocation codes, recording target storage width, place alignment, relocation class, and semantic summary. Corrects target-width handling for ABS8 (1 byte), ABS16 (2 bytes), ABS32 (4 bytes), Thumb16 (2 bytes), Thumb32 (4 bytes), variable-size COPY (symbol st_size), and NONE (zero target access). Unknown relocation codes remain unknown. The registry is integrated with target-range checks, dynamic relocation naming, and unified ABI coverage counts.
+
+    python3 tools/guest_arm_relocation_reconciliation.py /path/to/guest.elf --json /tmp/relocation-reconciliation.json
+
+See STAGE120K_REPORT.md and docs/STAGE120K_ARM_RELOCATION_ABI.md. GitHub Actions run 42602775178 passed 199 Python tests plus host C/native regressions. This remains static metadata analysis; no relocation is applied and no game boot is claimed.
