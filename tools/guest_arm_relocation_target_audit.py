@@ -12,12 +12,12 @@ MAX_TARGETS=4_000_000
 ADDRESS_LIMIT=0x100000000
 
 def classify_target(target, width, loads):
-    if not isinstance(target,int) or target<0 or target>=ADDRESS_LIMIT:
-        return {"status":"invalid_target_address","matches":[]}
-    if width is not None and (not isinstance(width,int) or width<=0):
-        raise ELFAuditError("relocation target width must be positive or unknown")
+    if width is not None and (not isinstance(width,int) or width<0):
+        raise ELFAuditError("relocation target width must be nonnegative or unknown")
     if width==0:
         return {"status":"no_target_access","matches":[]}
+    if not isinstance(target,int) or target<0 or target>=ADDRESS_LIMIT:
+        return {"status":"invalid_target_address","matches":[]}
     end=target+(width or 0)
     if end>ADDRESS_LIMIT:
         return {"status":"target_range_overflows_elf32","matches":[]}
