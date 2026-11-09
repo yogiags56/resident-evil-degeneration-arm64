@@ -44,9 +44,19 @@ static void differential_case(uint32_t instruction, uint32_t base,
     legacy_cpu.r[1] = helper_cpu.r[1] = base;
     legacy_cpu.r[rd] = helper_cpu.r[rd] = source;
 
-    assert(re_guest_cpu_step(&legacy_cpu, &legacy_memory) == RE_CPU_OK);
-    assert(re_guest_cpu_arm_transfer_imm(
-        &helper_cpu, &memory, instruction) == RE_CPU_OK);
+    REGUESTCPUStatus legacy_status = re_guest_cpu_step(&legacy_cpu, &legacy_memory);
+    if (legacy_status != RE_CPU_OK) {
+        fprintf(stderr, "legacy decoder failed instruction=0x%08x status=%d\\n",
+            instruction, (int)legacy_status);
+    }
+    assert(legacy_status == RE_CPU_OK);
+    REGUESTCPUStatus helper_status = re_guest_cpu_arm_transfer_imm(
+        &helper_cpu, &memory, instruction);
+    if (helper_status != RE_CPU_OK) {
+        fprintf(stderr, "helper failed instruction=0x%08x status=%d\\n",
+            instruction, (int)helper_status);
+    }
+    assert(helper_status == RE_CPU_OK);
 
     assert(legacy_cpu.r[rd] == helper_cpu.r[rd]);
     assert(memcmp(legacy_data + 0x7000, bus_data, sizeof(bus_data)) == 0);
