@@ -539,3 +539,8 @@ Added a rollback-safe multi-region mapping API. Failed requests remove only mapp
 ## Stage 120U — ELF segment materialization
 
 Added a preflighted segment materializer that copies file-backed bytes and zero-fills BSS tails in already-mapped writable guest regions. Every segment is validated before any destination bytes are changed. No mapping, allocation, relocation, or guest execution is performed. See `docs/STAGE120U_ELF_MATERIALIZATION.md`.
+
+
+## Stage 120V — Guest permission finalization
+
+Added an atomic permission finalization API for exact existing guest mappings. It rejects W+X and validates every request before changing any guest permission metadata. It does not alter host page protections. See `docs/STAGE120V_PERMISSION_FINALIZATION.md`.
