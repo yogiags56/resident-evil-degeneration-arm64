@@ -422,11 +422,23 @@ Later milestones: guest system control/MMU semantics, narrow checked-step integr
 - Added synthetic tests for REL/RELA, grouped/ungrouped records, malformed streams, overflow, and mapping bounds.
 - Does not apply relocations, dereference targets, infer providers, or decode RELR.
 
-### Next — Stage 120F: APS2 and ordinary relocation reconciliation
+## Stage 120F — Dynamic relocation reconciliation
 
-1. Normalize section-backed REL/RELA, segment-backed REL/RELA/JMPREL, and APS2 records.
-2. Detect exact duplicate ranges and partial overlaps without silently double-counting.
-3. Compare normalized tuples (target, type, symbol index, addend) across representations.
-4. Preserve source provenance and report discrepancies.
-5. Add fixtures for exact duplicates, partial overlaps, and distinct tables.
-6. Keep relocation application and runtime loader behavior disabled.
+- Unified section-backed REL/RELA, PT_DYNAMIC REL/RELA/JMPREL, and Android APS2 REL/RELA inventories.
+- Normalizes target domain/address, relocation type, symbol index, addend, source table, and symbol namespace.
+- Reports exact duplicates only within the same symbol-table namespace.
+- Reports cross-namespace tuple matches as candidates, not proven duplicates.
+- Reports exact and partial file-range overlaps independently from semantic matches.
+- Preserves all source records and raw counts; never silently deduplicates.
+- Supports stripped ELF through the section-header-independent PT_DYNAMIC/PT_LOAD path.
+- GitHub Actions Source checks passed: 147 Python tests plus host C/native regression tests (run 42598567251).
+
+### Next — Stage 120G: Dynamic symbol namespace and GNU hash bounds
+
+1. Parse DT_GNU_HASH header, bloom filter, buckets, and chain termination with strict bounds.
+2. Derive safe dynamic symbol count without assuming SysV DT_HASH exists.
+3. Cross-check SysV DT_HASH nchain and GNU-hash-derived bounds when both are present.
+4. Resolve symbols only when hash metadata safely bounds complete symbol/string ranges.
+5. Preserve unavailable/ambiguous symbol status; do not guess.
+6. Add malformed chain, bucket, bloom, overflow, and big-endian fixtures.
+7. Keep RELR and relocation application out of scope.
