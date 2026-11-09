@@ -167,10 +167,16 @@ def audit(data: bytes) -> dict:
                 sym = symbol_table[idx]
                 entry["symbol"] = sym["name"]
                 entry["symbol_undefined"] = sym["undefined"]
+                entry["symbol_size"] = sym["size"]
+                entry["symbol_defined"] = sym["section_index"] != 0
+                entry["symbol_section_index"] = sym["section_index"]
                 entry["symbol_version"] = sym.get("version")
             else:
                 entry["symbol"] = None
                 entry["symbol_undefined"] = None
+                entry["symbol_size"] = None
+                entry["symbol_defined"] = None
+                entry["symbol_section_index"] = None
                 entry["symbol_version"] = None
     return {
         "source_size": len(data), "sha256": hashlib.sha256(data).hexdigest(),
@@ -185,7 +191,7 @@ def audit(data: bytes) -> dict:
         "evidence_limits": [
             "Only ELF32 EM_ARM Android APS2 REL/RELA streams described by PT_DYNAMIC are supported.",
             "Packed relocation targets are reported but never dereferenced, patched, or applied.",
-            "Symbol names are resolved only when a bounded SysV DT_HASH/DT_SYMTAB/DT_STRTAB set is available.",
+            "Symbol names, sizes, and definition state are resolved only when bounded hash and dynamic symbol/string-table metadata establish the dynamic symbol table.",
             "Symbol versions are decoded only from bounded DT_VERSYM/DT_VERDEF/DT_VERNEED metadata; provider compatibility is not inferred.",
             "RELR, runtime load-bias calculation, and provider inference are not implemented.",
         ],
