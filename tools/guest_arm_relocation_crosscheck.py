@@ -15,8 +15,9 @@ def _cross_check_reports(elf,reloc_report,ranges_by_index,sha):
         target_idx=reloc_section["target_section_index"]; target=section_by_index[target_idx]
         for entry in reloc_section["entries"]:
             off=entry["target_section_offset"]; kind="non_executable"
-            for span in ranges_by_index.get(target_idx,[]):
-                if span["start"]<=off<span["end"]: kind=span["kind"]; break
+            if target["flags"]&SHF_EXECINSTR:
+                for span in ranges_by_index.get(target_idx,[]):
+                    if span["start"]<=off<span["end"]: kind=span["kind"]; break
             category={"a":"arm_code","t":"thumb_code","d":"data","unknown":"unknown"}.get(kind,"non_executable")
             counts[category]+=1; is_call_jump=entry["type"] in CALL_JUMP_TYPES
             if is_call_jump:
