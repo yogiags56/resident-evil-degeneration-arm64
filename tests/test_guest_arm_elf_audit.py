@@ -12,7 +12,7 @@ def make_elf32(attributes=None,endian="<"):
     names=b"\0.shstrtab\0.ARM.attributes\0"; attr=b""
     if attributes is not None:
         body=b"".join(uleb(k)+(v.encode()+b"\0" if isinstance(v,str) else uleb(v)) for k,v in attributes.items())
-        payload=uleb(1)+struct.pack(endian+"I",4+len(body))+body; vendor=b"aeabi\0"
+        payload=uleb(1)+struct.pack(endian+"I",5+len(body))+body; vendor=b"aeabi\0"
         attr=b"A"+struct.pack(endian+"I",4+len(vendor)+len(payload))+vendor+payload
     ident=b"\x7fELF"+bytes([1,1 if endian=="<" else 2,1])+bytes(9)
     eh,sh=52,40; shoff=eh; noff=shoff+3*sh; aoff=noff+len(names)

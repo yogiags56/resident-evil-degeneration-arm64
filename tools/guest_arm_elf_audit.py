@@ -49,10 +49,11 @@ def parse_arm_attributes(blob,endian):
         end=start+length
         vendor,pos=cstring(blob,pos+4,end,"vendor"); vendors.append(vendor)
         while pos<end:
+            subsection_start=pos
             tag,pos=uleb(blob,pos,end)
             if tag!=1: raise ELFAuditError(f"unsupported ARM attribute subsection tag {tag}")
             flen,=unpack(endian+"I",blob,pos,"file attribute length")
-            fend=pos+flen
+            fend=subsection_start+flen
             if flen<5 or fend>end: raise ELFAuditError("invalid ARM file attribute length")
             pos+=4
             while pos<fend:
