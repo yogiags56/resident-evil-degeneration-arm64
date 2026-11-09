@@ -9,9 +9,11 @@ DT_NULL=0; DT_HASH=4; DT_STRTAB=5; DT_SYMTAB=6; DT_RELA=7; DT_RELASZ=8
 DT_RELAENT=9; DT_STRSZ=10; DT_SYMENT=11; DT_REL=17; DT_RELSZ=18
 DT_RELENT=19; DT_PLTREL=20; DT_JMPREL=23; DT_PLTRELSZ=2
 DT_GNU_HASH=0x6ffffef5
+DT_VERSYM=0x6ffffff0; DT_VERDEF=0x6ffffffc; DT_VERDEFNUM=0x6ffffffd
+DT_VERNEED=0x6ffffffe; DT_VERNEEDNUM=0x6fffffff
 TAGS={0:"DT_NULL",2:"DT_PLTRELSZ",4:"DT_HASH",5:"DT_STRTAB",6:"DT_SYMTAB",
 7:"DT_RELA",8:"DT_RELASZ",9:"DT_RELAENT",10:"DT_STRSZ",11:"DT_SYMENT",
-17:"DT_REL",18:"DT_RELSZ",19:"DT_RELENT",20:"DT_PLTREL",23:"DT_JMPREL",DT_GNU_HASH:"DT_GNU_HASH"}
+17:"DT_REL",18:"DT_RELSZ",19:"DT_RELENT",20:"DT_PLTREL",23:"DT_JMPREL",DT_GNU_HASH:"DT_GNU_HASH",DT_VERSYM:"DT_VERSYM",DT_VERDEF:"DT_VERDEF",DT_VERDEFNUM:"DT_VERDEFNUM",DT_VERNEED:"DT_VERNEED",DT_VERNEEDNUM:"DT_VERNEEDNUM"}
 RELOCS={0:"R_ARM_NONE",1:"R_ARM_PC24",2:"R_ARM_ABS32",3:"R_ARM_REL32",
 10:"R_ARM_THM_CALL",21:"R_ARM_GLOB_DAT",22:"R_ARM_JUMP_SLOT",23:"R_ARM_RELATIVE",
 28:"R_ARM_CALL",29:"R_ARM_JUMP24",30:"R_ARM_THM_JUMP24",38:"R_ARM_TARGET1",
@@ -190,6 +192,128 @@ def _parse_symbols(data,tags,loads,endian,max_index):
     if gnu_info is not None:
         info["gnu_hash"]={k:v for k,v in gnu_info.items() if k!="chain_records"}
     return symbols,info
+
+MAX_VERSION_RECORDS=65535
+def _version_string(strraw,offset,label):
+    if offset>=len(strraw):
+        raise ELFAuditError(f"{label}: string offset exceeds DT_STRSZ")
+    end=strraw.find(b"\0",offset)
+    if end<0:
+        raise ELFAuditError(f"{label}: unterminated version string")
+    try:
+        return strraw[offset:end].decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise ELFAuditError(f"{label}: invalid version string encoding") from exc
+
+def _version_next(address,delta,minimum,label):
+    if delta<minimum or delta%4:
+        raise ELFAuditError(f"{label}: invalid next/auxiliary offset")
+    result=address+delta
+    if result>0xffffffff:
+        raise ELFAuditError(f"{label}: virtual address overflow")
+    return result
+
+def _parse_symbol_versions(data,tags,loads,endian,symbols,symbol_info):
+    pairs=((DT_VERDEF,DT_VERDEFNUM,"DT_VERDEF"),(DT_VERNEED,DT_VERNEEDNUM,"DT_VERNEED"))
+    for address_tag,count_tag,label in pairs:
+        if (address_tag in tags)!=(count_tag in tags):
+            raise ELFAuditError(f"{label} and its count tag must appear together")
+        if count_tag in tags and (tags[count_tag]==0 or tags[count_tag]>MAX_VERSION_RECORDS):
+            raise ELFAuditError(f"{label} count is empty or exceeds safety limit")
+    version_records={}
+    definitions=[]
+    if DT_VERDEF in tags:
+        address=tags[DT_VERDEF]
+        for record_index in range(tags[DT_VERDEFNUM]):
+            _,raw=_mapped(data,address,20,loads,"Elf32_Verdef")
+            version,flags,index,count,name_hash,aux_delta,next_delta=struct.unpack(endian+"HHHHIII",raw)
+            if version!=1 or count==0 or count>MAX_VERSION_RECORDS:
+                raise ELFAuditError("invalid Elf32_Verdef version or auxiliary count")
+            if index<2 or index&0x8000:
+                raise ELFAuditError("invalid reserved Elf32_Verdef version index")
+            aux_address=_version_next(address,aux_delta,20,"Elf32_Verdef auxiliary")
+            names=[]
+            for aux_index in range(count):
+                _,aux=_mapped(data,aux_address,8,loads,"Elf32_Verdaux")
+                name_offset,aux_next=struct.unpack(endian+"II",aux)
+                if DT_STRTAB not in tags or DT_STRSZ not in tags:
+                    raise ELFAuditError("version records require DT_STRTAB and DT_STRSZ")
+                _,strraw=_mapped(data,tags[DT_STRTAB],tags[DT_STRSZ],loads,"DT_STRTAB")
+                names.append(_version_string(strraw,name_offset,"Elf32_Verdaux"))
+                if aux_index+1<count:
+                    aux_address=_version_next(aux_address,aux_next,8,"Elf32_Verdaux")
+                elif aux_next!=0:
+                    raise ELFAuditError("final Elf32_Verdaux has nonzero next offset")
+            if index in version_records:
+                raise ELFAuditError("duplicate ELF symbol version index")
+            record={"index":index,"kind":"definition","name":names[0],"parent_names":names[1:],
+              "flags":flags,"hash":f"0x{name_hash:08x}"}
+            version_records[index]=record; definitions.append(record)
+            if record_index+1<tags[DT_VERDEFNUM]:
+                address=_version_next(address,next_delta,20,"Elf32_Verdef")
+            elif next_delta!=0:
+                raise ELFAuditError("final Elf32_Verdef has nonzero next offset")
+    requirements=[]
+    if DT_VERNEED in tags:
+        address=tags[DT_VERNEED]
+        for record_index in range(tags[DT_VERNEEDNUM]):
+            _,raw=_mapped(data,address,16,loads,"Elf32_Verneed")
+            version,count,file_offset,aux_delta,next_delta=struct.unpack(endian+"HHIII",raw)
+            if version!=1 or count==0 or count>MAX_VERSION_RECORDS:
+                raise ELFAuditError("invalid Elf32_Verneed version or auxiliary count")
+            if DT_STRTAB not in tags or DT_STRSZ not in tags:
+                raise ELFAuditError("version records require DT_STRTAB and DT_STRSZ")
+            _,strraw=_mapped(data,tags[DT_STRTAB],tags[DT_STRSZ],loads,"DT_STRTAB")
+            library=_version_string(strraw,file_offset,"Elf32_Verneed file")
+            aux_address=_version_next(address,aux_delta,16,"Elf32_Verneed auxiliary")
+            auxiliaries=[]
+            for aux_index in range(count):
+                _,aux=_mapped(data,aux_address,16,loads,"Elf32_Vernaux")
+                name_hash,flags,other,name_offset,aux_next=struct.unpack(endian+"IHHII",aux)
+                index=other&0x7fff
+                if index<2:
+                    raise ELFAuditError("invalid reserved Elf32_Vernaux version index")
+                name=_version_string(strraw,name_offset,"Elf32_Vernaux")
+                if index in version_records:
+                    raise ELFAuditError("duplicate ELF symbol version index")
+                record={"index":index,"kind":"requirement","name":name,"library":library,
+                  "flags":flags,"hash":f"0x{name_hash:08x}"}
+                version_records[index]=record; auxiliaries.append(record)
+                if aux_index+1<count:
+                    aux_address=_version_next(aux_address,aux_next,16,"Elf32_Vernaux")
+                elif aux_next!=0:
+                    raise ELFAuditError("final Elf32_Vernaux has nonzero next offset")
+            requirements.append({"library":library,"versions":auxiliaries})
+            if record_index+1<tags[DT_VERNEEDNUM]:
+                address=_version_next(address,next_delta,16,"Elf32_Verneed")
+            elif next_delta!=0:
+                raise ELFAuditError("final Elf32_Verneed has nonzero next offset")
+    if DT_VERSYM in tags:
+        if symbols is None or not symbol_info.get("available"):
+            raise ELFAuditError("DT_VERSYM cannot be bounded without a resolved dynamic symbol count")
+        _,raw=_mapped(data,tags[DT_VERSYM],len(symbols)*2,loads,"DT_VERSYM")
+        for index,symbol in enumerate(symbols):
+            raw_value=struct.unpack_from(endian+"H",raw,index*2)[0]
+            version_index=raw_value&0x7fff
+            hidden=bool(raw_value&0x8000)
+            if version_index==0:
+                version={"index":0,"kind":"local","name":None}
+            elif version_index==1:
+                version={"index":1,"kind":"global","name":None}
+            else:
+                if version_index not in version_records:
+                    raise ELFAuditError(f"DT_VERSYM index {version_index} has no DT_VERDEF/DT_VERNEED record")
+                version=dict(version_records[version_index])
+            version["hidden"]=hidden
+            symbol["version"]=version
+    elif symbols is not None:
+        for symbol in symbols:
+            symbol["version"]=None
+    return {"available":bool(DT_VERSYM in tags or definitions or requirements),
+      "versym_entries":len(symbols) if DT_VERSYM in tags and symbols is not None else 0,
+      "definitions":definitions,"requirements":requirements,
+      "version_index_count":len(version_records)}
+
 def _reloc_table(data,address,size,entry_size,kind,loads,endian,label,symbols):
     expected=8 if kind=="REL" else 12
     if entry_size!=expected: raise ELFAuditError(f"{label}: entry size must be {expected}")
@@ -208,7 +332,7 @@ def _reloc_table(data,address,size,entry_size,kind,loads,endian,label,symbols):
             symbol={"index":sym_index,"name":sym["name"],"undefined":sym["undefined"]}
         else: symbol={"index":sym_index,"name":None,"undefined":None}
         entries.append({"index":index,"target_address":f"0x{target:08x}",
-          "symbol_index":sym_index,"symbol":symbol["name"],"symbol_undefined":symbol["undefined"],
+          "symbol_index":sym_index,"symbol":symbol["name"],"symbol_undefined":symbol["undefined"],"symbol_version":symbol.get("version"),
           "type":typ,"type_name":RELOCS.get(typ,f"R_ARM_UNKNOWN_{typ}"),"addend":addend})
     return {"kind":kind,"virtual_address":f"0x{address:08x}","file_offset":off,
       "size":size,"entry_size":entry_size,"entry_count":len(entries),"entries":entries}
@@ -242,6 +366,7 @@ def audit(data):
             info=struct.unpack_from(endian+"I",raw,pos+4)[0]
             max_index=max(max_index,info>>8)
     symbols,symbol_info=_parse_symbols(data,tags,loads,endian,max_index) if raw_specs else (None,{"available":False,"reason":"no dynamic relocation tables"})
+    version_info=_parse_symbol_versions(data,tags,loads,endian,symbols,symbol_info)
     tables=[]
     for label,address,size,ent,kind,_ in raw_specs:
         tables.append({"source_tag":label,**_reloc_table(data,address,size,ent,kind,loads,endian,label,symbols)})
@@ -249,10 +374,11 @@ def audit(data):
       "elf_class":32,"machine":"ARM","endianness":ph["endianness"],
       "section_headers_present":ph["section_headers_present"],"dynamic_entries":entries,
       "dynamic_tags":{TAGS.get(k,f"DT_UNKNOWN_{k}"):v for k,v in tags.items()},
-      "symbol_resolution":symbol_info,"relocation_tables":tables,
+      "symbol_resolution":symbol_info,"symbol_versioning":version_info,"relocation_tables":tables,
       "relocation_count":sum(x["entry_count"] for x in tables),
       "evidence_limits":["Only ELF32 EM_ARM dynamic REL/RELA tables described by PT_DYNAMIC are supported.",
-      "Symbol names are correlated only when a valid SysV DT_HASH table bounds DT_SYMTAB; GNU hash-only files remain unresolved.",
+      "Symbol names require bounded SysV DT_HASH or DT_GNU_HASH metadata and safe DT_SYMTAB/DT_STRTAB ranges.",
+      "Symbol versions are decoded only from bounded DT_VERSYM/DT_VERDEF/DT_VERNEED metadata; no provider compatibility is inferred.",
       "DT_JMPREL is reported separately and may overlap another declared range; this stage does not apply or deduplicate relocations.",
       "Relocation target addresses are reported, not dereferenced or modified.",
       "No relocation is applied, no runtime address is calculated, and no library provider is inferred."]}
