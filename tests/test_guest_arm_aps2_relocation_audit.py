@@ -173,6 +173,14 @@ class APS2DecodeTests(unittest.TestCase):
         self.assertEqual(report["relr_tables"][0]["targets"],
                          ["0x00001300", "0x00001304", "0x0000130c"])
 
+
+    def test_reports_overlap_between_aps2_and_relr_targets(self):
+        report = module.audit(elf_fixture_with_relr("REL"))
+        self.assertEqual(report["cross_format_target_overlaps"], [
+            {"target_address": "0x00001304",
+             "formats": ["DT_ANDROID_REL", "DT_RELR"]}
+        ])
+
     def test_reports_relr_coexisting_with_aps2_rela(self):
         report = module.audit(elf_fixture_with_relr("RELA"))
         self.assertEqual(report["relocation_count"], 2)
