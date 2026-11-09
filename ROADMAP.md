@@ -33,13 +33,15 @@ GitHub Actions run 42619189507 passed 272 Python tests and host C/native regress
 
 See STAGE120P_REPORT.md and docs/STAGE120P_APS2_RELR_COEXISTENCE.md.
 
-## Next milestone: Stage 120Q — Independent RELR differential validation and relocation-source reconciliation
+## Current milestone: Stage 120Q — RELR differential validation and Bionic metadata parity
 
-1. Compare RELR expansion against independent toolchain/Bionic-produced vectors.
-2. Validate DT_ANDROID_RELRCOUNT and mixed alias behavior across Bionic/API revisions.
-3. Reconcile standard REL, PLT, APS2, and RELR target sets with provenance.
-4. Preserve collision evidence and do not silently discard duplicate target reports.
-5. Keep all audits read-only; no relocation application or runtime load-bias calculation.
+- Corrected DT_ANDROID_RELRCOUNT behavior to match Bionic: ignored metadata, not a required RELR tag.
+- Exposed the count hint at the top level of both dynamic and APS2 audit reports.
+- Added a generated ELF32 ARM DYN fixture containing SHT_RELR.
+- Added GNU readelf -rW differential comparison for decoded relocation target addresses.
+- Added assertions that both audit pipelines preserve the non-authoritative count hint.
+
+See STAGE120Q_REPORT.md and docs/STAGE120Q_RELR_DIFFERENTIAL_VALIDATION.md.
 
 ## Remaining major gates
 
