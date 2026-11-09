@@ -116,5 +116,15 @@ class APS2DecodeTests(unittest.TestCase):
             module.audit(bytes(data))
 
 
+    def test_decodes_ungrouped_cumulative_info_deltas(self):
+        blob = bytearray(b"APS2")
+        blob += sleb(2) + sleb(0x2000)
+        blob += sleb(2) + sleb(0)  # two records, no grouped fields
+        blob += sleb(4) + sleb((1 << 8) | 22)
+        blob += sleb(4) + sleb(1)  # second r_info is previous + one
+        entries = module.decode_aps2(bytes(blob), "REL")
+        self.assertEqual([e["symbol_index"] for e in entries], [1, 2])
+        self.assertEqual([e["type"] for e in entries], [22, 23])
+
 if __name__ == "__main__":
     unittest.main()
