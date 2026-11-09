@@ -1,0 +1,13 @@
+Stage 120Y validation record
+============================
+
+Status: PENDING
+Branch: stage-120y-elf-symbol-table-integration
+
+Required checks:
+- Full Python unittest discovery.
+- Host mock compilation.
+- Native C regression suite.
+- Stage 120Y source SHA-256 provenance.
+
+No test pass is claimed until GitHub Actions reports success.

@@ -554,3 +554,8 @@ Added a bounded, preflighted relocation helper for R_ARM_RELATIVE, R_ARM_ABS32, 
 ## Stage 120X — Dynamic symbol resolution
 
 Added a bounded resolver for caller-verified ELF32 provider symbols, with exact names and requested versions, optional explicit unversioned fallback, SONAME constraint, visibility filtering, GLOBAL-over-WEAK selection, ambiguity rejection, and atomic batch results. ELF parsing and dependency loading remain in a separate adapter. See `docs/STAGE120X_SYMBOL_RESOLUTION.md`.
+
+
+## Stage 120Y — ELF dynamic symbol table integration
+
+The PT_DYNAMIC audit now exposes the bounded dynamic symbol inventory and ordered DT_NEEDED library names. `tools/guest_arm_symbol_adapter.py` separates eligible defined provider symbols from undefined GLOBAL/WEAK requests and preserves version/SONAME requirements. This is an inventory adapter only; it does not load dependencies, infer lookup scope, or apply relocations. See `docs/STAGE120Y_SYMBOL_TABLE_INTEGRATION.md`.
