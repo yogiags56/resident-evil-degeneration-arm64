@@ -1,6 +1,6 @@
 # Stage 120O Report — APS2 Conformance and Malformed-Input Hardening
 
-Status: implementation committed; CI validation pending.
+Status: implementation complete; GitHub Actions Source checks passed.
 
 ## Delivered
 
@@ -19,3 +19,8 @@ https://android.googlesource.com/platform/bionic/+/ac62e8285630592b1bf060711fa13
 ## Safety
 
 No relocation is applied, no target bytes are dereferenced or changed, and no provider is inferred.
+
+
+## Validation
+
+GitHub Actions run 42615891583 passed 244 Python tests in 7.173 seconds, together with host C mock compilation and native C regression checks. Full details: STAGE120O_VALIDATION_LOG.txt.
