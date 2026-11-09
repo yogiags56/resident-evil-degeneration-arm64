@@ -473,3 +473,10 @@ Added an explicit AAELF32-backed registry of 60 ARM relocation codes, recording 
     python3 tools/guest_arm_relocation_reconciliation.py /path/to/guest.elf --json /tmp/relocation-reconciliation.json
 
 See STAGE120K_REPORT.md and docs/STAGE120K_ARM_RELOCATION_ABI.md. GitHub Actions run 42602775178 passed 199 Python tests plus host C/native regressions. This remains static metadata analysis; no relocation is applied and no game boot is claimed.
+
+
+## Stage 120L — Relocation symbol and target contract cross-validation
+
+The AAELF32 registry now also annotates conservative symbol-index policy, processing applicability, and target policy. It flags nonzero symbol indices on R_ARM_RELATIVE, requires symbols for COPY/GLOB_DAT/JUMP_SLOT/DTPOFF32, preserves nullable TLS DTPMOD32/TPOFF32 cases, leaves R_ARM_NONE's symbol index unconstrained, and accepts ET_REL section-relative target domains. Unified output includes per-entry abi_contract and aggregate contract issue counts.
+
+See STAGE120L_REPORT.md and docs/STAGE120L_RELOCATION_CONTRACTS.md. This remains read-only metadata validation; no symbol provider is resolved and no relocation is applied.
