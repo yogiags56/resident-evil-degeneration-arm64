@@ -109,3 +109,30 @@ The connected GitHub app currently exposes repository search and Git data operat
 ## Stage 115 — Private publication and first CI dispatch
 
 The publication helper now enforces private visibility (no public override), pushes the source on `main`, and dispatches `.github/workflows/android-arm64.yml` after successful publication. If dispatch fails, the repository remains published and the script prints a safe retry command. Workflow artifact naming and Android versionName advance to Stage 115. This session still cannot create the remote repository directly: the available GitHub connection exposes no repository-create action, and no authenticated `gh` CLI exists in this runtime. No remote run or Android APK is claimed.
+
+
+
+## Stage 119M — ARMv7 unaligned access research (complete: documentation only)
+
+- Audited the Stage 119J bus and Stage 119K/L A32 transfer helper against the ARMv7-A/R Architecture Reference Manual.
+- Recorded instruction-specific behavior controlled by SCTLR.A, including families that always require alignment.
+- Recorded Normal versus Device/Strongly-ordered memory restrictions, PC-load restrictions, and non-atomic / multi-access fault caveats.
+- Kept runtime strict alignment unchanged; memory type and guest SCTLR.A are not modeled yet.
+- Added `docs/STAGE119M_ARMV7_UNALIGNED_ACCESS_RESEARCH.md`.
+- No implementation or test behavior changed. CI for the research branch is pending.
+
+### Next — Stage 119N: guest memory attributes + alignment policy
+
+1. Extend guest mapped regions with explicit memory type attributes (Normal, Device, Strongly-ordered or a deliberately conservative Unknown).
+2. Preserve existing mapping call behavior with a safe default; do not silently classify unknown regions as Normal.
+3. Add explicit CPU alignment policy representing guest SCTLR.A, defaulting to strict until guest system-control state is evidenced.
+4. Test all supported scalar transfer combinations, including cross-region / mixed-attribute rejection and permission faults.
+5. Keep production interpreter migration disabled until the policy layer and differential tests pass.
+
+### Later milestones
+
+- Stage 119O: implement instruction-specific ARMv7 scalar transfer semantics through the policy layer.
+- Stage 119P+: migrate narrowly scoped A32/Thumb instruction families behind opt-in checked execution and differential regression coverage.
+- Then: XE3U loader/relocations, complete guest address-space mapping, import-table activation, renderer/audio/input lifecycle, and real-device boot/gameplay validation.
+
+**Important:** a green host test suite or Android ARM64 APK build does not mean the original game is playable. Physical-device boot and gameplay remain separate acceptance gates.
