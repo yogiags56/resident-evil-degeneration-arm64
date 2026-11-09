@@ -491,4 +491,4 @@ Added `tools/guest_arm_relocation_independent_crosscheck.py` to compare section-
 
 The relocation inventory now carries bounded symbol `st_size` and definition provenance from SHT_SYMTAB and PT_DYNAMIC symbol tables. R_ARM_COPY target width is resolved only for a nonzero symbol index, a defined symbol, positive `st_size`, and an explicit symbol-table namespace. Otherwise its width remains unknown. APS2 symbol-size provenance remains unresolved.
 
-See STAGE120M_REPORT.md and docs/STAGE120M_INDEPENDENT_ELF_CROSSCHECK.md. No relocation is applied and no game boot is claimed.
+See STAGE120M_REPORT.md, STAGE120M_VALIDATION_LOG.txt, and docs/STAGE120M_INDEPENDENT_ELF_CROSSCHECK.md. GitHub Actions run 42605382359 passed 218 Python tests, including real readelf invocation when available, plus host C/native regressions. No relocation is applied and no game boot is claimed.
