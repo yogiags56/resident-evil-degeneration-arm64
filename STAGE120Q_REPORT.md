@@ -1,6 +1,6 @@
 # Stage 120Q Report — RELR Differential Validation
 
-Status: implementation committed; final CI validation pending.
+Status: complete; GitHub Actions passed 273 Python tests, including the GNU readelf differential fixture, plus host C/native regressions.
 
 ## Changes
 
@@ -16,3 +16,8 @@ See STAGE120Q_VALIDATION_LOG.txt after the CI run completes.
 ## Safety and project scope
 
 No relocation is applied and no target contents are read or written. No runtime load-bias calculation, Android device execution, or game boot is claimed.
+
+
+## Validation evidence
+
+GitHub Actions run 42640031158 completed successfully. All 273 Python tests passed in 5.135 seconds. The generated ELF32 ARM SHT_RELR fixture produced the same four expanded target addresses in the project decoder and GNU readelf -rW. Host C mock compilation and native C regression checks also passed. See STAGE120Q_VALIDATION_LOG.txt.
