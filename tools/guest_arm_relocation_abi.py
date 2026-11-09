@@ -78,7 +78,7 @@ def contract_for(relocation_type, symbol_index=None, target_domain="virtual", en
     if spec is None:
         return {"known":False,"symbol_policy":"unknown","applicability":"unknown",
                 "target_policy":"unknown","contract_issues":[]}
-    no_symbol={0,23}
+    no_symbol={23}
     mandatory_symbol={18,20,21,22}
     if relocation_type in no_symbol:
         symbol_policy="must_be_zero_or_absent"
