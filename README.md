@@ -379,3 +379,8 @@ Instruction inventory now reads ELF32 local mapping symbols ($a/$t/$d) and split
 ## Stage 119X — ARM relocation audit
 
 Added a read-only ELF32 EM_ARM REL/RELA relocation auditor. It validates relocation table links, target section bounds, symbol indices, and reports known relocation names while preserving unknown types numerically. No relocation is applied. See docs/STAGE119X_ARM_RELOCATION_AUDIT.md.
+
+
+## Stage 119Y — Relocation/mapping cross-check
+
+Added a report correlating ELF32 ARM relocation sites with local ARM/Thumb/data mapping-symbol ranges. CALL/JUMP relocations outside mapped ARM/Thumb code are flagged; undefined symbols remain external/undefined rather than guessed as Marmalade imports. No relocations are applied. See docs/STAGE119Y_RELOCATION_MAPPING_CROSSCHECK.md.

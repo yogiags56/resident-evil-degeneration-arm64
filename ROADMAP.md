@@ -321,3 +321,20 @@ Later milestones: guest system control/MMU semantics, narrow checked-step integr
 2. Flag relocations landing in data or unknown ranges.
 3. Annotate only symbol-backed call/jump relocations; do not resolve final addresses without link context.
 4. Add ET_EXEC/ET_DYN virtual-address fixtures and malformed table cases.
+
+
+## Stage 119Y — Relocation/mapping cross-check
+
+- Correlate relocation target offsets with ARM, Thumb, data, unknown, and non-executable ranges.
+- Flag CALL/JUMP relocations outside mapped ARM/Thumb code.
+- Distinguish undefined/external symbols, absolute symbols, and ordinary defined-section symbols.
+- Do not infer final branch targets, PLT/GOT resolution, or Marmalade import identity.
+- Add deterministic synthetic cross-check tests.
+
+### Next — Stage 119Z: Function-symbol and relocation target inventory
+
+1. Parse STT_FUNC and mapping-symbol ranges together.
+2. Identify function symbols whose ranges overlap data or unmapped bytes.
+3. Annotate call/jump relocation symbol references and report unresolved/undefined symbols.
+4. Add ET_EXEC/ET_DYN target-address validation and malformed ELF tests.
+5. Preserve symbol provenance; do not infer absent names.
