@@ -1,0 +1,13 @@
+Stage 120S validation record
+============================
+
+Status: PENDING
+Branch: stage-120s-elf32-load-plan
+
+Required checks:
+- Full Python unittest discovery.
+- Host C mock compilation.
+- Native C regression checks.
+- Stage 120S PT_LOAD load-plan tests.
+
+No test pass is claimed until GitHub Actions reports success.
