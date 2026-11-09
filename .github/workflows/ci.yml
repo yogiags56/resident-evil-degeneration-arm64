@@ -50,6 +50,9 @@ jobs:
             tools/guest_arm_relocation_reconciliation.py tools/guest_arm_relr.py \
             runtime/guest/re_guest_map_transaction.h runtime/guest/re_guest_map_transaction.c \
             tests/test_re_guest_map_transaction.c docs/STAGE120T_GUEST_MAP_TRANSACTION.md \
+            runtime/guest/re_guest_elf_materialize.h runtime/guest/re_guest_elf_materialize.c \
+            tests/test_re_guest_elf_materialize.c docs/STAGE120U_ELF_MATERIALIZATION.md \
+            STAGE120U_REPORT.md STAGE120U_VALIDATION_LOG.txt \
             STAGE120T_REPORT.md STAGE120T_VALIDATION_LOG.txt \
             tools/guest_arm_load_plan.py \
             tests/test_guest_arm_load_plan.py \
