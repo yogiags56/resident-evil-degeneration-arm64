@@ -6,7 +6,7 @@ from pathlib import Path
 from guest_arm_elf_audit import ELFAuditError
 from guest_arm_relocation_abi import SPECS
 from guest_arm_pt_dynamic_audit import parse_program_headers, map_vaddr, PT_LOAD, PT_DYNAMIC
-from guest_arm_relr import (collect_relr_tables, DT_ANDROID_RELR, DT_ANDROID_RELRSZ, DT_ANDROID_RELRENT)
+from guest_arm_relr import (collect_relr_tables, find_cross_format_overlaps, DT_ANDROID_RELR, DT_ANDROID_RELRSZ, DT_ANDROID_RELRENT)
 DT_NULL=0; DT_HASH=4; DT_STRTAB=5; DT_SYMTAB=6; DT_RELA=7; DT_RELASZ=8
 DT_RELAENT=9; DT_STRSZ=10; DT_SYMENT=11; DT_REL=17; DT_RELSZ=18
 DT_RELENT=19; DT_PLTREL=20; DT_JMPREL=23; DT_PLTRELSZ=2
@@ -375,6 +375,9 @@ def audit(data):
     tables=[]
     for label,address,size,ent,kind,_ in raw_specs:
         tables.append({"source_tag":label,**_reloc_table(data,address,size,ent,kind,loads,endian,label,symbols)})
+    overlap_groups = [(table["source_tag"], [entry["target_address"] for entry in table["entries"]]) for table in tables]
+    overlap_groups += [(table["source_tag"], table["targets"]) for table in relr_tables]
+    cross_format_overlaps = find_cross_format_overlaps(overlap_groups)
     return {"source_size":len(data),"sha256":hashlib.sha256(data).hexdigest(),
       "elf_class":32,"machine":"ARM","endianness":ph["endianness"],
       "section_headers_present":ph["section_headers_present"],"dynamic_entries":entries,
@@ -382,7 +385,7 @@ def audit(data):
       "symbol_resolution":symbol_info,"symbol_versioning":version_info,"relocation_tables":tables,
       "relocation_count":sum(x["entry_count"] for x in tables),
       "relr_tables":relr_tables,
-      "relr_relocation_count":sum(x["relocation_count"] for x in relr_tables),
+      "relr_relocation_count":sum(x["relocation_count"] for x in relr_tables),\n      "cross_format_target_overlaps":cross_format_overlaps,
       "evidence_limits":["Only ELF32 EM_ARM dynamic REL/RELA tables described by PT_DYNAMIC are supported.",
       "Symbol names require bounded SysV DT_HASH or DT_GNU_HASH metadata and safe DT_SYMTAB/DT_STRTAB ranges.",
       "Symbol versions are decoded only from bounded DT_VERSYM/DT_VERDEF/DT_VERNEED metadata; no provider compatibility is inferred.",
