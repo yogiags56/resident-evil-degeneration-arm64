@@ -2,6 +2,8 @@
 
 ## Current milestone: Stage 120N — Packed and dynamic relocation metadata parity
 
+GitHub Actions run 42614083636 passed 229 Python tests plus host C/native regressions. See STAGE120N_VALIDATION_LOG.txt.
+
 - Carry bounded symbol size, definition state, section index, and symbol version into APS2 entries.
 - Mark DT_SYMTAB namespace unresolved unless dynamic symbol bounds are proven.
 - Apply R_ARM_COPY st_size only with complete symbol provenance.
