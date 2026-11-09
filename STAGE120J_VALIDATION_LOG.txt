@@ -1,0 +1,23 @@
+Stage 120J validation record
+============================
+
+GitHub Actions workflow: Source checks
+Run ID: 42601441300
+Validated commit: ae24991410ef7984003f90e75bfe239c2b248701
+Result: success
+
+Observed:
+- python3 -m unittest discover -s tests -v
+- 187 Python tests passed (6.762 seconds)
+- File-backed, BSS, file-to-BSS crossing, segment-end crossing, and out-of-range classification passed.
+- Overlapping PT_LOAD ambiguity and unknown relocation width handling passed.
+- ELF32 range overflow and R_ARM_NONE no-access checks passed.
+- Unified RELR target range and BSS integration passed.
+- bash ./tools/compile_host_mock.sh completed successfully.
+- Native host C regression executables completed successfully.
+
+Not tested:
+- Android ARM64 NDK build or APK installation in this run.
+- Physical-device execution.
+- Original game boot or gameplay.
+- Proprietary original ELF/APK analysis.
