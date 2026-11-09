@@ -279,6 +279,33 @@ class APS2DecodeTests(unittest.TestCase):
         self.assertEqual([e["target_address"] for e in entries],
                          ["0x00001004", "0x00001008", "0x00001010"])
 
+
+    def test_zero_relocation_stream_is_valid_and_empty(self):
+        self.assertEqual(module.decode_aps2(b"APS2" + sleb(0) + sleb(0), "REL"), [])
+
+    def test_rejects_negative_count_and_count_above_configured_limit(self):
+        with self.assertRaises(module.ELFAuditError):
+            module.decode_aps2(b"APS2" + sleb(-1) + sleb(0), "REL")
+        with self.assertRaises(module.ELFAuditError):
+            module.decode_aps2(b"APS2" + sleb(3) + sleb(0), "REL", max_relocations=2)
+
+    def test_rejects_group_size_above_safety_limit_before_payload_read(self):
+        blob = b"APS2" + sleb(1) + sleb(0) + sleb(module.MAX_GROUP_SIZE + 1) + sleb(0)
+        with self.assertRaises(module.ELFAuditError):
+            module.decode_aps2(blob, "REL")
+
+    def test_every_truncated_prefix_of_valid_aps2_stream_is_rejected(self):
+        blob = self._group_blob("RELA", 15)
+        for end in range(4, len(blob)):
+            with self.subTest(end=end), self.assertRaises(module.ELFAuditError):
+                module.decode_aps2(blob[:end], "RELA")
+
+    def test_rejects_negative_and_unknown_group_flags(self):
+        for flags in (-1, 16, 0x7fffffff):
+            blob = b"APS2" + sleb(1) + sleb(0) + sleb(1) + sleb(flags)
+            with self.subTest(flags=flags), self.assertRaises(module.ELFAuditError):
+                module.decode_aps2(blob, "REL")
+
     def test_rejects_group_size_larger_than_remaining_count(self):
         blob = b"APS2" + sleb(1) + sleb(0) + sleb(2) + sleb(0)
         with self.assertRaises(module.ELFAuditError):
