@@ -409,3 +409,12 @@ Added a section-header-independent ELF32 EM_ARM program-header auditor. It maps 
 ## Stage 120D — Dynamic relocation segment mapping
 
 Added a section-header-independent ELF32 EM_ARM dynamic relocation auditor for DT_REL, DT_RELA, and DT_JMPREL tables. It maps file-backed table bytes through PT_LOAD and correlates symbol identities when SysV DT_HASH provides safe bounds. See docs/STAGE120D_DYNAMIC_RELOCATION_SEGMENT_MAPPING.md.
+
+
+## Stage 120E — Android APS2 packed relocations
+
+Added a read-only ELF32 EM_ARM auditor for Android APS2 packed REL/RELA streams referenced by PT_DYNAMIC. It validates SLEB128 and group encoding, maps the packed stream through PT_LOAD file-backed ranges, and optionally correlates symbols using bounded SysV DT_HASH metadata. The parser reports relocation records only; it does not apply relocations or infer runtime providers.
+
+    python3 tools/guest_arm_aps2_relocation_audit.py /path/to/guest.elf --json /tmp/aps2-relocations.json
+
+See STAGE120E_REPORT.md, ROADMAP_THROUGH_STAGE120E.md, and docs/STAGE120E_ANDROID_APS2_PACKED_RELOCATIONS.md. The original game executable is not included, so no game-specific APS2 presence or boot status is claimed.
