@@ -33,7 +33,9 @@ GitHub Actions run 42619189507 passed 272 Python tests and host C/native regress
 
 See STAGE120P_REPORT.md and docs/STAGE120P_APS2_RELR_COEXISTENCE.md.
 
-## Current milestone: Stage 120Q — RELR differential validation and Bionic metadata parity
+## Completed milestone: Stage 120Q — RELR differential validation and Bionic metadata parity
+
+GitHub Actions run 42640031158 passed all 273 Python tests and host C/native regression checks. The GNU readelf SHT_RELR differential test passed. See STAGE120Q_VALIDATION_LOG.txt.
 
 - Corrected DT_ANDROID_RELRCOUNT behavior to match Bionic: ignored metadata, not a required RELR tag.
 - Exposed the count hint at the top level of both dynamic and APS2 audit reports.
@@ -42,6 +44,14 @@ See STAGE120P_REPORT.md and docs/STAGE120P_APS2_RELR_COEXISTENCE.md.
 - Added assertions that both audit pipelines preserve the non-authoritative count hint.
 
 See STAGE120Q_REPORT.md and docs/STAGE120Q_RELR_DIFFERENTIAL_VALIDATION.md.
+
+## Next milestone: Stage 120R — Cross-toolchain RELR parity and real-image inventory
+
+1. Compare parser output with GNU readelf and LLVM llvm-readelf on additional ELF32 ARM fixtures.
+2. Build and archive linker/toolchain-generated RELR fixtures covering sparse/dense bitmaps, aliases, and mixed relocation sources.
+3. Inspect the project's actual guest ELF when a version-matched binary is available; do not infer unsupported formats from synthetic fixtures.
+4. Preserve file-offset, virtual-address, and provenance evidence for each relocation stream.
+5. Keep analysis read-only until a separately reviewed runtime relocation design exists.
 
 ## Remaining major gates
 
