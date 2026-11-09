@@ -22,10 +22,10 @@ def make_elf():
     header=struct.pack("<HHIIIIIHHHHHH",3,40,1,0,0,eh,0,eh,0,0,sh,count,1)
     headers=[bytes(sh),
       struct.pack("<IIIIIIIIII",1,3,0,0,shstr_off,len(shnames),0,0,1,0),
-      struct.pack("<IIIIIIIIII",11,1,6,0,0x1000,text_off,16,0,0,4,0),
+      struct.pack("<IIIIIIIIII",11,1,6,0x1000,text_off,16,0,0,4,0),
       struct.pack("<IIIIIIIIII",17,3,0,0,str_off,len(strings),0,0,1,0),
-      struct.pack("<IIIIIIIIII",25,11,0,0,0,sym_off,len(dynsym),3,1,4,16),
-      struct.pack("<IIIIIIIIII",33,6,0,0,0,dyn_off,len(dynamic),3,0,4,8),
+      struct.pack("<IIIIIIIIII",25,11,0,0,sym_off,len(dynsym),3,1,4,16),
+      struct.pack("<IIIIIIIIII",33,6,0,0,dyn_off,len(dynamic),3,0,4,8),
       struct.pack("<IIIIIIIIII",42,9,0,0,rel_off,len(rel),4,2,4,8)]
     return ident+header+b"".join(headers)+shnames+bytes(16)+strings+dynsym+dynamic+rel
 class DynamicImportInventoryTests(unittest.TestCase):
