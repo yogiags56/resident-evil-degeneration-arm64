@@ -365,7 +365,7 @@ def audit(data):
         for pos in range(0,size,ent):
             info=struct.unpack_from(endian+"I",raw,pos+4)[0]
             max_index=max(max_index,info>>8)
-    symbols,symbol_info=_parse_symbols(data,tags,loads,endian,max_index) if raw_specs else (None,{"available":False,"reason":"no dynamic relocation tables"})
+    symbols,symbol_info=_parse_symbols(data,tags,loads,endian,max_index) if raw_specs or DT_VERSYM in tags else (None,{"available":False,"reason":"no dynamic relocation tables or version symbol table"})
     version_info=_parse_symbol_versions(data,tags,loads,endian,symbols,symbol_info)
     tables=[]
     for label,address,size,ent,kind,_ in raw_specs:
