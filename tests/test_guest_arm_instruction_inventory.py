@@ -22,9 +22,9 @@ def make_elf32(code=b"",symbols=(),flags=0x6):
     symtab=b"".join(sym_entries); eh,sh=52,40; shoff=eh; n=5; cursor=shoff+n*sh
     shstr_off=cursor; cursor+=len(shnames); text_off=cursor; cursor+=len(code); str_off=cursor; cursor+=len(names); sym_off=cursor
     ident=b"\x7fELF"+bytes([1,1,1])+bytes(9)
-    header=struct.pack("<HHIIIIIHHHHHH",2,40,1,0,0,shoff,0,eh,0,0,sh,n,1)
+    header=struct.pack("<HHIIIIIHHHHHH",1,40,1,0,0,shoff,0,eh,0,0,sh,n,1)
     shdr=[bytes(sh),struct.pack("<IIIIIIIIII",1,3,0,0,shstr_off,len(shnames),0,0,1,0),
-      struct.pack("<IIIIIIIIII",11,1,flags,0x1000,text_off,len(code),0,0,4,0),
+      struct.pack("<IIIIIIIIII",11,1,flags,0,text_off,len(code),0,0,4,0),
       struct.pack("<IIIIIIIIII",19,3,0,0,str_off,len(names),0,0,1,0),
       struct.pack("<IIIIIIIIII",27,2,0,0,sym_off,len(symtab),3,1,4,16)]
     return ident+header+b"".join(shdr)+shnames+code+names+symtab
