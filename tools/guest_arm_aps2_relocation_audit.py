@@ -34,7 +34,7 @@ def _sleb128(data: bytes, pos: int, label: str = "APS2 value") -> tuple[int, int
             raise ELFAuditError(f"{label}: truncated SLEB128")
         byte = data[pos]
         pos += 1
-        if shift == 28 and (byte & 0x70) not in (0x00, 0x70):
+        if shift == 28 and not ((byte & 0x7f) <= 0x07 or (byte & 0x7f) >= 0x78):
             raise ELFAuditError(f"{label}: invalid fifth-byte SLEB128 sign extension")
         value |= (byte & 0x7f) << shift
         shift += 7
