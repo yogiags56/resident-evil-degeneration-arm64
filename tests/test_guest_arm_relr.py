@@ -114,7 +114,7 @@ class RELRDifferentialTests(unittest.TestCase):
             )
         reported = {
             int(value, 16)
-            for value in re.findall(r"(?m)^\s+([0-9a-fA-F]{8})\s+<no sym>", result.stdout)
+            for value in re.findall(r"(?m)^\s*([0-9a-fA-F]{8})\s*$", result.stdout)
         }
         self.assertEqual(reported, set(expected), result.stdout)
 
