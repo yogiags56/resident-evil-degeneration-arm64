@@ -375,8 +375,8 @@ def audit(data):
     tables=[]
     for label,address,size,ent,kind,_ in raw_specs:
         tables.append({"source_tag":label,**_reloc_table(data,address,size,ent,kind,loads,endian,label,symbols)})
-    overlap_groups = [(table["source_tag"], [entry["target_address"] for entry in table["entries"]]) for table in tables]
-    overlap_groups += [(table["source_tag"], table["targets"]) for table in relr_tables]
+    overlap_groups = [(table["kind"], [entry["target_address"] for entry in table["entries"]]) for table in tables]
+    overlap_groups += [("RELR", table["targets"]) for table in relr_tables]
     cross_format_overlaps = find_cross_format_overlaps(overlap_groups)
     return {"source_size":len(data),"sha256":hashlib.sha256(data).hexdigest(),
       "elf_class":32,"machine":"ARM","endianness":ph["endianness"],
