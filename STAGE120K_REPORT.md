@@ -1,6 +1,6 @@
 # Stage 120K Report — ARM ELF32 Relocation Semantics and ABI Metadata
 
-Status: implementation and CI validation in progress.
+Status: implementation complete; GitHub Actions Source checks passed.
 
 ## Delivered
 
@@ -12,6 +12,15 @@ Status: implementation and CI validation in progress.
 - Integrates the registry with target-range validation and dynamic relocation names.
 - Adds per-type ABI coverage counts to unified reconciliation output.
 - Adds tests for widths, alignment, unknown types, and metadata completeness.
+
+## Validation
+
+GitHub Actions run 42602775178, validated commit 0e47c78724e38f789dd8d827d521f18c001cac89:
+- 199 Python tests passed.
+- ABI registry width and metadata tests passed.
+- Thumb32 alignment metadata and misalignment tests passed.
+- Unified relocation target-range integration passed.
+- Host C mock compilation and native regression executables passed.
 
 ## Normative source
 
