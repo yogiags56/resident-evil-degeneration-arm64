@@ -559,3 +559,8 @@ Added a bounded resolver for caller-verified ELF32 provider symbols, with exact 
 ## Stage 120Y — ELF dynamic symbol table integration
 
 The PT_DYNAMIC audit now exposes the bounded dynamic symbol inventory and ordered DT_NEEDED library names. `tools/guest_arm_symbol_adapter.py` separates eligible defined provider symbols from undefined GLOBAL/WEAK requests and preserves version/SONAME requirements. This is an inventory adapter only; it does not load dependencies, infer lookup scope, or apply relocations. See `docs/STAGE120Y_SYMBOL_TABLE_INTEGRATION.md`.
+
+
+## Stage 120Z — DT_NEEDED dependency graph
+
+Added `tools/guest_arm_dependency_graph.py` to build an explicit dependency graph from supplied Stage 120Y adapter inventories. It rejects duplicate SONAME providers, reports unresolved DT_NEEDED names, detects cycles, and emits dependency-first order only for complete acyclic graphs. It performs no filesystem search or library loading. See `docs/STAGE120Z_DEPENDENCY_GRAPH.md`.
