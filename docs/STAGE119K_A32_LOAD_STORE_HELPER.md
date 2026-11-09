@@ -28,3 +28,12 @@ The implementation deliberately leaves Thumb transfers, halfword transfers, LDM/
 - Expand tests to compare condition flags, fault behavior, and write-protection cases.
 - Research ARMv7 unaligned word semantics before allowing broader instruction coverage.
 - Only then consider connecting the helper to an opt-in interpreter path.
+
+
+## Boundary and fault tests (Stage 119L preparation)
+Added explicit checks for:
+- write to a READ-only mapped region returns `RE_CPU_E_PERMISSION` and leaves backing bytes unchanged;
+- unmapped LDR returns `RE_CPU_E_MEMORY` and preserves destination register;
+- unmapped STR returns `RE_CPU_E_MEMORY` and leaves all mapped bytes unchanged.
+
+These tests extend the existing seven differential cases. They are registered through the existing `test_re_guest_cpu_transfer` target, so no build script change is needed. CI for the new test revision is pending.
