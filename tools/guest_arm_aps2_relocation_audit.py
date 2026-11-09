@@ -6,7 +6,7 @@ from pathlib import Path
 from guest_arm_elf_audit import ELFAuditError
 from guest_arm_dynamic_relocation_segment_audit import (
     _read_dynamic, _mapped, _parse_symbols, DT_HASH, DT_SYMTAB, DT_SYMENT,
-    DT_STRTAB, DT_STRSZ, RELOCS,
+    DT_STRTAB, DT_STRSZ, RELOCS, _parse_symbol_versions,
 )
 
 DT_ANDROID_REL = 0x6000000f
@@ -157,8 +157,9 @@ def audit(data: bytes) -> dict:
             "packed_size": len(blob), "entry_count": len(entries), "entries": entries,
         })
     symbol_table, symbol_info = _parse_symbols(data, tags, loads, endian, max_symbol)
+    version_info = _parse_symbol_versions(data, tags, loads, endian, symbol_table, symbol_info)
     for table in decoded:
-        for entry in table["entries"]:
+        for entry in table["entries"]
             idx = entry["symbol_index"]
             if symbol_table is not None:
                 if idx >= len(symbol_table):
@@ -176,13 +177,15 @@ def audit(data: bytes) -> dict:
         "dynamic_entries": dynamic,
         "dynamic_tags": {f"0x{k:08x}": v for k, v in tags.items()},
         "symbol_resolution": symbol_info,
+        "symbol_versioning": version_info,
         "packed_relocation_tables": decoded,
         "relocation_count": sum(x["entry_count"] for x in decoded),
         "evidence_limits": [
             "Only ELF32 EM_ARM Android APS2 REL/RELA streams described by PT_DYNAMIC are supported.",
             "Packed relocation targets are reported but never dereferenced, patched, or applied.",
             "Symbol names are resolved only when a bounded SysV DT_HASH/DT_SYMTAB/DT_STRTAB set is available.",
-            "GNU-hash-only symbol resolution, RELR, runtime load-bias calculation, and provider inference are not implemented.",
+            "Symbol versions are decoded only from bounded DT_VERSYM/DT_VERDEF/DT_VERNEED metadata; provider compatibility is not inferred.",
+            "RELR, runtime load-bias calculation, and provider inference are not implemented.",
         ],
     }
 
