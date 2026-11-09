@@ -69,7 +69,7 @@ class ReconciliationTests(unittest.TestCase):
         self.assertEqual(entry["target_range"]["width_source"],"validated_symbol_st_size")
 
     def test_aps2_namespace_remains_unresolved_without_bounded_hash(self):
-        report=module.audit(elf_fixture("REL"))
+        report=module.audit(elf_fixture("REL",20))
         aps=[t for t in report["tables"] if t["encoding"]=="APS2_REL"][0]
         entry=aps["entries"][0]
         self.assertEqual(entry["symbol_namespace"],"DT_SYMTAB:unresolved")
