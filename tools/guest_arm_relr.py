@@ -43,6 +43,8 @@ def decode_relr(blob: bytes, endian: str = "<", word_size: int = WORD_SIZE) -> l
                 raise ELFAuditError("RELR direct address moves backwards or overlaps prior bitmap")
             if entry <= previous:
                 raise ELFAuditError("RELR targets are not strictly increasing")
+            if len(targets) >= MAX_RELR_RELOCATIONS:
+                raise ELFAuditError("RELR relocation count exceeds safety limit")
             targets.append(entry)
             previous = entry
             cursor = entry + word_size
@@ -60,6 +62,8 @@ def decode_relr(blob: bytes, endian: str = "<", word_size: int = WORD_SIZE) -> l
                     raise ELFAuditError("RELR bitmap target overflows ELF32 address space")
                 if target <= previous:
                     raise ELFAuditError("RELR targets are not strictly increasing")
+                if len(targets) >= MAX_RELR_RELOCATIONS:
+                    raise ELFAuditError("RELR relocation count exceeds safety limit")
                 targets.append(target)
                 previous = target
         cursor += 31 * word_size
