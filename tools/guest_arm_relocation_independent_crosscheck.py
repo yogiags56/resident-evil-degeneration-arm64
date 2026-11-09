@@ -7,7 +7,7 @@ from guest_arm_elf_audit import ELFAuditError
 from guest_arm_relocation_audit import audit_relocations, RELOC_NAMES
 from guest_arm_relocation_abi import SPECS
 
-ROW=re.compile(r"^\\s*([0-9a-fA-F]+)\\s+([0-9a-fA-F]+)\\s+(R_ARM_[A-Z0-9_]+)\\b")
+ROW=re.compile(r"^\s*([0-9a-fA-F]+)\s+([0-9a-fA-F]+)\s+(R_ARM_[A-Z0-9_]+)\b")
 
 def parse_readelf_relocations(output):
     rows=[]
