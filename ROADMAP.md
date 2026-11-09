@@ -157,3 +157,23 @@ The publication helper now enforces private visibility (no public override), pus
 5. Keep instruction fetch alignment unchanged.
 
 Stage 119P+ will migrate narrow instruction families behind checked execution, followed by XE3U loading/relocations, import-table activation, renderer/audio/input, and physical-device boot/gameplay validation.
+
+## Stage 119O — Checked scalar transfer semantics
+
+- Added an isolated CPU-facing byte/halfword/word data-access helper.
+- Uses explicit little-endian byte assembly; does not rely on host alignment or host endianness.
+- Consults Stage 119N memory-type metadata and SCTLR.A policy.
+- Permissive unaligned scalar access is eligible only for complete ranges inside NORMAL memory when SCTLR.A is clear.
+- UNKNOWN, DEVICE, STRONGLY_ORDERED, unmapped, cross-region, and strict-mode unaligned accesses fail closed.
+- Resolves full range and permissions before reads/writes; failed stores do not mutate backing memory and failed loads do not update output.
+- Added host regression test and Android CMake registration.
+- Does not modify the checked bus, Stage 119K/L A32 decoder helper, or production interpreter. CI pending.
+
+### Next — Stage 119P: isolated A32 scalar instruction integration
+
+1. Add opt-in ordinary A32 LDR/STR and halfword transfer variants that explicitly use the new scalar helper.
+2. Preserve strict legacy path as fallback and keep PC/writeback/condition semantics outside the supported subset.
+3. Add differential tests against the legacy interpreter for aligned and unaligned addresses, pre/post indexing only when semantics are fully specified, and fault/commit behavior.
+4. Do not connect the new path to production `re_guest_cpu_step` until differential coverage and exception behavior are adequate.
+
+Later milestones: broader ARM/Thumb migration, guest SCTLR/system-control emulation, XE3U loader/relocations, import table, renderer/audio/input, and device boot/gameplay verification.
