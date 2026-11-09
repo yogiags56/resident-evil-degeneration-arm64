@@ -1,6 +1,6 @@
 # Stage 120N Report — Packed and Dynamic Relocation Metadata Parity
 
-Status: implementation committed; CI validation pending.
+Status: implementation complete; GitHub Actions Source checks passed.
 
 ## Delivered
 
@@ -24,3 +24,10 @@ Status: implementation committed; CI validation pending.
 ## Safety
 
 Metadata inspection only. No relocation is applied, no target bytes are dereferenced, and no provider is inferred.
+
+
+## Validation
+
+GitHub Actions run 42614083636 passed 229 Python tests (5.965 seconds), including APS2 high-bit ELF32 offset, signed r_info, grouped-info, grouped/per-entry addend, COPY symbol-size, undefined-symbol rejection, and integrated DT_REL/APS2 metadata namespace parity. Host C mock compilation and native C regression checks also passed.
+
+Validation log: STAGE120N_VALIDATION_LOG.txt
