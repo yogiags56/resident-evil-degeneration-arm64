@@ -23,7 +23,7 @@ class RELRDecodeTests(unittest.TestCase):
         self.assertEqual(module.decode_relr(blob), [0x2000, 0x207c, 0x2080])
 
     def test_supports_big_endian_elf32(self):
-        self.assertEqual(module.decode_relr(words([0x3000, 0x05], ">"), ">"),
+        self.assertEqual(module.decode_relr(words([0x3000, 0x03], ">"), ">"),
                          [0x3000, 0x3004])
 
     def test_empty_table_is_valid(self):
