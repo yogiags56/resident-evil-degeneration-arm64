@@ -1,10 +1,30 @@
-import sys, unittest
+import sys, unittest, struct
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"tools"))
 import guest_arm_relocation_reconciliation as module
-from test_guest_arm_aps2_relocation_audit import elf_fixture, elf_fixture_with_symbols
+from test_guest_arm_aps2_relocation_audit import elf_fixture, elf_fixture_with_symbols, packed as aps2_packed
 from test_guest_arm_relr_audit import fixture as relr_fixture
+from test_guest_arm_dynamic_relocation_segment_audit import fixture as dynamic_fixture
+
+
+def combined_dynamic_aps2_fixture():
+    data=bytearray(dynamic_fixture())
+    # Mark dynamic symbol #1 as a defined 37-byte object.
+    struct.pack_into("<I",data,0x1e0+8,37)
+    struct.pack_into("<H",data,0x1e0+14,2)
+    # Expand PT_LOAD memory to include the packed relocation targets in BSS.
+    struct.pack_into("<I",data,52+20,0x400)
+    # Append APS2 tags before the new DT_NULL entry.
+    struct.pack_into("<IIIIIIII",data,84,2,0x100,0x1100,0,112,112,4,4)
+    tags=[(0x6000000f,0x1220),(0x60000010,len(aps2_packed("REL",20))),(0,0)]
+    for i,(tag,value) in enumerate(tags):
+        struct.pack_into("<iI",data,0x100+(11+i)*8,tag,value)
+    # Make the conventional DT_REL entry R_ARM_COPY as well.
+    struct.pack_into("<I",data,0x204,(1<<8)|20)
+    blob=aps2_packed("REL",20)
+    data[0x220:0x220+len(blob)]=blob
+    return bytes(data)
 
 def entry(target=0x1304,typ=22,sym=1,addend=None,namespace="DT_SYMTAB@0x1000"):
     return {"index":0,"target_domain":"virtual","target":target,"symbol_index":sym,
@@ -56,6 +76,17 @@ class ReconciliationTests(unittest.TestCase):
         self.assertEqual(r["duplicate_group_count"],0)
         self.assertEqual(r["namespace_ambiguous_match_count"],1)
 
+
+    def test_dynamic_rel_and_aps2_share_proven_symbol_metadata_namespace(self):
+        report=module.audit(combined_dynamic_aps2_fixture())
+        ordinary=[t for t in report["tables"] if t["source_table"]=="DT_REL"][0]["entries"][0]
+        packed=[t for t in report["tables"] if t["encoding"]=="APS2_REL"][0]["entries"][0]
+        for field in ("symbol","symbol_size","symbol_defined","symbol_section_index","symbol_version","symbol_namespace"):
+            self.assertEqual(ordinary.get(field),packed.get(field),field)
+        self.assertEqual(packed["symbol_size"],37)
+        self.assertTrue(packed["symbol_defined"])
+        self.assertEqual(packed["symbol_namespace"],"DT_SYMTAB@0x000011d0")
+        self.assertEqual(packed["target_access_width"],37)
 
     def test_aps2_symbol_size_and_namespace_reach_copy_target_audit(self):
         report=module.audit(elf_fixture_with_symbols("REL",20,37,2))
