@@ -68,6 +68,16 @@ class ReconciliationTests(unittest.TestCase):
         self.assertEqual(entry["target_access_width"],37)
         self.assertEqual(entry["target_range"]["width_source"],"validated_symbol_st_size")
 
+    def test_aps2_copy_symbol_size_is_not_used_for_undefined_symbol(self):
+        report=module.audit(elf_fixture_with_symbols("REL",20,37,0))
+        aps=[t for t in report["tables"] if t["encoding"]=="APS2_REL"][0]
+        entry=aps["entries"][0]
+        self.assertEqual(entry["symbol_size"],37)
+        self.assertFalse(entry["symbol_defined"])
+        self.assertEqual(entry["symbol_section_index"],0)
+        self.assertIsNone(entry["target_access_width"])
+        self.assertEqual(entry["target_range"]["width_source"],"unresolved_copy_symbol_size")
+
     def test_aps2_namespace_remains_unresolved_without_bounded_hash(self):
         report=module.audit(elf_fixture("REL",20))
         aps=[t for t in report["tables"] if t["encoding"]=="APS2_REL"][0]
