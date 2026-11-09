@@ -30,19 +30,23 @@ jobs:
         run: bash ./tools/run_tests.sh
         
 
-      - name: Report Stage 120N-120P source SHA-256
+      - name: Report Stage 120N-120Q source SHA-256
         if: always()
         run: |
           sha256sum \
             .github/workflows/ci.yml \
             README.md ROADMAP.md ROADMAP_THROUGH_STAGE120N.md \
             STAGE120N_REPORT.md STAGE120N_VALIDATION_LOG.txt \
-            STAGE120O_REPORT.md STAGE120O_VALIDATION_LOG.txt STAGE120P_REPORT.md STAGE120P_VALIDATION_LOG.txt \
+            STAGE120O_REPORT.md STAGE120O_VALIDATION_LOG.txt STAGE120P_REPORT.md STAGE120P_VALIDATION_LOG.txt \\
+            STAGE120Q_REPORT.md STAGE120Q_VALIDATION_LOG.txt \\
             docs/STAGE120N_PACKED_DYNAMIC_SYMBOL_PARITY.md \
-            docs/STAGE120O_APS2_CONFORMANCE.md docs/STAGE120P_APS2_RELR_COEXISTENCE.md \
+            docs/STAGE120O_APS2_CONFORMANCE.md docs/STAGE120P_APS2_RELR_COEXISTENCE.md \\
+            docs/STAGE120Q_RELR_CANONICAL_DECODER.md \\
             tools/guest_arm_aps2_relocation_audit.py \
             tools/guest_arm_dynamic_relocation_segment_audit.py \
-            tools/guest_arm_relocation_reconciliation.py tools/guest_arm_relr.py \
+            tools/guest_arm_relocation_reconciliation.py tools/guest_arm_relr.py \\
+            tools/guest_arm_relr_audit.py \\
             tests/test_guest_arm_aps2_relocation_audit.py \
             tests/test_guest_arm_dynamic_relocation_segment_audit.py \
-            tests/test_guest_arm_relocation_reconciliation.py tests/test_guest_arm_relr.py
+            tests/test_guest_arm_relocation_reconciliation.py tests/test_guest_arm_relr.py \\
+            tests/test_guest_arm_relr_audit.py
