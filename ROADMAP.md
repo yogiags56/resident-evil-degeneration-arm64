@@ -1,17 +1,17 @@
 # Project Roadmap
 
-## Current milestone: Stage 120J — Relocation target range validation
+## Current milestone: Stage 120K — ARM ELF32 relocation semantics and ABI validation
 
-The unified ELF relocation inventory now maps target addresses against PT_LOAD memory ranges, distinguishing file-backed bytes, BSS/zero-fill, cross-boundary targets, ambiguous overlapping segments, and out-of-range addresses. Known relocation widths are validated; unknown types remain unknown.
+The relocation audit now uses a 60-entry AAELF32-backed metadata registry for target storage width, place alignment, relocation class, and semantics. It distinguishes byte, halfword, word, Thumb16, Thumb32, variable-size COPY, and no-op relocations. Unknown types remain unknown. GitHub Actions run 42602775178 passed 199 Python tests and host C/native regression checks.
 
-## Next milestone: Stage 120K — Relocation semantic coverage and ARM ABI validation
+## Next milestone: Stage 120L — Relocation symbol and target contract cross-validation
 
-1. Review supported R_ARM relocation type widths and semantics against the ARM ELF ABI.
-2. Expand known relocation coverage only when target width and semantics are documented.
-3. Keep unknown and processor-specific relocation types explicit.
-4. Add cross-check fixtures against independent ELF tooling where available.
-5. Preserve version, symbol namespace, encoding, and PT_LOAD range provenance.
-6. Do not read or patch target bytes or calculate load bias.
+1. Cross-check each known relocation's symbol requirements, target requirements, and dynamic/static applicability against AAELF32.
+2. Separate relocation storage width from instruction encoding and runtime write semantics.
+3. Add independent-tool fixtures for representative ARM, Thumb16, Thumb32, TLS, and dynamic relocations.
+4. Validate variable-size R_ARM_COPY against symbol st_size when safely available.
+5. Preserve unknown, reserved, private, and platform-specific types.
+6. Do not apply relocations or read target bytes.
 
 ## Remaining major gates
 
