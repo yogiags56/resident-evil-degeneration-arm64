@@ -3,7 +3,6 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 python3 -m unittest discover -s tests -v
-python3 -m unittest tests.test_guest_arm_symbol_adapter -v
 bash ./tools/compile_host_mock.sh
 mkdir -p build/host-tests
 CC="${CC:-clang}"
