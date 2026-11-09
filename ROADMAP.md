@@ -411,14 +411,14 @@ Later milestones: guest system control/MMU semantics, narrow checked-step integr
 - Parse DT_REL/DT_RELA table metadata and entries.
 - Parse DT_JMPREL and its REL/RELA selector.
 - Map relocation ranges through unique PT_LOAD file-backed regions.
-- Correlate symbol names when DT_HASH bounds DT_SYMTAB.
+- Correlate symbol names when bounded SysV DT_HASH or GNU DT_GNU_HASH metadata bounds DT_SYMTAB.
 - Do not apply relocations or infer runtime providers.
 
 ## Stage 120E — Android APS2 packed relocations
 
 - Added an ELF32 EM_ARM parser for DT_ANDROID_REL/RELSZ and DT_ANDROID_RELA/RELASZ streams.
 - Decodes bounded SLEB128, relocation counts, group flags, offset/info deltas, and cumulative RELA addends.
-- Maps packed streams through file-backed PT_LOAD ranges and reuses bounded SysV DT_HASH symbol resolution.
+- Maps packed streams through file-backed PT_LOAD ranges and reuses bounded SysV DT_HASH or GNU DT_GNU_HASH symbol resolution.
 - Added synthetic tests for REL/RELA, grouped/ungrouped records, malformed streams, overflow, and mapping bounds.
 - Does not apply relocations, dereference targets, infer providers, or decode RELR.
 
@@ -433,12 +433,22 @@ Later milestones: guest system control/MMU semantics, narrow checked-step integr
 - Supports stripped ELF through the section-header-independent PT_DYNAMIC/PT_LOAD path.
 - GitHub Actions Source checks passed: 147 Python tests plus host C/native regression tests (run 42598567251).
 
-### Next — Stage 120G: Dynamic symbol namespace and GNU hash bounds
+## Stage 120G — Dynamic symbol namespace and GNU hash bounds
 
-1. Parse DT_GNU_HASH header, bloom filter, buckets, and chain termination with strict bounds.
-2. Derive safe dynamic symbol count without assuming SysV DT_HASH exists.
-3. Cross-check SysV DT_HASH nchain and GNU-hash-derived bounds when both are present.
-4. Resolve symbols only when hash metadata safely bounds complete symbol/string ranges.
-5. Preserve unavailable/ambiguous symbol status; do not guess.
-6. Add malformed chain, bucket, bloom, overflow, and big-endian fixtures.
-7. Keep RELR and relocation application out of scope.
+- Implemented DT_GNU_HASH parsing for ELF32 EM_ARM.
+- Validates header dimensions, bloom filter, buckets, chain bounds, and terminators through PT_LOAD file-backed ranges.
+- Derives safe dynamic symbol count for GNU-hash-only binaries.
+- Validates GNU chain hashes and bloom membership against symbol names.
+- Cross-checks GNU-derived bounds against SysV DT_HASH nchain when both exist.
+- Shares the resolver with ordinary dynamic and APS2 relocation audits.
+- GitHub Actions run 42599061503 passed 152 Python tests and host C/native regression checks.
+
+### Next — Stage 120H: Dynamic version metadata and symbol identity
+
+1. Parse DT_VERSYM through bounded PT_LOAD reads.
+2. Parse DT_VERDEF and DT_VERNEED headers and auxiliary chains.
+3. Correlate symbols using version indices and names, not numeric symbol index alone.
+4. Preserve hidden, local, weak, and unresolved version states.
+5. Reject malformed linked lists, cyclic chains, and invalid string/index offsets.
+6. Add little-endian and big-endian fixtures.
+7. Keep provider lookup and relocation application disabled.
