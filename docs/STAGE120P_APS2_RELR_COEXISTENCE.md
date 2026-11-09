@@ -56,4 +56,4 @@ Reports contain relocation target addresses only. The parser never dereferences 
 
 ## Validation evidence
 
-GitHub Actions run 42618941160 passed 272 Python tests in 12.026 seconds and host C/native regressions. The validation covers standard and Android RELR tags, mixed aliases, 32-bit bitmap expansion, bounds, malformed inputs, coexistence with APS2 REL/RELA, and cross-encoding target collision reporting. See STAGE120P_VALIDATION_LOG.txt.
+GitHub Actions run 42619189507 passed 272 Python tests in 10.807 seconds and host C/native regressions. The validation covers standard and Android RELR tags, mixed aliases, 32-bit bitmap expansion, bounds, malformed inputs, coexistence with APS2 REL/RELA, and cross-encoding target collision reporting. See STAGE120P_VALIDATION_LOG.txt.
