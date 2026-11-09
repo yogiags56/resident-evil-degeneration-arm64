@@ -49,9 +49,9 @@ class RELRDecodeTests(unittest.TestCase):
         data=bytearray(fixture(words=(0x0b,)))
         with self.assertRaises(ELFAuditError): module.audit(data)
 
-    def test_rejects_empty_bitmap(self):
-        data=bytearray(fixture(words=(0x1300,1)))
-        with self.assertRaises(ELFAuditError): module.audit(data)
+    def test_accepts_empty_bitmap_and_advances_cursor(self):
+        report=module.audit(fixture(words=(0x1300,1,0x1380)))
+        self.assertEqual([x["target_offset"] for x in report["relr_table"]["entries"]],[0x1300,0x1380])
 
     def test_rejects_bitmap_cursor_overflow(self):
         data=bytearray(fixture(words=(0xfffffffc,0x03)))
