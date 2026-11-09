@@ -45,3 +45,8 @@ https://android.googlesource.com/platform/bionic/+/refs/heads/aml_con_341810060/
 ## Next
 
 Stage 120P — APS2/RELR coexistence, dynamic-tag cross-checks, and independent toolchain differential validation.
+
+
+## Validation evidence
+
+GitHub Actions run 42615891583 passed 244 Python tests, including all legal REL/RELA group-flag combinations, malformed flag matrices, multi-group addend/offset transitions, SLEB128 fifth-byte boundaries, and truncation-prefix rejection. See STAGE120O_VALIDATION_LOG.txt.
