@@ -11,6 +11,7 @@ from guest_arm_dynamic_relocation_segment_audit import audit as audit_dynamic, _
 from guest_arm_aps2_relocation_audit import audit as audit_aps2
 from guest_arm_relr_audit import audit as audit_relr
 from guest_arm_pt_dynamic_audit import parse_program_headers
+from guest_arm_relocation_target_audit import audit_target_ranges
 ET_EXEC,ET_DYN=2,3
 
 def _section_tables(report, elf):
@@ -137,19 +138,22 @@ def audit(data):
     symaddr=dyn.get("dynamic_tags",{}).get("DT_SYMTAB")
     namespace=f"DT_SYMTAB@0x{symaddr:08x}" if symaddr is not None else "DT_SYMTAB:unavailable"
     tables=sec_tables+_convert(dyn,namespace)+_convert(aps,namespace,packed=True)+( _convert_relr(relr) if relr else [])
+    reconciliation=reconcile_tables(tables)
+    target_ranges=audit_target_ranges({"tables":tables},ph)
     return {"source_size":len(data),"sha256":hashlib.sha256(data).hexdigest(),
         "elf_class":32,"machine":"ARM","endianness":ph["endianness"],"elf_type":ph["type"],
         "section_headers_present":ph["section_headers_present"],"section_backed_audit":sec_status,
         "dynamic_symbol_resolution":dyn.get("symbol_resolution"),
         "aps2_symbol_resolution":aps.get("symbol_resolution"),"relr_relocation_count":relr.get("relocation_count",0) if relr else 0,"tables":tables,
-        "reconciliation":reconcile_tables(tables),
+        "reconciliation":reconciliation,"target_range_audit":target_ranges,
         "evidence_limits":[
             "ELF32 EM_ARM only; input is parsed read-only.",
             "Section-backed reconciliation uses the conventional SHT_SYMTAB Stage 119X parser; unsupported combinations are reported unavailable.",
             "Dynamic, APS2, and RELR inventories use PT_DYNAMIC/PT_LOAD; RELR has no symbol index or addend.",
             "Different symbol-table namespaces are never equated by index alone.",
             "REL implicit addends are not reconstructed from target memory.",
-            "No relocation is applied, no target is dereferenced, and no provider or game boot is inferred."]}
+            "Relocation target ranges are classified against PT_LOAD without dereferencing target bytes.",
+            "No relocation is applied and no provider or game boot is inferred."]}
 
 def main():
     p=argparse.ArgumentParser(description=__doc__); p.add_argument("input",type=Path); p.add_argument("--json",type=Path); a=p.parse_args()
