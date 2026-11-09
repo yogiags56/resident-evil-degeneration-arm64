@@ -30,7 +30,7 @@ jobs:
         run: bash ./tools/run_tests.sh
         
 
-      - name: Report Stage 120N-120Q source SHA-256
+      - name: Report Stage 120N-120S source SHA-256
         if: always()
         run: |
           sha256sum \
@@ -48,6 +48,10 @@ jobs:
             tools/guest_arm_aps2_relocation_audit.py \
             tools/guest_arm_dynamic_relocation_segment_audit.py \
             tools/guest_arm_relocation_reconciliation.py tools/guest_arm_relr.py \
+            tools/guest_arm_load_plan.py \
+            tests/test_guest_arm_load_plan.py \
+            docs/STAGE120S_PT_LOAD_LOAD_PLAN.md \
+            STAGE120S_REPORT.md STAGE120S_VALIDATION_LOG.txt \
             tests/test_guest_arm_aps2_relocation_audit.py \
             tests/test_guest_arm_dynamic_relocation_segment_audit.py \
             tests/test_guest_arm_relocation_reconciliation.py tests/test_guest_arm_relr.py
