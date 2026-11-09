@@ -39,7 +39,7 @@ def _convert(report, namespace, packed=False):
         entries=[]
         for e in table["entries"]:
             entries.append({"index":e["index"],"target_domain":"virtual","target":int(e["target_address"],16),
-                "symbol_index":e["symbol_index"],"symbol":e.get("symbol"),"type":e["type"],
+                "symbol_index":e["symbol_index"],"symbol":e.get("symbol"),"symbol_size":e.get("symbol_size"),"symbol_defined":e.get("symbol_defined"),"type":e["type"],
                 "type_name":e["type_name"],"addend":e.get("addend"),"symbol_namespace":namespace,"symbol_version":e.get("symbol_version")})
         result.append({"source_table":table["source_tag"],"encoding":f"APS2_{table['kind']}" if packed else table["kind"],
             "kind":table["kind"],"file_offset":table["file_offset"],
