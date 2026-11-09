@@ -42,18 +42,18 @@ int main(void) {
 
  /* Halfword unsigned load/store. */
  data[10]=0x34u;data[11]=0x12u;
- assert(re_guest_cpu_arm_scalar_transfer(&cpu,&scalar,0xe1d130b0u)==RE_CPU_OK);
+ assert(re_guest_cpu_arm_scalar_transfer(&cpu,&scalar,0xe1d130bau)==RE_CPU_OK);
  assert(cpu.r[3]==0x1234u);
  cpu.r[3]=0xabcdU;
- assert(re_guest_cpu_arm_scalar_transfer(&cpu,&scalar,0xe1c130b2u)==RE_CPU_OK);
+ assert(re_guest_cpu_arm_scalar_transfer(&cpu,&scalar,0xe1c130bcu)==RE_CPU_OK);
  assert(data[12]==0xcdu&&data[13]==0xabu);
 
  /* Signed byte and signed halfword loads. */
  data[14]=0x80u;
- assert(re_guest_cpu_arm_scalar_transfer(&cpu,&scalar,0xe1d140d0u)==RE_CPU_OK);
+ assert(re_guest_cpu_arm_scalar_transfer(&cpu,&scalar,0xe1d140dau)==RE_CPU_OK);
  assert(cpu.r[4]==0xffffff80u);
  data[16]=0x00u;data[17]=0x80u;
- assert(re_guest_cpu_arm_scalar_transfer(&cpu,&scalar,0xe1d150f0u)==RE_CPU_OK);
+ assert(re_guest_cpu_arm_scalar_transfer(&cpu,&scalar,0xe1d150f2u)==RE_CPU_OK);
  assert(cpu.r[5]==0xffff8000u);
 
  /* SCTLR.A clear permits ordinary unaligned Normal-memory scalar transfers. */
