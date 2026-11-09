@@ -33,6 +33,16 @@ def gnu_fixture():
     struct.pack_into("<IIIIIII",data,0x220,1,1,1,5,bloom,1,h|1)
     return bytes(data)
 
+
+def both_hash_fixture():
+    data=bytearray(gnu_fixture())
+    # Restore SysV DT_HASH and add GNU hash as a second dynamic tag.
+    struct.pack_into("<iI",data,0x100+6*8,4,0x11c0)
+    struct.pack_into("<iI",data,0x100+11*8,0x6ffffef5,0x1220)
+    struct.pack_into("<iI",data,0x100+12*8,0,0)
+    struct.pack_into("<II",data,84+16,104,104)
+    return bytes(data)
+
 class DynamicRelocationSegmentTests(unittest.TestCase):
     def test_maps_rel_and_jmprel_through_pt_load_and_resolves_symbol(self):
         report=module.audit(fixture())
@@ -93,6 +103,19 @@ class DynamicRelocationSegmentTests(unittest.TestCase):
     def test_rejects_gnu_hash_bloom_shift_outside_word_width(self):
         data=bytearray(gnu_fixture())
         struct.pack_into("<I",data,0x22c,32)
+        with self.assertRaises(module.ELFAuditError):
+            module.audit(bytes(data))
+
+
+    def test_cross_checks_gnu_hash_against_sysv_nchain(self):
+        report=module.audit(both_hash_fixture())
+        self.assertEqual(report["symbol_resolution"]["hash_source"],"gnu_bound_within_sysv_nchain")
+        self.assertEqual(report["symbol_resolution"]["sysv_symbol_count"],2)
+        self.assertEqual(report["symbol_resolution"]["symbol_count"],2)
+
+    def test_rejects_gnu_symbol_bound_larger_than_sysv_nchain(self):
+        data=bytearray(both_hash_fixture())
+        struct.pack_into("<I",data,0x1c4,1)
         with self.assertRaises(module.ELFAuditError):
             module.audit(bytes(data))
 
