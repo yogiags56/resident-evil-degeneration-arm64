@@ -371,3 +371,19 @@ Later milestones: guest system control/MMU semantics, narrow checked-step integr
 2. Correlate PLT/JUMP_SLOT entries with undefined dynamic symbols.
 3. Add PT_DYNAMIC/PT_LOAD mapping so stripped ELF files can be audited without section headers.
 4. Record unresolved and unsupported packed-relocation formats explicitly.
+
+
+## Stage 120B — PLT/GOT cross-reference
+
+- Report DT_PLTGOT, DT_JMPREL, DT_PLTRELSZ, DT_PLTREL.
+- Correlate section-backed R_ARM_JUMP_SLOT entries to exact dynamic symbols.
+- Preserve unresolved/unknown PLT metadata.
+- Do not decode PLT stubs, infer GOT runtime contents, or apply relocations.
+
+### Next — Stage 120C: PT_DYNAMIC / PT_LOAD program-header fallback
+
+1. Parse ELF32 program headers independently of section headers.
+2. Map dynamic virtual addresses through PT_LOAD file-backed ranges.
+3. Parse PT_DYNAMIC tags for stripped ELF inputs.
+4. Cross-check section-backed and segment-backed dynamic metadata when both exist.
+5. Keep BSS-only virtual ranges distinct from file-backed bytes.
