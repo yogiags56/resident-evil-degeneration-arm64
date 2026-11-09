@@ -414,10 +414,19 @@ Later milestones: guest system control/MMU semantics, narrow checked-step integr
 - Correlate symbol names when DT_HASH bounds DT_SYMTAB.
 - Do not apply relocations or infer runtime providers.
 
-### Next — Stage 120E: Android packed relocations
+## Stage 120E — Android APS2 packed relocations
 
-1. Research Android APS2 packed relocation encoding and platform scope.
-2. Add a bounded SLEB128/ULEB128 decoder.
-3. Decode packed REL/RELA relocation groups without applying them.
-4. Test truncation, overflow, invalid group flags, and address-delta accumulation.
-5. Keep RELR as a distinct format and only add if the target binary evidence warrants it.
+- Added an ELF32 EM_ARM parser for DT_ANDROID_REL/RELSZ and DT_ANDROID_RELA/RELASZ streams.
+- Decodes bounded SLEB128, relocation counts, group flags, offset/info deltas, and cumulative RELA addends.
+- Maps packed streams through file-backed PT_LOAD ranges and reuses bounded SysV DT_HASH symbol resolution.
+- Added synthetic tests for REL/RELA, grouped/ungrouped records, malformed streams, overflow, and mapping bounds.
+- Does not apply relocations, dereference targets, infer providers, or decode RELR.
+
+### Next — Stage 120F: APS2 and ordinary relocation reconciliation
+
+1. Normalize section-backed REL/RELA, segment-backed REL/RELA/JMPREL, and APS2 records.
+2. Detect exact duplicate ranges and partial overlaps without silently double-counting.
+3. Compare normalized tuples (target, type, symbol index, addend) across representations.
+4. Preserve source provenance and report discrepancies.
+5. Add fixtures for exact duplicates, partial overlaps, and distinct tables.
+6. Keep relocation application and runtime loader behavior disabled.
