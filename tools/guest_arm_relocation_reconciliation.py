@@ -137,8 +137,13 @@ def audit(data):
     aps=audit_aps2(data) if has_aps2 else {"packed_relocation_tables":[],"symbol_resolution":{"available":False,"reason":"no APS2 dynamic tags"}}
     relr=audit_relr(data) if has_relr else None
     symaddr=dyn.get("dynamic_tags",{}).get("DT_SYMTAB")
-    namespace=f"DT_SYMTAB@0x{symaddr:08x}" if symaddr is not None else "DT_SYMTAB:unavailable"
-    tables=sec_tables+_convert(dyn,namespace)+_convert(aps,namespace,packed=True)+( _convert_relr(relr) if relr else [])
+    dyn_symbols_available=bool(dyn.get("symbol_resolution",{}).get("available"))
+    aps_symbols_available=bool(aps.get("symbol_resolution",{}).get("available"))
+    dyn_namespace=(f"DT_SYMTAB@0x{symaddr:08x}" if symaddr is not None and dyn_symbols_available
+                   else "DT_SYMTAB:unresolved")
+    aps_namespace=(f"DT_SYMTAB@0x{symaddr:08x}" if symaddr is not None and aps_symbols_available
+                   else "DT_SYMTAB:unresolved")
+    tables=sec_tables+_convert(dyn,dyn_namespace)+_convert(aps,aps_namespace,packed=True)+( _convert_relr(relr) if relr else [])
     reconciliation=reconcile_tables(tables)
     target_ranges=audit_target_ranges({"tables":tables},ph)
     abi_counts={}
