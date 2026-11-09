@@ -2,6 +2,8 @@
 
 ## Current milestone: Stage 120M — Independent ELF cross-check and COPY symbol-size validation
 
+GitHub Actions run 42605382359 passed 218 Python tests (including a real readelf cross-check when available) and host C/native regression checks. See STAGE120M_VALIDATION_LOG.txt.
+
 - Compare section-backed ELF32 EM_ARM relocation offsets/types against GNU readelf or LLVM llvm-readelf.
 - Keep tool absence as an explicit skip; no host tool is a runtime dependency.
 - Resolve R_ARM_COPY width only from a defined, nonzero, namespaced symbol with positive st_size.
