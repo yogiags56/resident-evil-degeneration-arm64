@@ -11,12 +11,20 @@ Stage 120H added bounded dynamic symbol version metadata and version-aware reloc
 - GitHub Actions Source checks passed: 177 Python tests and host C/native regressions (run 42600655563).
 - No relocation application, target dereference, Android device execution, or game boot is claimed.
 
-## Next — Stage 120J: Relocation target segment and memory-range validation
+## Stage 120J — Relocation target segment and memory-range validation
 
-1. Map REL/RELA/JMPREL/APS2/RELR targets to PT_LOAD memory ranges.
-2. Distinguish file-backed bytes from zero-fill/BSS.
-3. Validate target width and alignment only for known relocation types.
-4. Report ambiguous mappings and out-of-range targets.
-5. Preserve unknown relocation types without guessing.
-6. Add boundary and overlapping-segment fixtures.
-7. Keep target memory read-only and load-bias calculation disabled.
+- Maps each virtual relocation target against PT_LOAD p_memsz and p_filesz ranges.
+- Distinguishes file-backed, BSS/zero-fill, file-to-BSS crossing, segment-end crossing, and out-of-range targets.
+- Reports ambiguous overlapping PT_LOAD mappings.
+- Applies known ELF32 ARM relocation access widths only; unknown relocation types remain unknown.
+- Treats R_ARM_NONE as a no-target-access relocation.
+- GitHub Actions Source checks passed: 187 Python tests and host C/native regressions (run 42601441300).
+- No target bytes are read or modified; no load bias or game boot is claimed.
+
+## Next — Stage 120K: Relocation semantic coverage and ARM ABI validation
+
+1. Verify supported R_ARM relocation types and widths against ARM ELF ABI references.
+2. Expand known types only with documented semantics and access widths.
+3. Add independent-tool cross-check fixtures where available.
+4. Preserve unknown and processor-specific types explicitly.
+5. Keep relocation targets read-only and load-bias calculation disabled.
