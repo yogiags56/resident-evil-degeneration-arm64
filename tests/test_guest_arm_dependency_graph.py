@@ -36,6 +36,6 @@ class DependencyGraphTests(unittest.TestCase):
     def test_preserves_duplicate_needed_entries_but_deduplicates_graph_edge(self):
         out=module.build_graph({"root":"a.so","libraries":[node("a.so",["b.so","b.so"]),node("b.so",[])]})
         self.assertEqual(len(out["edges"]),1)
-        self.assertEqual(out["nodes"][1]["needed_libraries"],["b.so","b.so"])
+        self.assertEqual(next(n for n in out["nodes"] if n["soname"]=="a.so")["needed_libraries"],["b.so","b.so"])
 
 if __name__=="__main__": unittest.main()
