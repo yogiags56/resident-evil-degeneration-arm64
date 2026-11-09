@@ -46,3 +46,7 @@ All parsing remains read-only. RELR targets are relative relocation locations; n
 2. Compare the decoder against Bionic/readelf behavior for empty bitmap and cursor-boundary cases.
 3. Preserve exact Android tag behavior by API/Bionic revision.
 4. Continue relocation-source reconciliation without discarding raw records.
+
+## Validation
+
+GitHub Actions run 42638644884 passed 277 Python tests in 5.799 seconds, plus host C/native regressions. The tests establish internal decoder/report parity, not independent readelf/Bionic differential validation. See STAGE120Q_VALIDATION_LOG.txt.
