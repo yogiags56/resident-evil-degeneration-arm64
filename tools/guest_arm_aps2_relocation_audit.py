@@ -159,7 +159,7 @@ def audit(data: bytes) -> dict:
     symbol_table, symbol_info = _parse_symbols(data, tags, loads, endian, max_symbol)
     version_info = _parse_symbol_versions(data, tags, loads, endian, symbol_table, symbol_info)
     for table in decoded:
-        for entry in table["entries"]
+        for entry in table["entries"]:
             idx = entry["symbol_index"]
             if symbol_table is not None:
                 if idx >= len(symbol_table):
@@ -167,9 +167,11 @@ def audit(data: bytes) -> dict:
                 sym = symbol_table[idx]
                 entry["symbol"] = sym["name"]
                 entry["symbol_undefined"] = sym["undefined"]
+                entry["symbol_version"] = sym.get("version")
             else:
                 entry["symbol"] = None
                 entry["symbol_undefined"] = None
+                entry["symbol_version"] = None
     return {
         "source_size": len(data), "sha256": hashlib.sha256(data).hexdigest(),
         "elf_class": 32, "machine": "ARM", "endianness": ph["endianness"],
