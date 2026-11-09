@@ -30,7 +30,7 @@ jobs:
         run: bash ./tools/run_tests.sh
         
 
-      - name: Report Stage 120N-120V source SHA-256
+      - name: Report Stage 120N-120W source SHA-256
         if: always()
         run: |
           sha256sum \
@@ -54,6 +54,9 @@ jobs:
             tests/test_re_guest_elf_materialize.c docs/STAGE120U_ELF_MATERIALIZATION.md \
             runtime/guest/re_guest_permission_finalize.h runtime/guest/re_guest_permission_finalize.c \
             tests/test_re_guest_permission_finalize.c docs/STAGE120V_PERMISSION_FINALIZATION.md \
+            runtime/guest/re_guest_relocation_apply.h runtime/guest/re_guest_relocation_apply.c \
+            tests/test_re_guest_relocation_apply.c docs/STAGE120W_RELOCATION_APPLICATION.md \
+            STAGE120W_REPORT.md STAGE120W_VALIDATION_LOG.txt \
             STAGE120V_REPORT.md STAGE120V_VALIDATION_LOG.txt \
             STAGE120U_REPORT.md STAGE120U_VALIDATION_LOG.txt \
             STAGE120T_REPORT.md STAGE120T_VALIDATION_LOG.txt \
