@@ -50,6 +50,7 @@ jobs:
             tools/guest_arm_relocation_reconciliation.py tools/guest_arm_relr.py \
             runtime/guest/re_guest_map_transaction.h runtime/guest/re_guest_map_transaction.c \
             tests/test_re_guest_map_transaction.c docs/STAGE120T_GUEST_MAP_TRANSACTION.md \
+            STAGE120T_REPORT.md STAGE120T_VALIDATION_LOG.txt \
             tools/guest_arm_load_plan.py \
             tests/test_guest_arm_load_plan.py \
             docs/STAGE120S_PT_LOAD_LOAD_PLAN.md \
