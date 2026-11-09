@@ -6,10 +6,8 @@ Resolve the provisional strict-alignment policy inherited by the Stage 119J CPU 
 
 ## Primary references
 
-1. Arm, *ARM Architecture Reference Manual ARMv7-A and ARMv7-R edition*, ARM DDI 0406C.d:
-   - Application Level Architecture, A3.2.1, "Unaligned data access" (table A3-1 in the C edition; table numbering differs across revisions).
-   - System-level memory access rules in B2.4.5, "Unaligned memory accesses".
-   - Official document: https://documentation-service.arm.com/static/5f8daeb7f86e16515cdb8c4e
+1. Arm, *ARM Architecture Reference Manual ARMv7-A and ARMv7-R edition*, ARM DDI 0406C.d, especially A3.2.1 (Table A3-1), A3.2.2, A3.2.3, and B3.12.4:
+   https://documentation-service.arm.com/static/5f8daeb7f86e16515cdb8c4e
 2. Arm, *Arm Compiler for Embedded User Guide*, "Alignment support in Arm Compiler for Embedded 6":
    https://support.arm.com/documentation/100748/0624/Alignment-support-in-Arm-Compiler-for-Embedded-6/Aligned-and-unaligned-accesses
 3. Linux kernel documentation, "Memory alignment" (useful for Linux user-space fault/fix-up behavior, not a replacement for the ARM architecture specification):
@@ -17,7 +15,7 @@ Resolve the provisional strict-alignment policy inherited by the Stage 119J CPU 
 
 ## Verified ARMv7-A/R behavior
 
-ARMv7 requires the newer alignment model. SCTLR.U is Read-As-One (unaligned support is implemented); SCTLR.A controls strict alignment checking. With SCTLR.A clear, selected ordinary load/store instructions can perform unaligned accesses to Normal memory. With SCTLR.A set, those accesses generate an Alignment fault.
+ARMv7-A/R requires the ARMv7 alignment model. SCTLR.U is Read-As-One (RAO) in this profile; SCTLR.A controls strict alignment checking. With SCTLR.A clear, selected ordinary load/store instructions can perform unaligned accesses to Normal memory. With SCTLR.A set, those accesses generate an Alignment fault.
 
 | Instruction family | SCTLR.A = 0 | SCTLR.A = 1 |
 |---|---|---|
@@ -59,7 +57,7 @@ Consequently, simply deleting the alignment checks would be unsafe: the bus cann
 5. Before enabling permissive accesses, add an explicit guest memory attribute (at minimum Normal vs Device/Strongly-ordered) to mapped regions, with a conservative default that is not permissive.
 6. Add an explicit guest alignment-control state corresponding to SCTLR.A. Until guest system-register emulation supplies it, the checked helper must remain strict.
 7. For permitted ARMv7 Normal-memory LDR/STR and halfword forms, implement the architectural byte-addressed result, not legacy pre-ARMv6 word-rotation behavior. Validate little-endian behavior against the selected guest endianness model.
-8. Ensure a multi-byte operation resolves the entire byte range within one compatible mapped region before any store commits. Failed stores must remain all-or-nothing in the emulator's host backing memory.
+8. The emulator must not accidentally write beyond a mapped region or partially mutate host memory when its own checked operation fails. However, do not mistake this implementation-safety rule for exact ARM fault atomicity: the ARM ARM states that unaligned accesses are not guaranteed single-copy atomic above byte granularity and may abort on one or more underlying accesses, including across a page boundary. Reproduce that finer-grained behavior only if/when the guest MMU, page model, and exception restart semantics are implemented; until then, document the conservative transactional emulator policy as a known abstraction.
 9. Keep strict alignment for ARM instruction fetch (A32 word-aligned; T32 halfword-aligned). Data alignment rules do not relax instruction alignment.
 
 ## Required follow-up work
