@@ -3,8 +3,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 python3 -m unittest discover -s tests -v
-python3 -m unittest tests.test_guest_arm_symbol_adapter -v
-python3 -m unittest tests.test_guest_arm_dependency_graph -v
+python3 -m unittest discover -s tests -p 'test_guest_arm_symbol_adapter.py' -v
+python3 -m unittest discover -s tests -p 'test_guest_arm_dependency_graph.py' -v
 bash ./tools/compile_host_mock.sh
 mkdir -p build/host-tests
 CC="${CC:-clang}"
