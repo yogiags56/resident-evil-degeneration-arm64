@@ -427,3 +427,12 @@ Added a read-only unified audit across section-backed REL/RELA, PT_DYNAMIC REL/R
     python3 tools/guest_arm_relocation_reconciliation.py /path/to/guest.elf --json /tmp/relocation-reconciliation.json
 
 See STAGE120F_REPORT.md, ROADMAP_THROUGH_STAGE120F.md, and docs/STAGE120F_DYNAMIC_RELOCATION_RECONCILIATION.md. GitHub Actions host suite passed 147 tests; no relocation is applied and no game boot is claimed.
+
+
+## Stage 120G — GNU hash dynamic symbol bounds
+
+Added bounded DT_GNU_HASH parsing for ELF32 EM_ARM. The auditor validates the header, bloom filter, buckets, and chain terminators; derives a safe dynamic-symbol count for GNU-hash-only binaries; validates GNU chain hashes and bloom membership against bounded DT_SYMTAB names; and cross-checks the result against SysV DT_HASH nchain when both are present. See STAGE120G_REPORT.md and docs/STAGE120G_GNU_HASH_SYMBOL_BOUNDS.md.
+
+    python3 tools/guest_arm_dynamic_relocation_segment_audit.py /path/to/guest.elf --json /tmp/dynamic-relocations.json
+
+The parser remains read-only and does not apply relocations or resolve runtime library providers.
