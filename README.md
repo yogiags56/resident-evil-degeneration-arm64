@@ -505,3 +505,8 @@ Stage 120N is complete. GitHub Actions run 42614083636 passed 229 Python tests a
 
 
 Stage 120O is complete: the APS2 parser now validates signed 32-bit SLEB128 fifth-byte payloads, and the conformance suite covers all legal REL/RELA group flag combinations plus malformed streams and multi-group state transitions. GitHub Actions run 42615891583 passed 244 Python tests and host C/native regressions. See STAGE120O_REPORT.md and STAGE120O_VALIDATION_LOG.txt.
+
+
+## Stage 120P — APS2 and RELR coexistence
+
+The ELF32 ARM audit now expands standard and Android RELR direct/bitmap entries alongside APS2 and ordinary REL/RELA tables. It preserves tag provenance, supports mixed standard/Android RELR aliases, bounds expanded target counts, and reports cross-format target collisions without modifying target contents. See STAGE120P_REPORT.md and docs/STAGE120P_APS2_RELR_COEXISTENCE.md.
