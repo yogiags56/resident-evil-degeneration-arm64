@@ -57,6 +57,16 @@ class RELRDecodeTests(unittest.TestCase):
         with self.assertRaises(ELFAuditError):
             module.decode_relr(words([0xfffffffc, 0x01]))
 
+
+    def test_expanded_relocation_count_has_independent_safety_limit(self):
+        previous = module.MAX_RELR_RELOCATIONS
+        try:
+            module.MAX_RELR_RELOCATIONS = 2
+            with self.assertRaises(ELFAuditError):
+                module.decode_relr(words([0x1000, 0xffffffff]))
+        finally:
+            module.MAX_RELR_RELOCATIONS = previous
+
     def test_rejects_invalid_word_size(self):
         with self.assertRaises(ELFAuditError):
             module.decode_relr(words([0x1000]), word_size=8)
