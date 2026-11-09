@@ -286,3 +286,21 @@ Later milestones: guest system control/MMU semantics, narrow checked-step integr
 3. Decode each range with the correct mode and preserve undecoded gaps.
 4. Add symbol-table bounds, relocation, and malformed mapping-symbol tests.
 5. Only then run the inventory on the original guest ELF when a permitted copy is available.
+
+
+## Stage 119W — ELF ARM mapping symbols
+
+- Parse ELF32 symbol/string tables and local mapping symbols $a, $t, $d, including suffixed forms.
+- Split executable sections into mode-aware code, data, and unknown ranges.
+- Decode ARM and Thumb ranges independently; do not send data ranges to Capstone.
+- Distinguish decoder-undecoded bytes, data bytes, and unmapped bytes.
+- Add synthetic mixed-mode ELF tests and fail-closed handling for conflicting symbols and malformed tables.
+- Original game executable remains absent; no game-specific inventory claimed.
+
+### Next — Stage 119X: relocation-aware disassembly and symbol cross-check
+
+1. Parse REL/RELA relocation tables and validate links, entry sizes, and symbol indices.
+2. Annotate decoded branch/call and literal references where relocation evidence exists.
+3. Cross-check mapping symbols, function symbols, and executable ranges.
+4. Preserve unknown relocations without guessing target addresses.
+5. Add synthetic relocation fixtures before analyzing the original binary.
