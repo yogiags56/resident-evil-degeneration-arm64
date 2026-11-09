@@ -24,16 +24,20 @@ REGUESTALIGNMENTSTATUS re_guest_alignment_check(
  if(!memory||!policy||!width||access_class<RE_GUEST_ACCESS_BYTE||
     access_class>RE_GUEST_ACCESS_COPROCESSOR)
   return RE_GUEST_ALIGN_E_ARGUMENT;
- if(!is_scalar(access_class))
-  return (width==1u && access_class==RE_GUEST_ACCESS_EXCLUSIVE)
-      ? RE_GUEST_ALIGN_E_UNSUPPORTED : RE_GUEST_ALIGN_E_FAULT;
  if((access_class==RE_GUEST_ACCESS_BYTE&&width!=1u)||
     (access_class==RE_GUEST_ACCESS_HALFWORD&&width!=2u)||
     (access_class==RE_GUEST_ACCESS_WORD&&width!=4u))
   return RE_GUEST_ALIGN_E_ARGUMENT;
+ if(width>8u||(width&(width-1u))!=0u)
+  return RE_GUEST_ALIGN_E_ARGUMENT;
+
  alignment=(uint32_t)width;
  if((address&(alignment-1u))==0u) return RE_GUEST_ALIGN_OK;
  if(width==1u) return RE_GUEST_ALIGN_OK;
+
+ /* Exclusive, doubleword, multiple, SWP, and coprocessor transfers
+  * remain alignment-constrained even when SCTLR.A is clear. */
+ if(!is_scalar(access_class)) return RE_GUEST_ALIGN_E_FAULT;
  if(policy->alignment_check_enabled) return RE_GUEST_ALIGN_E_FAULT;
 
  ms=re_guest_memory_query_type(memory,address,width,&type);
