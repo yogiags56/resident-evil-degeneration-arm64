@@ -93,10 +93,10 @@ class LoadPlanTests(unittest.TestCase):
             module.plan_load_segments(bytes(data))
 
 
-if __name__ == "__main__":
-    unittest.main()
-
     def test_accepts_exclusive_end_at_elf32_address_limit(self):
         segments = [(0, 0xfffff000, 0, 0x1000, 4, 0x1000)]
         report = module.plan_load_segments(fixture(segments=segments, entry=0xfffff000))
         self.assertEqual(report["segments"][0]["page_range"], [0xfffff000, 0x100000000])
+
+if __name__ == "__main__":
+    unittest.main()
