@@ -1,0 +1,23 @@
+Stage 120H validation record
+============================
+
+GitHub Actions workflow: Source checks
+Run ID: 42600277144
+Validated commit: 12c1ef460d9dea60e5326598696a58c6220c0d9e
+Result: success
+
+Observed:
+- python3 -m unittest discover -s tests -v
+- 165 Python tests passed (6.408 seconds)
+- ELF version requirement and definition fixtures passed.
+- DT_VERSYM hidden-bit preservation passed.
+- Missing version index, malformed auxiliary offset, and unterminated version string tests passed.
+- Version-aware relocation reconciliation tests passed.
+- bash ./tools/compile_host_mock.sh completed successfully.
+- Native host C regression executables completed successfully.
+
+Not tested:
+- Android ARM64 NDK build or APK installation in this run.
+- Physical-device execution.
+- Original game boot or gameplay.
+- Proprietary original ELF/APK analysis.
