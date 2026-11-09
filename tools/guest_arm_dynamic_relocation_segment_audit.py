@@ -53,6 +53,8 @@ def _gnu_hash(data, address, loads, endian):
         raise ELFAuditError("DT_GNU_HASH bloom_size must be a power of two")
     if symoffset > MAX_HASH_DIMENSION:
         raise ELFAuditError("DT_GNU_HASH symoffset exceeds safety limit")
+    if bloom_shift >= 32:
+        raise ELFAuditError("DT_GNU_HASH bloom_shift exceeds ELF32 word width")
     bloom_addr=address+16
     bloom_size_bytes=bloom_size*4
     _, bloom_raw=_mapped(data,bloom_addr,bloom_size_bytes,loads,"DT_GNU_HASH bloom filter")
