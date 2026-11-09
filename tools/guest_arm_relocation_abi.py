@@ -72,5 +72,41 @@ def get_spec(relocation_type):
     spec=SPECS.get(relocation_type)
     return dict(spec) if spec is not None else None
 
+def contract_for(relocation_type, symbol_index=None, target_domain="virtual", encoding=None):
+    """Return conservative ABI contract metadata; never infer provider resolution."""
+    spec=get_spec(relocation_type)
+    if spec is None:
+        return {"known":False,"symbol_policy":"unknown","applicability":"unknown",
+                "target_policy":"unknown","contract_issues":[]}
+    no_symbol={0,23}
+    mandatory_symbol={17,18,19,20,21,22}
+    if relocation_type in no_symbol:
+        symbol_policy="must_be_zero_or_absent"
+    elif relocation_type in mandatory_symbol:
+        symbol_policy="must_be_nonzero"
+    else:
+        symbol_policy="may_be_zero"
+    if relocation_type in {17,18,19,20,21,22,23}:
+        applicability="dynamic"
+    elif spec["kind"] in {"static","deprecated","platform_specific"}:
+        applicability="static_or_link_time"
+    else:
+        applicability="unknown"
+    target_policy="none" if spec["width"]==0 else (
+        "instruction" if spec["class"] in {"arm32","thumb16","thumb32"} else
+        "memory")
+    issues=[]
+    if symbol_index is not None:
+        if symbol_policy=="must_be_zero_or_absent" and symbol_index!=0:
+            issues.append("unexpected_symbol_index_for_symbol_free_relocation")
+        elif symbol_policy=="must_be_nonzero" and symbol_index==0:
+            issues.append("required_symbol_index_is_zero")
+    if target_domain!="virtual" and spec["width"] not in (0,None):
+        issues.append("non_virtual_target_domain_for_address_relocation")
+    if encoding=="RELR" and relocation_type!=23:
+        issues.append("unexpected_relocation_type_for_RELR")
+    return {"known":True,"symbol_policy":symbol_policy,"applicability":applicability,
+            "target_policy":target_policy,"contract_issues":issues}
+
 def known_widths():
     return {code:spec["width"] for code,spec in SPECS.items()}
