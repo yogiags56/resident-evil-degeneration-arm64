@@ -13,11 +13,14 @@ int main(void) {
     memset(elf, 0xA5, sizeof(elf));
     memset(text, 0xCC, sizeof(text));
     memset(data, 0xDD, sizeof(data));
+    memset(readonly, 0xEE, sizeof(readonly));
     re_guest_memory_init(&memory);
     assert(re_guest_memory_map(&memory, 0x1000, sizeof(text), text,
         RE_GUEST_MEM_READ | RE_GUEST_MEM_WRITE) == RE_GUEST_MEM_OK);
     assert(re_guest_memory_map(&memory, 0x2000, sizeof(data), data,
         RE_GUEST_MEM_READ | RE_GUEST_MEM_WRITE) == RE_GUEST_MEM_OK);
+    assert(re_guest_memory_map(&memory, 0x3000, sizeof(readonly), readonly,
+        RE_GUEST_MEM_READ) == RE_GUEST_MEM_OK);
 
     segments[0] = (REGUESTELFSEGMENT){0x1000, 4, 8, 16};
     segments[1] = (REGUESTELFSEGMENT){0x2000, 20, 12, 20};
@@ -61,6 +64,12 @@ int main(void) {
     assert(re_guest_elf_materialize(&memory, elf, sizeof(elf), segments, 1,
         &failed) == RE_GUEST_ELF_MATERIALIZE_E_GUEST_RANGE);
     assert(failed == 0);
+
+    segments[0] = (REGUESTELFSEGMENT){0x3000, 0, 8, 16};
+    assert(re_guest_elf_materialize(&memory, elf, sizeof(elf), segments, 1,
+        &failed) == RE_GUEST_ELF_MATERIALIZE_E_PERMISSION);
+    assert(failed == 0);
+    for (size_t i = 0; i < sizeof(readonly); ++i) assert(readonly[i] == 0xEE);
 
     assert(re_guest_elf_materialize(&memory, NULL, 0, NULL, 0, &failed)
         == RE_GUEST_ELF_MATERIALIZE_OK);
