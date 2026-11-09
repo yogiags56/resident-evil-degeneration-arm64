@@ -117,3 +117,16 @@ def collect_relr_tables(data: bytes, tags: dict[int, int], loads: list[dict], en
         return [first]
     decoded[0]["source_tags"] = [decoded[0]["source_tag"]]
     return decoded
+
+def find_cross_format_overlaps(groups: list[tuple[str, list[str]]]) -> list[dict]:
+    """Report target-address collisions between distinct relocation encodings."""
+    owners: dict[str, set[str]] = {}
+    for source, targets in groups:
+        for target in targets:
+            owners.setdefault(target, set()).add(source)
+    return [
+        {"target_address": target, "formats": sorted(formats)}
+        for target, formats in sorted(owners.items())
+        if len(formats) > 1
+    ]
+
