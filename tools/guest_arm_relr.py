@@ -79,8 +79,6 @@ def collect_relr_tables(data: bytes, tags: dict[int, int], loads: list[dict], en
         ("size", DT_RELRSZ, DT_ANDROID_RELRSZ),
         ("entry_size", DT_RELRENT, DT_ANDROID_RELRENT),
     )
-    if DT_ANDROID_RELRCOUNT in tags and not any(tag in tags for _, standard, android in alias_groups for tag in (standard, android)):
-        raise ELFAuditError("DT_ANDROID_RELRCOUNT is present without a RELR table")
     selected = {}
     source_tags = []
     for name, standard, android in alias_groups:
