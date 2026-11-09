@@ -19,7 +19,7 @@ def fixture(etype=3, segments=None, entry=0x1100):
     phoff = 52
     phnum = len(segments)
     data = bytearray(max(0x2000, phoff + phnum * 32))
-    data[:16] = b"\\x7fELF" + bytes([1, 1, 1]) + bytes(9)
+    data[:16] = b"\x7fELF" + bytes([1, 1, 1]) + bytes(9)
     struct.pack_into(
         "<HHIIIIIHHHHHH", data, 16,
         etype, 40, 1, entry, phoff, 0, 0, 52, 32, phnum, 40, 0, 0,
