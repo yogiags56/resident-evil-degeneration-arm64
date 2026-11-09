@@ -11,3 +11,14 @@ Required checks:
 - Stage 120Z source SHA-256 provenance.
 
 No test pass is claimed until GitHub Actions reports success.
+
+Follow-up review (2026-11-10):
+- Replaced module-style unittest invocations with discovery-compatible
+  commands, then removed redundant targeted invocations because the full
+  discovery command already includes both tests.
+- Corrected the repeated-DT_NEEDED test to locate the root node by SONAME
+  rather than rely on sorted node array position.
+- Added Stage 120Y report and validation-log files to CI source provenance.
+- GitHub Actions run/status queries currently return no run and no status
+  records for the PR head. Therefore CI remains NOT VERIFIED; these changes
+  do not claim a green result.
