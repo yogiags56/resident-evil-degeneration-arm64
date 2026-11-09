@@ -25,9 +25,14 @@ def _align_down(value: int, alignment: int) -> int:
 
 
 def _align_up(value: int, alignment: int) -> int:
-    if value > ELF32_LIMIT - (alignment - 1):
+    if value > ELF32_LIMIT:
         raise ELFAuditError("page-rounded segment end overflows ELF32 address space")
-    return (value + alignment - 1) & ~(alignment - 1)
+    if value == ELF32_LIMIT:
+        return ELF32_LIMIT
+    rounded = (value + alignment - 1) & ~(alignment - 1)
+    if rounded > ELF32_LIMIT:
+        raise ELFAuditError("page-rounded segment end overflows ELF32 address space")
+    return rounded
 
 
 def _permissions(flags: int) -> list[str]:
@@ -175,7 +180,7 @@ def main() -> int:
         rendered = json.dumps(report, indent=2)
         if args.json:
             args.json.parent.mkdir(parents=True, exist_ok=True)
-            args.json.write_text(rendered + "\\n", encoding="utf-8")
+            args.json.write_text(rendered + "\n", encoding="utf-8")
         print(rendered)
     except (OSError, ELFAuditError) as exc:
         parser.error(str(exc))
