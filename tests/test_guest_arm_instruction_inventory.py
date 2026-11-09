@@ -10,8 +10,8 @@ class FakeInstruction:
 class FakeEngine:
     def __init__(self,mode): self.mode=mode; self.detail=True
     def disasm(self,data,address,count=1):
-        if data.startswith(b"\xaa\xbb"): yield FakeInstruction(address,2,"mov","r0, r1")
-        elif data.startswith(b"\xcc\xdd\xee\xff"): yield FakeInstruction(address,4,"bl","0x1234")
+        if self.mode==0 and len(data)>=4: yield FakeInstruction(address,4,"armop","r0, r1")
+        elif data.startswith(b"\xaa\xbb"): yield FakeInstruction(address,2,"mov","r0, r1")
 class FakeCapstone(types.SimpleNamespace):
     def __init__(self): super().__init__(CS_ARCH_ARM=1,CS_MODE_ARM=0,CS_MODE_THUMB=16); self.__version__="test-fake"
     def Cs(self,arch,mode): self.last_mode=mode; return FakeEngine(mode)
@@ -30,7 +30,7 @@ def make_elf32(code=b"",symbols=(),flags=0x6):
     return ident+header+b"".join(shdr)+shnames+code+names+symtab
 class GuestArmInstructionInventoryTests(unittest.TestCase):
     def test_mapping_symbols_split_arm_thumb_and_data(self):
-        data=make_elf32(b"\xaa\xbb\xcc\xdd\xee\xff\x00\x00",(("$a",0),("$t",4),("$d",6)))
+        data=make_elf32(b"\xaa\xbb\xcc\xdd\xaa\xbb\x00\x00",(("$a",0),("$t",4),("$d",6)))
         result=inventory.inventory(data,None,FakeCapstone()); ranges=result["sections"][0]["ranges"]
         self.assertEqual([r["kind"] for r in ranges],["a","t","d"]); self.assertEqual([r["size"] for r in ranges],[4,2,2])
         self.assertEqual(result["summary"]["decoded_instructions"],2); self.assertEqual(result["summary"]["mapping_data_bytes"],2)
