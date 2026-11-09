@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse, hashlib, json, struct
 from pathlib import Path
 from guest_arm_elf_audit import ELFAuditError
+from guest_arm_relocation_abi import SPECS
 from guest_arm_pt_dynamic_audit import parse_program_headers, map_vaddr, PT_LOAD, PT_DYNAMIC
 DT_NULL=0; DT_HASH=4; DT_STRTAB=5; DT_SYMTAB=6; DT_RELA=7; DT_RELASZ=8
 DT_RELAENT=9; DT_STRSZ=10; DT_SYMENT=11; DT_REL=17; DT_RELSZ=18
@@ -19,6 +20,8 @@ RELOCS={0:"R_ARM_NONE",1:"R_ARM_PC24",2:"R_ARM_ABS32",3:"R_ARM_REL32",
 28:"R_ARM_CALL",29:"R_ARM_JUMP24",30:"R_ARM_THM_JUMP24",38:"R_ARM_TARGET1",
 42:"R_ARM_PREL31",43:"R_ARM_MOVW_ABS_NC",44:"R_ARM_MOVT_ABS",
 47:"R_ARM_THM_MOVW_ABS_NC",48:"R_ARM_THM_MOVT_ABS"}
+RELOCS.update({code:spec["name"] for code,spec in SPECS.items()})
+
 def _read_dynamic(data, ph):
     endian=ph["endian"]; loads=[x for x in ph["program_headers"] if x["type"]==PT_LOAD]
     segments=[x for x in ph["program_headers"] if x["type"]==PT_DYNAMIC]
