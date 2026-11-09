@@ -14,7 +14,33 @@ PROFILE_NAMES = {65:"Application",82:"Realtime",77:"Microcontroller",83:"Applica
 THUMB_USE = {0:"not permitted",1:"Thumb-1 permitted",2:"Thumb-2 permitted"}
 FP_ARCH = {0:"none",1:"VFPv1",2:"VFPv2",3:"VFPv3",4:"VFPv3-D16",5:"VFPv4",6:"ARMv8-A FP"}
 SIMD_ARCH = {0:"none",1:"NEONv1",2:"ARMv8-A SIMD"}
-STRING_TAGS = {4:"CPU_raw_name",5:"CPU_name",65:"also_compatible_with"}
+STRING_TAGS = {4:"CPU_raw_name",5:"CPU_name",32:"compatibility",65:"also_compatible_with",67:"conformance"}
+ATTRIBUTE_NAMES = {
+  6:"CPU_arch",7:"CPU_arch_profile",8:"ARM_ISA_use",9:"THUMB_ISA_use",10:"FP_arch",
+  11:"WMMX_arch",12:"Advanced_SIMD_arch",13:"PCS_config",14:"ABI_PCS_R9_use",
+  15:"ABI_PCS_RW_data",16:"ABI_PCS_RO_data",17:"ABI_PCS_GOT_use",18:"ABI_PCS_wchar_t",
+  19:"ABI_FP_rounding",20:"ABI_FP_denormal",21:"ABI_FP_exceptions",22:"ABI_FP_user_exceptions",
+  23:"ABI_FP_number_model",24:"ABI_align_needed",25:"ABI_align_preserved",26:"ABI_enum_size",
+  27:"ABI_HardFP_use",28:"ABI_VFP_args",29:"ABI_WMMX_args",30:"ABI_optimization_goals",
+  31:"ABI_FP_optimization_goals",34:"CPU_unaligned_access",36:"FP_HP_extension",
+  38:"ABI_FP_16bit_format",42:"MPextension_use",44:"DIV_use",46:"DSP_extension",
+  48:"MVE_arch",50:"PAC_extension",52:"BTI_extension",64:"nodefaults",
+  66:"T2EE_use",68:"Virtualization_use"
+}
+ATTRIBUTE_NAMES.update({tag:name for tag,name in STRING_TAGS.items()})
+def attribute_value_kind(tag):
+    normalized = tag % 128 if tag >= 128 else tag
+    if normalized in (32,):
+        return "compatibility"
+    if normalized == 64:
+        return "none"
+    if normalized in STRING_TAGS:
+        return "string"
+    if 33 <= normalized <= 127:
+        return "string" if normalized & 1 else "integer"
+    if normalized in ATTRIBUTE_NAMES or normalized in (1,2,3):
+        return "integer"
+    raise ELFAuditError(f"unknown mandatory AEABI attribute tag {tag}")
 
 def unpack(fmt, data, off, label):
     size=struct.calcsize(fmt)
@@ -38,41 +64,91 @@ def uleb(data,off,end):
         shift+=7
     raise ELFAuditError("ULEB128 exceeds 32-bit encoding limit")
 
+def parse_public_attributes(blob, endian):
+    pos=0
+    scopes=[]
+    while pos<len(blob):
+        scope_start=pos
+        tag,pos=uleb(blob,pos,len(blob))
+        size,=unpack(endian+"I",blob,pos,"ARM attribute scope size")
+        scope_end=scope_start+size
+        if size<5 or scope_end>len(blob):
+            raise ELFAuditError("invalid ARM attribute scope size")
+        pos+=4
+        indexes=[]
+        if tag in (2,3):
+            while True:
+                index,pos=uleb(blob,pos,scope_end)
+                if index==0: break
+                indexes.append(index)
+        elif tag!=1:
+            raise ELFAuditError(f"unknown AEABI attribute scope tag {tag}")
+        values={}
+        while pos<scope_end:
+            attr_tag,pos=uleb(blob,pos,scope_end)
+            if attr_tag==0:
+                raise ELFAuditError("zero AEABI attribute tag")
+            kind=attribute_value_kind(attr_tag)
+            if kind=="string":
+                value,pos=cstring(blob,pos,scope_end,ATTRIBUTE_NAMES.get(attr_tag,f"tag_{attr_tag}"))
+            elif kind=="compatibility":
+                flag,pos=uleb(blob,pos,scope_end)
+                vendor_name,pos=cstring(blob,pos,scope_end,"Tag_compatibility vendor")
+                value={"flag":flag,"vendor":vendor_name}
+            elif kind=="none":
+                value=True
+            else:
+                value,pos=uleb(blob,pos,scope_end)
+            key=ATTRIBUTE_NAMES.get(attr_tag,f"tag_{attr_tag}")
+            if key in values and values[key]!=value:
+                raise ELFAuditError(f"conflicting values for AEABI attribute {key}")
+            values[key]=value
+        if pos!=scope_end:
+            raise ELFAuditError("AEABI scope boundary mismatch")
+        scopes.append({"scope":{1:"file",2:"section",3:"symbol"}[tag],
+                       "indexes":indexes,"attributes":values})
+    return scopes
+
 def parse_arm_attributes(blob,endian):
-    if not blob: return {"present":False,"vendors":[],"file_attributes":{}}
+    if not blob: return {"present":False,"vendors":[],"file_attributes":{},"scopes":[]}
     if blob[:1]!=b"A": raise ELFAuditError("unsupported .ARM.attributes format byte")
-    pos=1; attrs={}; vendors=[]
+    pos=1; vendors=[]; all_scopes=[]; private=[]
     while pos<len(blob):
         start=pos
         length,=unpack(endian+"I",blob,pos,"vendor subsection length")
         if length<5 or start+length>len(blob): raise ELFAuditError("invalid ARM vendor subsection length")
         end=start+length
-        vendor,pos=cstring(blob,pos+4,end,"vendor"); vendors.append(vendor)
-        while pos<end:
-            subsection_start=pos
-            tag,pos=uleb(blob,pos,end)
-            if tag!=1: raise ELFAuditError(f"unsupported ARM attribute subsection tag {tag}")
-            flen,=unpack(endian+"I",blob,pos,"file attribute length")
-            fend=subsection_start+flen
-            if flen<5 or fend>end: raise ELFAuditError("invalid ARM file attribute length")
-            pos+=4
-            while pos<fend:
-                atag,pos=uleb(blob,pos,fend)
-                if atag in STRING_TAGS: value,pos=cstring(blob,pos,fend,STRING_TAGS[atag])
-                else: value,pos=uleb(blob,pos,fend)
-                attrs[STRING_TAGS.get(atag,f"tag_{atag}")]=value
-            if pos!=fend: raise ELFAuditError("ARM file attribute boundary mismatch")
-        if pos!=end: raise ELFAuditError("ARM vendor subsection boundary mismatch")
-    result={"present":True,"vendors":vendors,"file_attributes":attrs}
-    if vendors==["aeabi"]:
-        decoded={}
-        maps={"tag_6":("CPU_arch",CPU_ARCH),"tag_7":("CPU_arch_profile",PROFILE_NAMES),"tag_9":("THUMB_ISA_use",THUMB_USE),"tag_10":("FP_arch",FP_ARCH),"tag_12":("Advanced_SIMD_arch",SIMD_ARCH)}
-        for key,(name,mapping) in maps.items():
-            if key in attrs:
-                value=attrs[key]; decoded[name]={"value":value,"name":mapping.get(value,"unknown")}
-        for key,name in (("tag_8","ARM_ISA_use"),("tag_28","ABI_VFP_args")):
-            if key in attrs: decoded[name]=attrs[key]
-        result["decoded"]=decoded
+        vendor,pos=cstring(blob,pos+4,end,"vendor")
+        vendor_data=blob[pos:end]
+        vendors.append(vendor)
+        if vendor=="aeabi":
+            scopes=parse_public_attributes(vendor_data,endian)
+            for scope in scopes:
+                scope["vendor"]=vendor
+            all_scopes.extend(scopes)
+        else:
+            # Private vendor payload is deliberately opaque; its schema is vendor-defined.
+            private.append({"vendor":vendor,"data_size":len(vendor_data),"data_hex":vendor_data.hex()})
+        pos=end
+    file_attrs={}
+    for scope in all_scopes:
+        if scope["scope"]=="file":
+            for key,value in scope["attributes"].items():
+                if key in file_attrs and file_attrs[key]!=value:
+                    raise ELFAuditError(f"conflicting file-scope AEABI attribute {key}")
+                file_attrs[key]=value
+    result={"present":True,"vendors":vendors,"file_attributes":file_attrs,
+            "scopes":all_scopes,"private_vendor_payloads":private}
+    decoded={}
+    maps={"CPU_arch":CPU_ARCH,"CPU_arch_profile":PROFILE_NAMES,
+          "THUMB_ISA_use":THUMB_USE,"FP_arch":FP_ARCH,"Advanced_SIMD_arch":SIMD_ARCH}
+    for key,mapping in maps.items():
+        if key in file_attrs:
+            value=file_attrs[key]; decoded[key]={"value":value,"name":mapping.get(value,"unknown")}
+    for key in ("ARM_ISA_use","ABI_VFP_args","CPU_unaligned_access","MVE_arch",
+                "DIV_use","DSP_extension","Virtualization_use"):
+        if key in file_attrs: decoded[key]=file_attrs[key]
+    result["decoded"]=decoded
     return result
 
 def audit_elf(data):

@@ -50,4 +50,8 @@ Audited what the repository proves about the guest ARM profile. Confirmed ARM32/
 
 ## Stage 119T update
 
-Added a read-only ELF32/ELF64 auditor and synthetic fixtures for ELF class, endianness, machine, section bounds, and selected AEABI ARM attributes. The original guest executable is not in the repository, so no game-specific metadata is claimed. The first CI attempt exposed incorrect ARM attribute subsection-length accounting; the parser and fixture were corrected. Latest source checks and Android ARM64 build are running on commit ed33482. See STAGE119T_GUEST_ELF_ARM_ABI_AUDIT.md.
+Added a read-only ELF32/ELF64 metadata auditor and synthetic tests for ELF class, byte order, machine, section bounds, and selected AEABI ARM attributes. The original guest executable is not in the repository, so no game-specific metadata is claimed. Host source checks and Android ARM64 native build passed on commit ffd61f9 (runs 42586297642 and 42586297664). This does not establish game boot or playability.
+
+## Stage 119U update
+
+Expanded public AEABI attribute parsing to file, section, and symbol scopes; implemented Tag_compatibility (ULEB128 flag plus vendor string) and argument-free Tag_nodefaults; retained private vendor payloads as opaque data. Added a readelf/llvm-readobj evidence-capture utility recording tool version and source SHA-256 without executing the input. CI pending.

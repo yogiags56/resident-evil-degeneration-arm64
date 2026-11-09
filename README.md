@@ -345,10 +345,18 @@ The latest documented source milestone is Stage 119S (guest ARM architecture-pro
 See [current status](docs/STATUS.md), [Stage 119S report](docs/STAGE119S_GUEST_ARM_PROFILE_AUDIT.md), [Stage 119R report](docs/STAGE119R_A32_DIRECTED_FAULT_TESTS.md), [Stage 119Q report](docs/STAGE119Q_A32_SCALAR_DIFFERENTIAL.md), [Stage 119P report](docs/STAGE119P_A32_SCALAR_TRANSFER_INTEGRATION.md), [Stage 119O report](docs/STAGE119O_CHECKED_SCALAR_TRANSFER.md), and [project roadmap](ROADMAP.md). Stage 119Q host CI passed on commit `c4325e6` (75 Python checks, native C syntax checks, integration tests, and 512 differential cases). Stage 119R host CI passed on code commit `46a8d8a` (75 Python checks, native C syntax checks, integration tests, 512 differential cases, and directed fault tests). Stage 119P and 119Q Android ARM64 builds passed; Stage 119R host CI and Android ARM64 build passed on commit `080203b`. No production CPU migration, original game boot, or playable build is claimed.
 
 
-## Current engineering milestone — Stage 119T
+## Stage 119T — Guest ELF and ARM ABI metadata audit
 
-Stage 119T adds a read-only ELF/ARM ABI metadata auditor with synthetic fixtures. It inspects locally supplied ELF32/ELF64 files and selected AEABI .ARM.attributes; it does not execute or modify the binary. The original game executable is not stored in this repository, so game-specific CPU attributes remain unknown.
+Added a read-only ELF32/ELF64 metadata auditor with synthetic fixtures. It reports ELF class, endianness, machine, flags, section names, and selected AEABI ARM attributes. It does not execute or modify the input. The original game executable is not stored in this repository, so game-specific attributes remain unknown.
 
     python3 tools/guest_arm_elf_audit.py /path/to/guest.elf --json /tmp/guest-elf-report.json
 
-See docs/STAGE119T_GUEST_ELF_ARM_ABI_AUDIT.md, docs/STATUS.md, and ROADMAP.md. CI is running; no game boot or playable build is claimed.
+See [Stage 119T report](docs/STAGE119T_GUEST_ELF_ARM_ABI_AUDIT.md). Host source checks and Android ARM64 native build passed on commit ffd61f9. This is build validation only, not game boot validation.
+
+## Stage 119U — ARM attribute scopes and external evidence capture
+
+Expanded public AEABI attribute parsing to file, section, and symbol scopes, including Tag_compatibility and Tag_nodefaults. Added readelf/llvm-readobj evidence capture with source SHA-256 and tool-version recording.
+
+    python3 tools/guest_arm_elf_evidence.py /path/to/guest.elf --tool auto --json /tmp/guest-evidence.json
+
+See [Stage 119U report](docs/STAGE119U_ARM_ATTRIBUTES_EVIDENCE.md). Review evidence output before sharing because it can contain symbol names and local paths. The tool does not execute the supplied ELF.
