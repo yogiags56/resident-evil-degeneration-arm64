@@ -53,3 +53,7 @@ Reports contain relocation target addresses only. The parser never dereferences 
 - Cross-check DT_ANDROID_RELRCOUNT behavior across Android API levels.
 - Analyze mixed standard/Android alias behavior against more Bionic revisions.
 - Continue toward real ARM64 build and device-side guest execution only after the static ELF evidence is complete.
+
+## Validation evidence
+
+GitHub Actions run 42618941160 passed 272 Python tests in 12.026 seconds and host C/native regressions. The validation covers standard and Android RELR tags, mixed aliases, 32-bit bitmap expansion, bounds, malformed inputs, coexistence with APS2 REL/RELA, and cross-encoding target collision reporting. See STAGE120P_VALIDATION_LOG.txt.
