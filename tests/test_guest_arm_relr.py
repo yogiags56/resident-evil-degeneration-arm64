@@ -124,7 +124,7 @@ class RELRTagTests(unittest.TestCase):
         tables = module.collect_relr_tables(bytes(data), tags, [], "<", self.mapper)
         self.assertEqual(tables[0]["targets"], ["0x00001300"])
         self.assertEqual(tables[0]["source_tags"],
-                         ["DT_RELR", "DT_RELRENT", "DT_ANDROID_RELRSZ"])
+                         ["DT_RELR", "DT_ANDROID_RELRSZ", "DT_RELRENT"])
 
     def test_preserves_android_relr_count_hint_without_using_it_as_table_size(self):
         data = bytearray(0x400)
