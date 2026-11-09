@@ -117,6 +117,16 @@ class ReconciliationTests(unittest.TestCase):
         self.assertIsNone(entry.get("symbol_size"))
         self.assertFalse(entry["target_range"]["width_known"])
 
+
+    def test_integrates_android_relr_aliases_in_full_reconciliation(self):
+        from guest_arm_relr import DT_ANDROID_RELR, DT_ANDROID_RELRSZ, DT_ANDROID_RELRENT
+        report=module.audit(relr_fixture(tag_triplet=(
+            DT_ANDROID_RELR,DT_ANDROID_RELRSZ,DT_ANDROID_RELRENT)))
+        relr=[t for t in report["tables"] if t["encoding"]=="RELR"][0]
+        self.assertEqual(relr["entry_count"],4)
+        self.assertEqual(relr["entries"][0]["type_name"],"R_ARM_RELATIVE")
+        self.assertEqual(report["relr_relocation_count"],4)
+
     def test_integrates_relr_without_fabricating_symbol_or_addend(self):
         report=module.audit(relr_fixture())
         self.assertEqual(report["relr_relocation_count"],4)
