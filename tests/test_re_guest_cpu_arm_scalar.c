@@ -59,11 +59,11 @@ int main(void) {
  /* SCTLR.A clear permits ordinary unaligned Normal-memory scalar transfers. */
  re_guest_alignment_policy_set_sctlr_a(&policy,0u);
  data[20]=0x11u;data[21]=0x22u;data[22]=0x33u;data[23]=0x44u;
- assert(re_guest_cpu_arm_scalar_transfer(&cpu,&scalar,0xe5916014u)==RE_CPU_OK);
+ assert(re_guest_cpu_arm_scalar_transfer(&cpu,&scalar,0xe5916015u)==RE_CPU_OK);
  assert(cpu.r[6]==0x44332211u);
  cpu.r[6]=0x88776655u;
- assert(re_guest_cpu_arm_scalar_transfer(&cpu,&scalar,0xe5816015u)==RE_CPU_OK);
- assert(data[21]==0x55u&&data[22]==0x66u&&data[23]==0x77u&&data[24]==0x88u);
+ assert(re_guest_cpu_arm_scalar_transfer(&cpu,&scalar,0xe5816016u)==RE_CPU_OK);
+ assert(data[22]==0x55u&&data[23]==0x66u&&data[24]==0x77u&&data[25]==0x88u);
 
  /* Restore strict mode: unaligned word load faults, Rd is preserved. */
  re_guest_alignment_policy_set_sctlr_a(&policy,1u);
