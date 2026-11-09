@@ -45,13 +45,17 @@ GitHub Actions run 42640031158 passed all 273 Python tests and host C/native reg
 
 See STAGE120Q_REPORT.md and docs/STAGE120Q_RELR_DIFFERENTIAL_VALIDATION.md.
 
-## Next milestone: Stage 120R — Cross-toolchain RELR parity and real-image inventory
+## Completed milestone: Stage 120R — PT_DYNAMIC RELR differential validation
 
-1. Compare parser output with GNU readelf and LLVM llvm-readelf on additional ELF32 ARM fixtures.
-2. Build and archive linker/toolchain-generated RELR fixtures covering sparse/dense bitmaps, aliases, and mixed relocation sources.
-3. Inspect the project's actual guest ELF when a version-matched binary is available; do not infer unsupported formats from synthetic fixtures.
-4. Preserve file-offset, virtual-address, and provenance evidence for each relocation stream.
-5. Keep analysis read-only until a separately reviewed runtime relocation design exists.
+Stage 120R added a section-header-independent PT_DYNAMIC RELR fixture, a GNU readelf differential test, and unified reconciliation checks. CI validation is tracked in PR #19 and must pass before the stage is marked complete.
+
+## Next milestone: Stage 120S — ELF32 ARM PT_LOAD segment mapping and memory layout planning
+
+1. Validate PT_LOAD file-backed and memory ranges, including BSS zero-fill boundaries.
+2. Calculate page-rounded ranges without allocating guest memory or modifying file contents.
+3. Report page overlaps and combined permissions, especially writable/executable page combinations.
+4. Keep ET_EXEC fixed-address and ET_DYN load-bias requirements explicit; do not choose a bias.
+5. Add malformed-range, overflow, alignment, and entry-point regression fixtures.
 
 ## Remaining major gates
 
