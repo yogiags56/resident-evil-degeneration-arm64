@@ -75,6 +75,8 @@ class ReconciliationTests(unittest.TestCase):
         report=module.audit(bytes(data))
         targets=report["target_range_audit"]["targets"]
         self.assertEqual(report["target_range_audit"]["target_count"],4)
+        self.assertGreater(report["relocation_abi"]["registry_entry_count"],40)
+        self.assertTrue(report["relocation_abi"]["unknown_types_preserved"])
         self.assertEqual(targets[0]["status"],"zero_fill_bss")
         relr=[t for t in report["tables"] if t["encoding"]=="RELR"][0]
         self.assertEqual(relr["entries"][0]["target_range"]["status"],"zero_fill_bss")
