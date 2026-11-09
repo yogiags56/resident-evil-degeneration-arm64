@@ -544,3 +544,8 @@ Added a preflighted segment materializer that copies file-backed bytes and zero-
 ## Stage 120V — Guest permission finalization
 
 Added an atomic permission finalization API for exact existing guest mappings. It rejects W+X and validates every request before changing any guest permission metadata. It does not alter host page protections. See `docs/STAGE120V_PERMISSION_FINALIZATION.md`.
+
+
+## Stage 120W — ARM32 relocation application
+
+Added a bounded, preflighted relocation helper for R_ARM_RELATIVE, R_ARM_ABS32, R_ARM_GLOB_DAT, and R_ARM_JUMP_SLOT. It requires caller-provided symbol values, rejects duplicate/unaligned/unmapped targets, and applies no writes until all entries validate. This is not a dynamic linker. See `docs/STAGE120W_RELOCATION_APPLICATION.md`.
