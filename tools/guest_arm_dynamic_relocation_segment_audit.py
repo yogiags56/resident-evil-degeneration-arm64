@@ -328,8 +328,6 @@ def _needed_libraries(data,entries,tags,loads):
     names=[]
     for offset in offsets:
         names.append(_version_string(strraw,offset,"DT_NEEDED"))
-    if len(set(names))!=len(names):
-        raise ELFAuditError("duplicate DT_NEEDED library name")
     return names
 
 def _reloc_table(data,address,size,entry_size,kind,loads,endian,label,symbols):
