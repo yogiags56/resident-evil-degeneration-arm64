@@ -24,7 +24,7 @@ def _section_tables(report, elf):
         for e in table["entries"]:
             entries.append({"index":len(entries),"target_domain":"virtual" if is_virtual else f"section:{table['target_section_index']}",
                 "target":int(e["offset"],16) if is_virtual else e["target_section_offset"],
-                "symbol_index":e["symbol_index"],"symbol":e["symbol"],"symbol_size":e.get("symbol_size"),"symbol_defined":e.get("symbol_defined"),"type":e["type"],
+                "symbol_index":e["symbol_index"],"symbol":e["symbol"],"symbol_size":e.get("symbol_size"),"symbol_defined":e.get("symbol_defined"),"symbol_section_index":e.get("symbol_section_index",e.get("symbol_section_index")),"type":e["type"],
                 "type_name":e["type_name"],"addend":e["addend"],
                 "symbol_namespace":f"SHT_SYMTAB:{table['symbol_table_index']}","symbol_version":None})
         result.append({"source_table":f"SHT_{table['type']}:{table['name']}","encoding":table["type"],
@@ -39,7 +39,7 @@ def _convert(report, namespace, packed=False):
         entries=[]
         for e in table["entries"]:
             entries.append({"index":e["index"],"target_domain":"virtual","target":int(e["target_address"],16),
-                "symbol_index":e["symbol_index"],"symbol":e.get("symbol"),"symbol_size":e.get("symbol_size"),"symbol_defined":e.get("symbol_defined"),"type":e["type"],
+                "symbol_index":e["symbol_index"],"symbol":e.get("symbol"),"symbol_size":e.get("symbol_size"),"symbol_defined":e.get("symbol_defined"),"symbol_section_index":e.get("symbol_section_index"),"type":e["type"],
                 "type_name":e["type_name"],"addend":e.get("addend"),"symbol_namespace":namespace,"symbol_version":e.get("symbol_version")})
         result.append({"source_table":table["source_tag"],"encoding":f"APS2_{table['kind']}" if packed else table["kind"],
             "kind":table["kind"],"file_offset":table["file_offset"],
