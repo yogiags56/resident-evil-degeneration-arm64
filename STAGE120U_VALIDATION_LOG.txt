@@ -1,0 +1,13 @@
+Stage 120U validation record
+============================
+
+Status: PENDING
+Branch: stage-120u-elf-segment-materialization
+
+Required checks:
+- Full Python unittest discovery.
+- Host C mock compilation.
+- Native C guest memory and ELF materialization regressions.
+- CI source SHA-256 provenance step.
+
+No test pass is claimed until GitHub Actions reports success.
