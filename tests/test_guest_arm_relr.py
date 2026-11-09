@@ -55,7 +55,7 @@ class RELRDecodeTests(unittest.TestCase):
 
     def test_rejects_bitmap_cursor_overflow(self):
         with self.assertRaises(ELFAuditError):
-            module.decode_relr(words([0xfffffffc, 0x03]))
+            module.decode_relr(words([0xfffffffc, 0x01]))
 
     def test_rejects_invalid_word_size(self):
         with self.assertRaises(ELFAuditError):
@@ -114,6 +114,22 @@ class RELRTagTests(unittest.TestCase):
         tags = {module.DT_RELR: 0x1200, module.DT_RELRSZ: 4, module.DT_RELRENT: 8}
         with self.assertRaises(ELFAuditError):
             module.collect_relr_tables(b"", tags, [], "<", self.mapper)
+
+
+    def test_reports_overlapping_targets_across_distinct_formats(self):
+        overlaps = module.find_cross_format_overlaps([
+            ("DT_ANDROID_REL", ["0x00001000", "0x00001004"]),
+            ("DT_RELR", ["0x00001004", "0x00001008"]),
+        ])
+        self.assertEqual(overlaps, [
+            {"target_address": "0x00001004", "formats": ["DT_ANDROID_REL", "DT_RELR"]}
+        ])
+
+    def test_does_not_report_duplicates_within_one_format(self):
+        self.assertEqual(module.find_cross_format_overlaps([
+            ("DT_REL", ["0x1000", "0x1000"]),
+            ("DT_REL", ["0x1000"]),
+        ]), [])
 
     def test_rejects_non_multiple_table_size(self):
         tags = {module.DT_RELR: 0x1200, module.DT_RELRSZ: 6, module.DT_RELRENT: 4}
