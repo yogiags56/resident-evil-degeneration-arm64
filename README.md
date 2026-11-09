@@ -480,3 +480,6 @@ See STAGE120K_REPORT.md and docs/STAGE120K_ARM_RELOCATION_ABI.md. GitHub Actions
 The AAELF32 registry now also annotates conservative symbol-index policy, processing applicability, and target policy. It flags nonzero symbol indices on R_ARM_RELATIVE, requires symbols for COPY/GLOB_DAT/JUMP_SLOT/DTPOFF32, preserves nullable TLS DTPMOD32/TPOFF32 cases, leaves R_ARM_NONE's symbol index unconstrained, and accepts ET_REL section-relative target domains. Unified output includes per-entry abi_contract and aggregate contract issue counts.
 
 See STAGE120L_REPORT.md and docs/STAGE120L_RELOCATION_CONTRACTS.md. This remains read-only metadata validation; no symbol provider is resolved and no relocation is applied.
+
+
+Stage 120L is complete. Conservative per-relocation contracts now cover symbol-index policy, processing applicability, and target policy. Special cases preserve R_ARM_RELATIVE's symbol-free rule, nullable TLS DTPMOD32/TPOFF32, R_ARM_NONE's unconstrained symbol index, and ET_REL section-relative targets. GitHub Actions run 42603875912 passed 206 Python tests plus host C/native regressions. See STAGE120L_REPORT.md and STAGE120L_VALIDATION_LOG.txt.
