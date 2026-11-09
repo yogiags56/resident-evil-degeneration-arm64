@@ -332,10 +332,10 @@ def _reloc_table(data,address,size,entry_size,kind,loads,endian,label,symbols):
         if symbols is not None:
             if sym_index>=len(symbols): raise ELFAuditError(f"{label}: symbol index {sym_index} out of range")
             sym=symbols[sym_index]
-            symbol={"index":sym_index,"name":sym["name"],"undefined":sym["undefined"],"version":sym.get("version")}
-        else: symbol={"index":sym_index,"name":None,"undefined":None}
+            symbol={"index":sym_index,"name":sym["name"],"undefined":sym["undefined"],"size":sym["size"],"section_index":sym["section_index"],"version":sym.get("version")}
+        else: symbol={"index":sym_index,"name":None,"undefined":None,"size":None,"section_index":None}
         entries.append({"index":index,"target_address":f"0x{target:08x}",
-          "symbol_index":sym_index,"symbol":symbol["name"],"symbol_undefined":symbol["undefined"],"symbol_version":symbol.get("version"),
+          "symbol_index":sym_index,"symbol":symbol["name"],"symbol_undefined":symbol["undefined"],"symbol_size":symbol["size"],"symbol_defined":symbol["section_index"] not in (None,0),"symbol_version":symbol.get("version"),
           "type":typ,"type_name":RELOCS.get(typ,f"R_ARM_UNKNOWN_{typ}"),"addend":addend})
     return {"kind":kind,"virtual_address":f"0x{address:08x}","file_offset":off,
       "size":size,"entry_size":entry_size,"entry_count":len(entries),"entries":entries}
