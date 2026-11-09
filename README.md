@@ -374,3 +374,8 @@ See docs/STAGE119V_ARM_THUMB_INSTRUCTION_INVENTORY.md. Original game binary rema
 ## Stage 119W — ARM mapping symbols
 
 Instruction inventory now reads ELF32 local mapping symbols ($a/$t/$d) and splits executable sections into ARM, Thumb, data, and unknown ranges. Unknown prefixes are not guessed. Sections without mapping symbols require an explicit fallback mode. See docs/STAGE119W_ARM_MAPPING_SYMBOLS.md.
+
+
+## Stage 119X — ARM relocation audit
+
+Added a read-only ELF32 EM_ARM REL/RELA relocation auditor. It validates relocation table links, target section bounds, symbol indices, and reports known relocation names while preserving unknown types numerically. No relocation is applied. See docs/STAGE119X_ARM_RELOCATION_AUDIT.md.

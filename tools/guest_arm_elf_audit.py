@@ -171,12 +171,12 @@ def audit_elf(data):
         sh=unpack(endian+("IIIIIIIIII" if cls==1 else "IIQQQQIIQQ"),data,off,"section header")
         name,stype,sflags,addr,foff,size,link,info,align,entsize=sh
         if stype!=8 and foff+size>len(data): raise ELFAuditError(f"section {i} data out of bounds")
-        sections.append({"index":i,"name_offset":name,"type":stype,"flags":sflags,"address":addr,"offset":foff,"size":size,"link":link,"entsize":entsize})
+        sections.append({"index":i,"name_offset":name,"type":stype,"flags":sflags,"address":addr,"offset":foff,"size":size,"link":link,"info":info,"entsize":entsize})
     ns=sections[shstrndx]; names=data[ns["offset"]:ns["offset"]+ns["size"]]
     for s in sections: s["name"],_=cstring(names,s["name_offset"],len(names),"section name")
     arm=next((s for s in sections if s["name"]==".ARM.attributes"),None)
     attrs=parse_arm_attributes(data[arm["offset"]:arm["offset"]+arm["size"]],endian) if arm else {"present":False,"vendors":[],"file_attributes":{}}
-    return {"file_size":len(data),"sha256":hashlib.sha256(data).hexdigest(),"elf_class":32 if cls==1 else 64,"endianness":"little" if enc==1 else "big","type":etype,"machine":machine,"machine_name":MACHINE_NAMES.get(machine,"unknown"),"entry":f"0x{entry:x}","flags":f"0x{flags:x}","program_header_count":phnum,"section_count":shnum,"sections":[{"index":s["index"],"name":s["name"],"type":s["type"],"flags":s["flags"],"address":f"0x{s['address']:x}","offset":s["offset"],"size":s["size"],"link":s["link"],"entsize":s["entsize"]} for s in sections],"arm_attributes":attrs,"evidence_limits":["ELF metadata describes the supplied file, not necessarily runtime CPU reset state.","Missing .ARM.attributes means attributes are unknown, not that extensions are absent.","This audit does not disassemble code or infer instruction usage."]}
+    return {"file_size":len(data),"sha256":hashlib.sha256(data).hexdigest(),"elf_class":32 if cls==1 else 64,"endianness":"little" if enc==1 else "big","type":etype,"machine":machine,"machine_name":MACHINE_NAMES.get(machine,"unknown"),"entry":f"0x{entry:x}","flags":f"0x{flags:x}","program_header_count":phnum,"section_count":shnum,"sections":[{"index":s["index"],"name":s["name"],"type":s["type"],"flags":s["flags"],"address":f"0x{s['address']:x}","offset":s["offset"],"size":s["size"],"link":s["link"],"info":s["info"],"entsize":s["entsize"]} for s in sections],"arm_attributes":attrs,"evidence_limits":["ELF metadata describes the supplied file, not necessarily runtime CPU reset state.","Missing .ARM.attributes means attributes are unknown, not that extensions are absent.","This audit does not disassemble code or infer instruction usage."]}
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
