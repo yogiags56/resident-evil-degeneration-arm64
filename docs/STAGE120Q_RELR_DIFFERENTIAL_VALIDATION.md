@@ -31,3 +31,7 @@ GNU binutils readelf is used as an independent output oracle for a generated ELF
 ## Scope limits
 
 This remains offline ELF inspection. It does not apply relocations, compute runtime load bias, inspect target memory, or claim Android device execution or original game boot.
+
+## Validation evidence
+
+GitHub Actions run 42640031158 passed all 273 Python tests in 5.135 seconds, including GNU readelf differential comparison of the generated ELF32 SHT_RELR fixture. Host C mock compilation, native C regression checks, and CI SHA-256 reporting also passed. See STAGE120Q_VALIDATION_LOG.txt.
