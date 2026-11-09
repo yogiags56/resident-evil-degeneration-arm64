@@ -453,12 +453,21 @@ Later milestones: guest system control/MMU semantics, narrow checked-step integr
 - Rejects malformed record counts, invalid auxiliary offsets, missing version records, and unterminated strings.
 - GitHub Actions run 42600277144 passed 165 Python tests plus host C/native regression checks.
 
-### Next — Stage 120I: ELF32 RELR relative relocation decoding
+## Stage 120I — ELF32 RELR relative relocation decoding
 
-1. Verify ELF32 RELR dynamic tags and word encoding against the generic ABI and Android linker behavior.
-2. Parse DT_RELRSZ, DT_RELR, and DT_RELRENT through PT_DYNAMIC/PT_LOAD.
-3. Decode direct-address and bitmap entries with 32-bit overflow and alignment checks.
-4. Preserve table offsets and target addresses without reading or applying relocations.
-5. Reconcile RELR targets with REL/RELA/APS2 inventories without fabricating symbol indices or addends.
-6. Add malformed, truncated, overflow, empty-bitmap, and endian fixtures.
-7. Keep runtime load-bias calculation and relocation application disabled.
+- Added DT_RELR/DT_RELRSZ/DT_RELRENT parsing for ELF32 EM_ARM.
+- Decodes direct offset entries and 31-bit bitmap entries.
+- Validates table alignment, entry size, file-backed PT_LOAD mapping, cursor bounds, target alignment, and 32-bit overflow.
+- Integrates RELR targets into relocation reconciliation as relative-only records with no symbol index or fabricated addend.
+- Preserves source table and encoding provenance; no silent deduplication or target dereference.
+- GitHub Actions run 42600655563 passed 177 Python tests plus host C/native regression checks.
+
+### Next — Stage 120J: Relocation target segment and memory-range validation
+
+1. Map each REL/RELA/JMPREL/APS2/RELR target against PT_LOAD memory ranges.
+2. Distinguish file-backed target bytes from zero-fill/BSS memory.
+3. Validate relocation width and alignment only where the relocation type is known.
+4. Report ambiguous overlapping PT_LOAD mappings and targets outside all loadable ranges.
+5. Preserve unknown relocation types without guessing their access width.
+6. Add boundary, BSS, overlapping-segment, and overflow fixtures.
+7. Do not dereference or modify relocation targets; do not calculate load bias.
