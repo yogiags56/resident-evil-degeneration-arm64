@@ -80,6 +80,7 @@ def relr_fixture(android=False):
         (0x6fffe000 if android else 36, 0x1220),
         (0x6fffe001 if android else 35, 8),
         (0x6fffe003 if android else 37, 4),
+        (0x6fffe005, 77),
         (0, 0),
     ]
     struct.pack_into("<IIIIIIII", data, 84, 2, 0x100, 0x1100, 0, len(tags) * 8, len(tags) * 8, 4, 4)
