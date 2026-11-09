@@ -53,6 +53,6 @@ int main(void) {
   RE_GUEST_ACCESS_WORD)==RE_GUEST_ALIGN_E_MEMORY);
  assert(re_guest_alignment_check(NULL,&policy,0x1000u,4u,
   RE_GUEST_ACCESS_WORD)==RE_GUEST_ALIGN_E_ARGUMENT);
- puts("Guest alignment policy tests: PASS (20 assertions)");
+ puts("Guest alignment policy tests: PASS (22 assertions)");
  return 0;
 }
