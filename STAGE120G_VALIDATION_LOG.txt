@@ -2,14 +2,16 @@ Stage 120G validation record
 ============================
 
 GitHub Actions workflow: Source checks
-Run ID: 42599061503
-Validated commit: 24911d6220c8ba4bb9a1827c5f8574e51caa2a98
+Run ID: 42599248679
+Validated commit: b5285886dffb3dcf5e49af00a6b55d41b6922735
 Result: success
 
 Observed:
 - python3 -m unittest discover -s tests -v
-- 152 Python tests passed (6.588 seconds)
+- 154 Python tests passed (6.699 seconds)
 - GNU-hash-only dynamic symbol resolution test passed.
+- GNU/SysV nchain agreement cross-check passed.
+- GNU-derived symbol count exceeding SysV nchain was rejected.
 - GNU bloom filter, chain hash, bloom-size, and bloom-shift negative tests passed.
 - bash ./tools/compile_host_mock.sh completed successfully.
 - Native host C regression executables completed successfully.
