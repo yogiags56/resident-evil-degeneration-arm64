@@ -22,7 +22,7 @@ class PltGotCrossReferenceTests(unittest.TestCase):
     def test_no_jump_slot_is_reported_as_empty_inventory(self):
         data=bytearray(fixture.make_elf())
         # The fixture relocation's low byte is the relocation type (22 = JUMP_SLOT).
-        elf=plt.inventory(bytes(data))
+        elf=load("guest_elf_audit_for_plt_test",ROOT/"tools"/"guest_arm_elf_audit.py").audit_elf(bytes(data))
         relsec=next(s for s in elf["sections"] if s["type"]==9)
         data[relsec["offset"]+4]=(2<<8)|2
         report=plt.audit_plt_got(bytes(data))
