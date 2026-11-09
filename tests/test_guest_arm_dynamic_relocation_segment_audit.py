@@ -89,6 +89,13 @@ class DynamicRelocationSegmentTests(unittest.TestCase):
         with self.assertRaises(module.ELFAuditError):
             module.audit(bytes(data))
 
+
+    def test_rejects_gnu_hash_bloom_shift_outside_word_width(self):
+        data=bytearray(gnu_fixture())
+        struct.pack_into("<I",data,0x22c,32)
+        with self.assertRaises(module.ELFAuditError):
+            module.audit(bytes(data))
+
     def test_rejects_invalid_rel_entry_size(self):
         data=bytearray(fixture()); struct.pack_into("<I",data,0x100+2*8+4,12)
         with self.assertRaises(module.ELFAuditError): module.audit(bytes(data))
