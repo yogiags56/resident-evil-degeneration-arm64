@@ -1,0 +1,13 @@
+Stage 120Z validation record
+============================
+
+Status: PENDING
+Branch: stage-120z-dependency-graph-resolution
+
+Required checks:
+- Full Python unittest discovery.
+- Host mock compilation.
+- Native C regression suite.
+- Stage 120Z source SHA-256 provenance.
+
+No test pass is claimed until GitHub Actions reports success.
