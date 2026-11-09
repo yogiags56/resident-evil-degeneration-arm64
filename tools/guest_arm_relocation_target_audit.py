@@ -9,7 +9,9 @@ ARM_WIDTHS=known_widths()
 MAX_TARGETS=4_000_000
 ADDRESS_LIMIT=0x100000000
 
-def classify_target(target, width, loads):
+def classify_target(target, width, loads, alignment=1):
+    if not isinstance(alignment,int) or alignment<=0:
+        raise ELFAuditError("relocation target alignment must be positive")
     if width is not None and (not isinstance(width,int) or width<0):
         raise ELFAuditError("relocation target width must be nonnegative or unknown")
     if width==0:
@@ -54,7 +56,8 @@ def classify_target(target, width, loads):
         status=matches[0]["region"]
     if width is None and len(matches)==1:
         status="unknown_width_"+status
-    return {"status":status,"matches":matches}
+    return {"status":status,"matches":matches,"required_alignment":alignment,
+        "alignment_valid":target%alignment==0}
 
 def audit_target_ranges(reconciliation, program_headers):
     loads=[p for p in program_headers["program_headers"] if p["type"]==1]
@@ -67,10 +70,13 @@ def audit_target_ranges(reconciliation, program_headers):
                 width=None
             else:
                 typ=entry.get("type")
-                width=ARM_WIDTHS.get(typ)
+                spec=get_spec(typ)
+                width=spec["width"] if spec else None
+                alignment=spec["alignment"] if spec else 1
                 if entry.get("encoding")=="RELR" or table.get("encoding")=="RELR":
                     width=4
-                item=classify_target(entry.get("target"),width,loads)
+                    alignment=4
+                item=classify_target(entry.get("target"),width,loads,alignment)
             item.update({
                 "source_table":table.get("source_table"),
                 "entry_index":entry.get("index"),
@@ -79,6 +85,8 @@ def audit_target_ranges(reconciliation, program_headers):
                 "relocation_type":entry.get("type"),
                 "relocation_type_name":entry.get("type_name"),
                 "abi_spec":get_spec(entry.get("type")),
+                "required_alignment":item.get("required_alignment"),
+                "alignment_valid":item.get("alignment_valid"),
                 "access_width":width,
                 "width_known":width is not None,
             })
