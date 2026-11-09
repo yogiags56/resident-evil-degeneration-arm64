@@ -35,14 +35,13 @@ REGUESTSYMBOLStatus re_guest_symbol_resolve(
 
         if (!s->name || !same(s->name, request->name))
             continue;
-        name_seen = 1;
-
         if (!s->defined || s->binding == RE_GUEST_STB_LOCAL ||
             !externally_visible(s))
             continue;
         if (s->binding != RE_GUEST_STB_GLOBAL &&
             s->binding != RE_GUEST_STB_WEAK)
             continue;
+        name_seen = 1;
 
         version_match = same(s->version_name, request->version_name);
         if (!version_match && request->allow_unversioned_fallback &&
