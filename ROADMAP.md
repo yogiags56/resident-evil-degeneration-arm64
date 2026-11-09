@@ -1,18 +1,21 @@
 # Project Roadmap
 
-## Current milestone: Stage 120L — Relocation symbol and target contract cross-validation
+## Current milestone: Stage 120M — Independent ELF cross-check and COPY symbol-size validation
 
-Extend the Stage 120K AAELF32 registry with conservative symbol-index policies, target policies, and processing applicability. The unified report annotates each relocation entry and counts observed contract issues. Unknown types remain unknown.
+- Compare section-backed ELF32 EM_ARM relocation offsets/types against GNU readelf or LLVM llvm-readelf.
+- Keep tool absence as an explicit skip; no host tool is a runtime dependency.
+- Resolve R_ARM_COPY width only from a defined, nonzero, namespaced symbol with positive st_size.
+- Keep COPY width unknown when symbol-size provenance is incomplete; APS2 size provenance remains unresolved.
+- Preserve unknown external relocation names and comparison mismatches.
 
-## Next milestone: Stage 120M — Independent ELF-tool cross-check and COPY symbol-size validation
+## Next milestone: Stage 120N — Packed and dynamic relocation symbol metadata parity
 
-1. Add synthetic ELF fixtures with section-backed and PT_DYNAMIC relocations.
-2. Compare relocation offsets, symbol indices, and relocation names against GNU readelf and/or LLVM llvm-readelf when available.
-3. Add explicit skip behavior when independent tooling is unavailable; never make host tools a hidden runtime dependency.
-4. Resolve R_ARM_COPY width only when a valid referenced symbol st_size is available and namespace identity is proven.
-5. Validate malformed symbol references, out-of-range indices, and missing symbol tables.
-6. Preserve unknown, reserved, private, and platform-specific types.
-7. Keep target bytes read-only and do not apply relocations.
+1. Carry bounded dynamic symbol size, definition state, and version metadata consistently into APS2 normalized records.
+2. Prove symbol namespace identity before using a symbol index to resolve COPY metadata.
+3. Add sectionless PT_DYNAMIC and APS2 fixtures for symbol metadata parity.
+4. Cross-check dynamic relocation tags and records without requiring section headers.
+5. Preserve explicit unknown/unresolved states for missing hashes, symbol bounds, and provider resolution.
+6. Keep all target bytes read-only; do not apply relocations.
 
 ## Remaining major gates
 
