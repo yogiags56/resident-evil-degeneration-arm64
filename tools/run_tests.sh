@@ -41,6 +41,11 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
   runtime/guest/re_guest_cpu_scalar.c runtime/guest/re_guest_alignment.c \
   runtime/guest/re_guest_memory.c \
   -o build/host-tests/test_re_guest_cpu_scalar
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_cpu_arm_scalar.c \
+  runtime/guest/re_guest_cpu.c runtime/guest/re_guest_cpu_arm_scalar.c \
+  runtime/guest/re_guest_cpu_scalar.c \
+  runtime/guest/re_guest_alignment.c runtime/guest/re_guest_memory.c \
+  -o build/host-tests/test_re_guest_cpu_arm_scalar
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_cpu_memory.c \
   runtime/guest/re_guest_cpu_memory.c runtime/guest/re_guest_memory.c \
   runtime/guest/re_guest_memory_bus.c \

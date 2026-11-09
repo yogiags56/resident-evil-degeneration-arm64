@@ -1,6 +1,6 @@
 # Resident Evil: Degeneration — Native ARM64 Port Research
 
-[![Stage](https://img.shields.io/badge/stage-119O-blue)](#project-status)
+[![Stage](https://img.shields.io/badge/stage-119P-blue)](#project-status)
 [![Platform](https://img.shields.io/badge/platform-Android%20ARM64-green)](#build-the-android-probe)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
@@ -338,8 +338,8 @@ This automation script is provided because the connected GitHub integration in t
 Stage 117 compiles the partial ARM32/Thumb CPU interpreter, AAPCS32 dispatcher, and runtime coordinator into the Android ARM64 native library. Its CI build and source checks passed on commit `b090f90`. Stage 118 adds runtime stop/fault diagnostics and tests for unresolved imports, failed import dispatch, and invalid guest instruction fetch. See [Stage 118 report and roadmap](docs/STAGE118_RUNTIME_DIAGNOSTICS_AND_ROADMAP.md). The native probe remains a research harness: no physical-device execution or original game boot is claimed.
 
 
-## Current engineering milestone — Stage 119O
+## Current engineering milestone — Stage 119P
 
-The latest documented source milestone is Stage 119O (checked scalar transfer semantics). An isolated helper performs byte, halfword, and word reads/writes using explicit little-endian byte assembly and the Stage 119N memory-type/alignment policy. The checked memory bus and production CPU interpreter remain unchanged; this helper is not yet connected to the production decoder.
+The latest documented source milestone is Stage 119P (isolated A32 scalar transfer integration). The opt-in helper routes immediate pre-indexed/no-writeback byte, word, and halfword transfers through the Stage 119O scalar helper, including signed LDRSB/LDRSH. It is not called by the production CPU interpreter.
 
-See [current status](docs/STATUS.md), [Stage 119O report](docs/STAGE119O_CHECKED_SCALAR_TRANSFER.md), [Stage 119N report](docs/STAGE119N_MEMORY_ATTRIBUTES_ALIGNMENT_POLICY.md), and [project roadmap](ROADMAP.md). Stage 119O branch CI is pending. No production CPU migration, original game boot, or playable build is claimed.
+See [current status](docs/STATUS.md), [Stage 119P report](docs/STAGE119P_A32_SCALAR_TRANSFER_INTEGRATION.md), [Stage 119O report](docs/STAGE119O_CHECKED_SCALAR_TRANSFER.md), and [project roadmap](ROADMAP.md). Stage 119P branch CI is pending. No production CPU migration, original game boot, or playable build is claimed.
