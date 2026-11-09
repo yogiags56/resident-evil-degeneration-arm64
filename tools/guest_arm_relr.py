@@ -11,6 +11,7 @@ DT_RELRENT = 37
 DT_ANDROID_RELR = 0x6fffe000
 DT_ANDROID_RELRSZ = 0x6fffe001
 DT_ANDROID_RELRENT = 0x6fffe003
+DT_ANDROID_RELRCOUNT = 0x6fffe005
 MAX_RELR_SIZE = 64 * 1024 * 1024
 WORD_SIZE = 4
 WORD_MASK = 0xffffffff
@@ -67,56 +68,59 @@ def decode_relr(blob: bytes, endian: str = "<", word_size: int = WORD_SIZE) -> l
 
 
 def collect_relr_tables(data: bytes, tags: dict[int, int], loads: list[dict], endian: str, mapper):
-    """Validate standard/Android RELR tag sets, map tables, and decode them."""
-    standard_tags = (DT_RELR, DT_RELRSZ, DT_RELRENT)
-    android_tags = (DT_ANDROID_RELR, DT_ANDROID_RELRSZ, DT_ANDROID_RELRENT)
-    present_standard = [tag in tags for tag in standard_tags]
-    present_android = [tag in tags for tag in android_tags]
-    if any(present_standard) and not all(present_standard):
-        raise ELFAuditError("DT_RELR, DT_RELRSZ, and DT_RELRENT must appear together")
-    if any(present_android) and not all(present_android):
-        raise ELFAuditError("Android DT_ANDROID_RELR tag triplet must appear together")
-    if not any(present_standard) and not any(present_android):
-        return []
+    """Validate standard/Android RELR aliases, map tables, and decode them."""
+    alias_groups = (
+        ("address", DT_RELR, DT_ANDROID_RELR),
+        ("size", DT_RELRSZ, DT_ANDROID_RELRSZ),
+        ("entry_size", DT_RELRENT, DT_ANDROID_RELRENT),
+    )
+    selected = {}
+    source_tags = []
+    for name, standard, android in alias_groups:
+        present = [(tag, tags[tag]) for tag in (standard, android) if tag in tags]
+        if not present:
+            raise_if_any = any(tag in tags for _, a, b in alias_groups for tag in (a, b))
+            if raise_if_any:
+                raise ELFAuditError(f"RELR {name} tag is missing")
+            return []
+        values = {value for _, value in present}
+        if len(values) != 1:
+            raise ELFAuditError(f"standard and Android RELR {name} tags conflict")
+        selected[name] = present[0][1]
+        source_tags.extend(tag for tag, _ in present)
 
-    specs = []
-    if all(present_standard):
-        specs.append(("DT_RELR", tags[DT_RELR], tags[DT_RELRSZ], tags[DT_RELRENT]))
-    if all(present_android):
-        specs.append(("DT_ANDROID_RELR", tags[DT_ANDROID_RELR], tags[DT_ANDROID_RELRSZ], tags[DT_ANDROID_RELRENT]))
+    address = selected["address"]
+    size = selected["size"]
+    entry_size = selected["entry_size"]
+    if entry_size != WORD_SIZE:
+        raise ELFAuditError("DT_RELRENT must be 4 for ELF32")
+    if size > MAX_RELR_SIZE or size % WORD_SIZE:
+        raise ELFAuditError("invalid or excessive RELR table size")
+    if size == 0:
+        offset, targets = 0, []
+    else:
+        offset, raw = mapper(data, address, size, loads, "DT_RELR")
+        targets = decode_relr(raw, endian)
+    result = {
+        "source_tag": "DT_RELR" if DT_RELR in tags else "DT_ANDROID_RELR",
+        "source_tags": [
+            name for name, tag in (
+                ("DT_RELR", DT_RELR), ("DT_RELRSZ", DT_RELRSZ),
+                ("DT_RELRENT", DT_RELRENT), ("DT_ANDROID_RELR", DT_ANDROID_RELR),
+                ("DT_ANDROID_RELRSZ", DT_ANDROID_RELRSZ), ("DT_ANDROID_RELRENT", DT_ANDROID_RELRENT),
+            ) if tag in tags
+        ],
+        "virtual_address": f"0x{address:08x}",
+        "file_offset": offset,
+        "size": size,
+        "entry_size": entry_size,
+        "entry_count": size // WORD_SIZE,
+        "relocation_count": len(targets),
+        "targets": [f"0x{target:08x}" for target in targets],
+        "android_relr_count_hint": tags.get(DT_ANDROID_RELRCOUNT),
+    }
+    return [result]
 
-    decoded = []
-    for source, address, size, entry_size in specs:
-        if entry_size != WORD_SIZE:
-            raise ELFAuditError(f"{source}: DT_RELRENT must be 4 for ELF32")
-        if size > MAX_RELR_SIZE or size % WORD_SIZE:
-            raise ELFAuditError(f"{source}: invalid or excessive RELR table size")
-        if size == 0:
-            offset, raw, targets = 0, b"", []
-        else:
-            offset, raw = mapper(data, address, size, loads, source)
-            targets = decode_relr(raw, endian)
-        decoded.append({
-            "source_tag": source,
-            "virtual_address": f"0x{address:08x}",
-            "file_offset": offset,
-            "size": size,
-            "entry_size": entry_size,
-            "entry_count": size // WORD_SIZE,
-            "relocation_count": len(targets),
-            "targets": [f"0x{target:08x}" for target in targets],
-        })
-
-    if len(decoded) == 2:
-        first, second = decoded
-        if (first["virtual_address"], first["size"], first["entry_size"], first["targets"]) != (
-            second["virtual_address"], second["size"], second["entry_size"], second["targets"]
-        ):
-            raise ELFAuditError("standard and Android RELR tag triplets describe conflicting tables")
-        first["source_tags"] = ["DT_RELR", "DT_ANDROID_RELR"]
-        return [first]
-    decoded[0]["source_tags"] = [decoded[0]["source_tag"]]
-    return decoded
 
 def find_cross_format_overlaps(groups: list[tuple[str, list[str]]]) -> list[dict]:
     """Report target-address collisions between distinct relocation encodings."""
