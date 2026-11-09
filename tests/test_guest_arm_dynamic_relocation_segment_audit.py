@@ -23,7 +23,7 @@ def fixture(endian="<",include_hash=True):
 
 
 def gnu_fixture():
-    data=bytearray(fixture(include_hash=False))
+    data=bytearray(fixture())
     # Replace DT_HASH with DT_GNU_HASH; keep all other dynamic metadata intact.
     struct.pack_into("<iI",data,0x100+6*8,0x6ffffef5,0x1220)
     h=5381
