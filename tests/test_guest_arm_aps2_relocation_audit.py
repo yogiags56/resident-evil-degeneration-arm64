@@ -31,18 +31,18 @@ def packed(kind="REL", reloc_type=22):
     return bytes(out)
 
 
-def elf_fixture(kind="REL"):
+def elf_fixture(kind="REL", reloc_type=22):
     data = bytearray(0x300)
     data[:7] = b"\x7fELF" + bytes([1, 1, 1])
     struct.pack_into("<HHIIIIIHHHHHH", data, 16, 3, 40, 1, 0x1000, 52, 0, 0, 52, 32, 2, 40, 0, 0)
     struct.pack_into("<IIIIIIII", data, 52, 1, 0, 0x1000, 0, 0x300, 0x400, 5, 0x1000)
     struct.pack_into("<IIIIIIII", data, 84, 2, 0x100, 0x1100, 0, 0x78, 0x78, 4, 4)
     tags = [(0x6000000f if kind == "REL" else 0x60000011, 0x1220),
-            (0x60000010 if kind == "REL" else 0x60000012, len(packed(kind))),
+            (0x60000010 if kind == "REL" else 0x60000012, len(packed(kind, reloc_type))),
             (0, 0)]
     for i, (tag, value) in enumerate(tags):
         struct.pack_into("<iI", data, 0x100 + i * 8, tag, value)
-    blob = packed(kind)
+    blob = packed(kind, reloc_type)
     data[0x220:0x220 + len(blob)] = blob
     return bytes(data)
 
