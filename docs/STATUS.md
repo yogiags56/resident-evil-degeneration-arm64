@@ -1,6 +1,6 @@
 # Current Status
 
-**Current source milestone: Stage 119R — directed A32 scalar decoder/fault tests added on branch `stage-119r-a32-directed-fault-tests`; CI pending. Stage 119Q host CI passed on commit `c4325e6` (run 42584673737).** Stage 117 integrated a partial ARM32/Thumb guest CPU, AAPCS32 dispatcher, runtime coordinator, and ABI support into the Android ARM64 native target. A prior Android ARM64 workflow passed on commit `b090f90`; this is not validation of the current branch.
+**Current source milestone: Stage 119R — directed A32 scalar decoder/fault tests added on branch `stage-119r-a32-directed-fault-tests`; host CI passed on code commit `46a8d8a` (run 42584904344). Latest documentation-only revision is undergoing CI. Stage 119Q host CI passed on commit `c4325e6` (run 42584673737).** Stage 117 integrated a partial ARM32/Thumb guest CPU, AAPCS32 dispatcher, runtime coordinator, and ABI support into the Android ARM64 native target. A prior Android ARM64 workflow passed on commit `b090f90`; this is not validation of the current branch.
 
 Stage 118 adds guest runtime stop diagnostics. Stages 119A–119L introduced guest memory management, checked bus, CPU adapters, checked instruction fetch, CPU data facade, isolated transfer helper, and fault regressions. Stage 119M documented ARMv7-A/R alignment. Stage 119N added memory attributes and strict-by-default SCTLR.A policy; host CI passed on commit `529a7ee`.
 
@@ -40,4 +40,4 @@ Added a deterministic independent byte-array reference model covering 512 A32 sc
 
 ## Stage 119R update
 
-Added directed A32 scalar permission, cross-region, address-wrap/underflow, and unsupported-encoding tests. The tests verify no partial backing-memory mutation and preservation of destination registers on failed loads. Host CI pending.
+Added directed A32 scalar permission, cross-region, address-wrap/underflow, and unsupported-encoding tests. The tests verify no partial backing-memory mutation and preservation of destination registers on failed loads. Host CI passed on code commit `46a8d8a` (run 42584904344): 75 Python checks, native C syntax checks, Stage 119P integration tests, 512 differential cases, and directed fault/decoder tests all passed.
