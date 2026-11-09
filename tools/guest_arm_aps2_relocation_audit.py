@@ -8,6 +8,7 @@ from guest_arm_dynamic_relocation_segment_audit import (
     _read_dynamic, _mapped, _parse_symbols, DT_HASH, DT_SYMTAB, DT_SYMENT,
     DT_STRTAB, DT_STRSZ, RELOCS, _parse_symbol_versions,
 )
+from guest_arm_relr import collect_relr_tables
 
 DT_ANDROID_REL = 0x6000000f
 DT_ANDROID_RELSZ = 0x60000010
@@ -148,6 +149,7 @@ def audit(data: bytes) -> dict:
             specs.append((kind, tags[address_tag], off, blob))
     if not specs:
         raise ELFAuditError("no Android APS2 relocation tags found in PT_DYNAMIC")
+    relr_tables = collect_relr_tables(data, tags, loads, endian, _mapped)
     decoded = []
     max_symbol = 0
     for kind, address, file_offset, blob in specs:
@@ -191,6 +193,8 @@ def audit(data: bytes) -> dict:
         "symbol_versioning": version_info,
         "packed_relocation_tables": decoded,
         "relocation_count": sum(x["entry_count"] for x in decoded),
+        "relr_tables": relr_tables,
+        "relr_relocation_count": sum(x["relocation_count"] for x in relr_tables),
         "evidence_limits": [
             "Only ELF32 EM_ARM Android APS2 REL/RELA streams described by PT_DYNAMIC are supported.",
             "Packed relocation targets are reported but never dereferenced, patched, or applied.",
