@@ -136,3 +136,24 @@ The publication helper now enforces private visibility (no public override), pus
 - Then: XE3U loader/relocations, complete guest address-space mapping, import-table activation, renderer/audio/input lifecycle, and real-device boot/gameplay validation.
 
 **Important:** a green host test suite or Android ARM64 APK build does not mean the original game is playable. Physical-device boot and gameplay remain separate acceptance gates.
+
+## Stage 119N — Guest memory attributes + alignment policy
+
+- Extended guest memory regions with UNKNOWN, NORMAL, DEVICE, and STRONGLY_ORDERED attributes.
+- Added re_guest_memory_map_ex; the legacy re_guest_memory_map remains source-compatible and defaults to UNKNOWN.
+- Added bounded memory-type query.
+- Added a conservative SCTLR.A alignment-policy model, strict by default.
+- Added instruction-class-aware alignment checks and regression tests for scalar, exclusive, doubleword, multiple, SWP, coprocessor, and memory-type cases.
+- Registered the new source in Android CMake and host test runner.
+- The policy is decision-only: the memory bus and production CPU remain strict; no unaligned load/store implementation is active.
+- CI for this branch is pending.
+
+### Next — Stage 119O: checked scalar transfer semantics
+
+1. Add opt-in byte-assembled unaligned scalar reads/writes for eligible Normal-memory ranges only.
+2. Keep strict behavior for UNKNOWN, Device, Strongly-ordered, SCTLR.A=1, and instruction families requiring alignment.
+3. Test little-endian behavior, bounds, permissions, unmapped and cross-region accesses, and failure non-mutation.
+4. Add isolated A32 LDR/STR and halfword forms and differential tests before production decoder migration.
+5. Keep instruction fetch alignment unchanged.
+
+Stage 119P+ will migrate narrow instruction families behind checked execution, followed by XE3U loading/relocations, import-table activation, renderer/audio/input, and physical-device boot/gameplay validation.
