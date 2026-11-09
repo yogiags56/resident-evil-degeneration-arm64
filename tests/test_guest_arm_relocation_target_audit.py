@@ -50,6 +50,6 @@ class TargetRangeTests(unittest.TestCase):
 
     def test_rejects_invalid_width(self):
         with self.assertRaises(ELFAuditError):
-            module.classify_target(0x1080,0,[LOAD])
+            module.classify_target(0x1080,-1,[LOAD])
 
 if __name__=="__main__": unittest.main()
