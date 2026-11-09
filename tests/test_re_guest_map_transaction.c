@@ -6,6 +6,7 @@
 int main(void) {
     REGUESTMEMORY memory;
     uint8_t original[16] = {0};
+    void *resolved = NULL;
     uint8_t first[32] = {0}, second[32] = {0}, third[32] = {0};
     size_t failed = 999;
     REGUESTMEMStatus map_status = RE_GUEST_MEM_OK;
@@ -34,7 +35,7 @@ int main(void) {
     assert(failed == 1 && map_status == RE_GUEST_MEM_E_OVERLAP);
     assert(re_guest_memory_region_count(&memory) == 3);
     assert(re_guest_memory_resolve(&memory, 0x4000, 1, RE_GUEST_MEM_READ,
-        (void **)&requests[2].host_buffer) == RE_GUEST_MEM_E_NOT_FOUND);
+        &resolved) == RE_GUEST_MEM_E_NOT_FOUND);
 
     /* Duplicate guest ranges within one transaction also roll back cleanly. */
     requests[0] = (REGUESTMEMMAPREQUEST){0x5000, sizeof(first), first,
@@ -57,12 +58,9 @@ int main(void) {
     assert(re_guest_memory_region_count(&memory) == 3);
 
     /* The pre-existing region survives every rollback. */
-    {
-        void *resolved = NULL;
-        assert(re_guest_memory_resolve(&memory, 0x1000, 1, RE_GUEST_MEM_READ,
-            &resolved) == RE_GUEST_MEM_OK);
-        assert(resolved == original);
-    }
+    assert(re_guest_memory_resolve(&memory, 0x1000, 1, RE_GUEST_MEM_READ,
+        &resolved) == RE_GUEST_MEM_OK);
+    assert(resolved == original);
 
     assert(re_guest_memory_map_transaction(&memory, NULL, 0, &failed,
         &map_status) == RE_GUEST_MAP_TX_OK);
