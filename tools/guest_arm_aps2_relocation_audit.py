@@ -204,7 +204,8 @@ def audit(data: bytes) -> dict:
             "Packed relocation targets are reported but never dereferenced, patched, or applied.",
             "Symbol names, sizes, and definition state are resolved only when bounded hash and dynamic symbol/string-table metadata establish the dynamic symbol table.",
             "Symbol versions are decoded only from bounded DT_VERSYM/DT_VERDEF/DT_VERNEED metadata; provider compatibility is not inferred.",
-            "RELR direct/bitmap tables are inventoried separately; target contents are never dereferenced or modified.",\n            "Runtime load-bias calculation and provider inference are not implemented.",
+            "RELR direct/bitmap tables are inventoried separately; target contents are never dereferenced or modified.",
+            "Runtime load-bias calculation and provider inference are not implemented.",
         ],
     }
 
