@@ -30,48 +30,11 @@ jobs:
         run: bash ./tools/run_tests.sh
         
 
-      - name: Report Stage 120N-120Z source SHA-256
+      - name: Report tracked source SHA-256 provenance
         if: always()
+        shell: bash
         run: |
-          sha256sum \
-            .github/workflows/ci.yml \
-            README.md ROADMAP.md ROADMAP_THROUGH_STAGE120N.md \
-            STAGE120N_REPORT.md STAGE120N_VALIDATION_LOG.txt \
-            STAGE120O_REPORT.md STAGE120O_VALIDATION_LOG.txt STAGE120P_REPORT.md STAGE120P_VALIDATION_LOG.txt \
-            STAGE120Q_REPORT.md STAGE120Q_VALIDATION_LOG.txt \
-            STAGE120R_REPORT.md \
-            docs/STAGE120R_DYNAMIC_RELR_DIFFERENTIAL.md \
-            tests/test_stage120r_dynamic_relr_differential.py \
-            docs/STAGE120N_PACKED_DYNAMIC_SYMBOL_PARITY.md \
-            docs/STAGE120O_APS2_CONFORMANCE.md docs/STAGE120P_APS2_RELR_COEXISTENCE.md \
-            docs/STAGE120Q_RELR_DIFFERENTIAL_VALIDATION.md \
-            tools/guest_arm_aps2_relocation_audit.py \
-            tools/guest_arm_dynamic_relocation_segment_audit.py \
-            tools/guest_arm_relocation_reconciliation.py tools/guest_arm_relr.py \
-            runtime/guest/re_guest_map_transaction.h runtime/guest/re_guest_map_transaction.c \
-            tests/test_re_guest_map_transaction.c docs/STAGE120T_GUEST_MAP_TRANSACTION.md \
-            runtime/guest/re_guest_elf_materialize.h runtime/guest/re_guest_elf_materialize.c \
-            tests/test_re_guest_elf_materialize.c docs/STAGE120U_ELF_MATERIALIZATION.md \
-            runtime/guest/re_guest_permission_finalize.h runtime/guest/re_guest_permission_finalize.c \
-            tests/test_re_guest_permission_finalize.c docs/STAGE120V_PERMISSION_FINALIZATION.md \
-            runtime/guest/re_guest_relocation_apply.h runtime/guest/re_guest_relocation_apply.c \
-            tests/test_re_guest_relocation_apply.c docs/STAGE120W_RELOCATION_APPLICATION.md \
-            runtime/guest/re_guest_symbol_resolve.h runtime/guest/re_guest_symbol_resolve.c \
-            tests/test_re_guest_symbol_resolve.c docs/STAGE120X_SYMBOL_RESOLUTION.md \
-            tools/guest_arm_symbol_adapter.py tests/test_guest_arm_symbol_adapter.py \
-            docs/STAGE120Y_SYMBOL_TABLE_INTEGRATION.md \
-            tools/guest_arm_dependency_graph.py tests/test_guest_arm_dependency_graph.py \
-            docs/STAGE120Z_DEPENDENCY_GRAPH.md STAGE120Z_REPORT.md STAGE120Z_VALIDATION_LOG.txt \
-            STAGE120Y_REPORT.md STAGE120Y_VALIDATION_LOG.txt \
-            STAGE120X_REPORT.md STAGE120X_VALIDATION_LOG.txt \
-            STAGE120W_REPORT.md STAGE120W_VALIDATION_LOG.txt \
-            STAGE120V_REPORT.md STAGE120V_VALIDATION_LOG.txt \
-            STAGE120U_REPORT.md STAGE120U_VALIDATION_LOG.txt \
-            STAGE120T_REPORT.md STAGE120T_VALIDATION_LOG.txt \
-            tools/guest_arm_load_plan.py \
-            tests/test_guest_arm_load_plan.py \
-            docs/STAGE120S_PT_LOAD_LOAD_PLAN.md \
-            STAGE120S_REPORT.md STAGE120S_VALIDATION_LOG.txt \
-            tests/test_guest_arm_aps2_relocation_audit.py \
-            tests/test_guest_arm_dynamic_relocation_segment_audit.py \
-            tests/test_guest_arm_relocation_reconciliation.py tests/test_guest_arm_relr.py
+          set -euo pipefail
+          git ls-files -z | while IFS= read -r -d '' path; do
+            sha256sum -- "$path"
+          done
