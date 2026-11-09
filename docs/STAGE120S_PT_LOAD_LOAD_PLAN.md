@@ -16,7 +16,7 @@ execution.
 - Detect page-rounded overlaps and report combined permissions, including
   overlaps that would produce W+X pages.
 - Keep ET_EXEC fixed-address and ET_DYN runtime load-bias policies explicit.
-- Check ELF32 address-space overflow and page-size bounds.
+- Check ELF32 address-space overflow, page-size bounds, and PT_LOAD file/virtual page congruence.
 - Avoid allocating per-page arrays; overlap analysis is interval-based.
 
 ## Validation
