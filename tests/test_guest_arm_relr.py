@@ -17,14 +17,14 @@ def words(values, endian="<"):
 def make_relr_elf32_fixture():
     """Create a minimal ELF32 ARM DYN file with a SHT_RELR section."""
     blob = bytearray(0x1f8)
-    ident = b"\\x7fELF" + bytes([1, 1, 1]) + bytes(9)
+    ident = b"\x7fELF" + bytes([1, 1, 1]) + bytes(9)
     struct.pack_into(
         "<16sHHIIIIIHHHHHH", blob, 0, ident,
         3, 40, 1, 0, 52, 0x180, 0, 52, 32, 1, 40, 3, 2,
     )
     struct.pack_into("<IIIIIIII", blob, 52, 1, 0, 0x1000, 0x1000, 0x140, 0x140, 5, 0x1000)
     struct.pack_into("<III", blob, 0x100, 0x2000, 0x0b, 0x2080)
-    names = b"\\0.relr.dyn\\0.shstrtab\\0"
+    names = b"\0.relr.dyn\0.shstrtab\0"
     blob[0x120:0x120 + len(names)] = names
     struct.pack_into("<IIIIIIIIII", blob, 0x180 + 40, 1, 19, 2, 0x1100, 0x100, 12, 0, 0, 4, 4)
     struct.pack_into("<IIIIIIIIII", blob, 0x180 + 80, 11, 3, 0, 0, 0x120, len(names), 0, 0, 1, 0)
@@ -114,7 +114,7 @@ class RELRDifferentialTests(unittest.TestCase):
             )
         reported = {
             int(value, 16)
-            for value in re.findall(r"(?m)^\\s+([0-9a-fA-F]{8})\\s+<no sym>", result.stdout)
+            for value in re.findall(r"(?m)^\s+([0-9a-fA-F]{8})\s+<no sym>", result.stdout)
         }
         self.assertEqual(reported, set(expected), result.stdout)
 
