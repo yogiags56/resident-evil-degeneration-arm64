@@ -71,6 +71,24 @@ def versioned_definition_fixture():
     struct.pack_into("<II",data,0x224,15,0)
     return bytes(data)
 
+
+def relr_fixture(android=False):
+    data = bytearray(fixture())
+    tags = [
+        (17, 0x1200), (18, 8), (19, 8), (23, 0x1200), (2, 8), (20, 17),
+        (4, 0x11c0), (6, 0x11d0), (11, 16), (5, 0x1180), (10, 5),
+        (0x6fffe000 if android else 36, 0x1220),
+        (0x6fffe001 if android else 35, 8),
+        (0x6fffe003 if android else 37, 4),
+        (0, 0),
+    ]
+    struct.pack_into("<IIIIIIII", data, 84, 2, 0x100, 0x1100, 0, len(tags) * 8, len(tags) * 8, 4, 4)
+    for index, (tag, value) in enumerate(tags):
+        struct.pack_into("<iI", data, 0x100 + index * 8, tag, value)
+    struct.pack_into("<II", data, 0x220, 0x1300, 0x0b)
+    return bytes(data)
+
+
 class DynamicRelocationSegmentTests(unittest.TestCase):
     def test_maps_rel_and_jmprel_through_pt_load_and_resolves_symbol(self):
         report=module.audit(fixture())
