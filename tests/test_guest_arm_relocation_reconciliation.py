@@ -4,6 +4,7 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"tools"))
 import guest_arm_relocation_reconciliation as module
 from test_guest_arm_aps2_relocation_audit import elf_fixture
+from test_guest_arm_relr_audit import fixture as relr_fixture
 
 def entry(target=0x1304,typ=22,sym=1,addend=None,namespace="DT_SYMTAB@0x1000"):
     return {"index":0,"target_domain":"virtual","target":target,"symbol_index":sym,
@@ -54,6 +55,16 @@ class ReconciliationTests(unittest.TestCase):
         r=module.reconcile_tables([table("DT_REL",0x200,8,[a]),table("SHT_REL:.rel.dyn",0x200,8,[b])])
         self.assertEqual(r["duplicate_group_count"],0)
         self.assertEqual(r["namespace_ambiguous_match_count"],1)
+
+
+    def test_integrates_relr_without_fabricating_symbol_or_addend(self):
+        report=module.audit(relr_fixture())
+        self.assertEqual(report["relr_relocation_count"],4)
+        relr=[t for t in report["tables"] if t["encoding"]=="RELR"][0]
+        self.assertEqual(relr["entry_count"],4)
+        self.assertIsNone(relr["entries"][0]["symbol_index"])
+        self.assertIsNone(relr["entries"][0]["addend"])
+        self.assertEqual(relr["entries"][1]["relr_encoding"],"bitmap")
 
     def test_rejects_non_elf(self):
         with self.assertRaises(module.ELFAuditError): module.audit(b"not ELF")
