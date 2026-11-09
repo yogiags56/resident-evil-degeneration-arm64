@@ -43,6 +43,11 @@ class TargetRangeTests(unittest.TestCase):
         r=module.classify_target(0xfffffffe,4,[LOAD])
         self.assertEqual(r["status"],"target_range_overflows_elf32")
 
+    def test_r_arm_none_does_not_access_target_memory(self):
+        r=module.classify_target(0xdeadbeef,0,[LOAD])
+        self.assertEqual(r["status"],"no_target_access")
+        self.assertEqual(r["matches"],[])
+
     def test_rejects_invalid_width(self):
         with self.assertRaises(ELFAuditError):
             module.classify_target(0x1080,0,[LOAD])
