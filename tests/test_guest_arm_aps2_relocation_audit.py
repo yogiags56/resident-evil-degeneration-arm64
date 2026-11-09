@@ -88,11 +88,13 @@ class APS2DecodeTests(unittest.TestCase):
         entries = module.decode_aps2(packed("REL"), "REL")
         self.assertEqual([e["target_address"] for e in entries], ["0x00001304", "0x00001308"])
         self.assertEqual(entries[0]["type_name"], "R_ARM_JUMP_SLOT")
+        self.assertEqual([e["type"] for e in entries], [22, 22])
+        self.assertEqual([e["symbol_index"] for e in entries], [1, 1])
         self.assertIsNone(entries[0]["addend"])
 
     def test_decodes_rela_cumulative_addends(self):
         entries = module.decode_aps2(packed("RELA"), "RELA")
-        self.assertEqual([e["addend"] for e in entries], [5, 10])
+        self.assertEqual([e["addend"] for e in entries], [5, 5])
 
     def test_rejects_bad_magic_and_trailing_bytes(self):
         with self.assertRaises(module.ELFAuditError):
@@ -154,15 +156,40 @@ class APS2DecodeTests(unittest.TestCase):
             module.audit(bytes(data))
 
 
-    def test_decodes_ungrouped_cumulative_info_deltas(self):
+    def test_decodes_ungrouped_absolute_r_info_values(self):
         blob = bytearray(b"APS2")
         blob += sleb(2) + sleb(0x2000)
         blob += sleb(2) + sleb(0)  # two records, no grouped fields
         blob += sleb(4) + sleb((1 << 8) | 22)
-        blob += sleb(4) + sleb(257)  # second r_info delta advances symbol and type
+        blob += sleb(4) + sleb((2 << 8) | 23)
         entries = module.decode_aps2(bytes(blob), "REL")
         self.assertEqual([e["symbol_index"] for e in entries], [1, 2])
         self.assertEqual([e["type"] for e in entries], [22, 23])
+
+    def test_rela_addend_without_addend_grouping_accumulates_per_entry(self):
+        blob = b"APS2" + sleb(2) + sleb(0x2000)
+        blob += sleb(2) + sleb(9)
+        blob += sleb((1 << 8) | 22)
+        blob += sleb(4) + sleb(5)
+        blob += sleb(4) + sleb(3)
+        entries = module.decode_aps2(blob, "RELA")
+        self.assertEqual([e["addend"] for e in entries], [5, 8])
+
+    def test_rela_addend_without_has_addend_resets_to_zero_per_group(self):
+        blob = b"APS2" + sleb(2) + sleb(0x2000)
+        blob += sleb(1) + sleb(15)
+        blob += sleb(4) + sleb((1 << 8) | 22) + sleb(5)
+        blob += sleb(1) + sleb(3)
+        blob += sleb(4) + sleb((1 << 8) | 22)
+        entries = module.decode_aps2(blob, "RELA")
+        self.assertEqual([e["addend"] for e in entries], [5, 0])
+
+    def test_signed_sleb_r_info_preserves_elf32_bit_pattern(self):
+        blob = b"APS2" + sleb(1) + sleb(0)
+        blob += sleb(1) + sleb(0) + sleb(4) + sleb(-1)
+        entry = module.decode_aps2(blob, "REL")[0]
+        self.assertEqual(entry["symbol_index"], 0xffffff)
+        self.assertEqual(entry["type"], 0xff)
 
 if __name__ == "__main__":
     unittest.main()
