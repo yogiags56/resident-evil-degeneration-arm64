@@ -30,6 +30,10 @@ ATTRIBUTE_NAMES = {
 ATTRIBUTE_NAMES.update({tag:name for tag,name in STRING_TAGS.items()})
 def attribute_value_kind(tag):
     normalized = tag % 128 if tag >= 128 else tag
+    if normalized in (32,):
+        return "compatibility"
+    if normalized == 64:
+        return "none"
     if normalized in STRING_TAGS:
         return "string"
     if 33 <= normalized <= 127:
@@ -87,6 +91,12 @@ def parse_public_attributes(blob, endian):
             kind=attribute_value_kind(attr_tag)
             if kind=="string":
                 value,pos=cstring(blob,pos,scope_end,ATTRIBUTE_NAMES.get(attr_tag,f"tag_{attr_tag}"))
+            elif kind=="compatibility":
+                flag,pos=uleb(blob,pos,scope_end)
+                vendor_name,pos=cstring(blob,pos,scope_end,"Tag_compatibility vendor")
+                value={"flag":flag,"vendor":vendor_name}
+            elif kind=="none":
+                value=True
             else:
                 value,pos=uleb(blob,pos,scope_end)
             key=ATTRIBUTE_NAMES.get(attr_tag,f"tag_{attr_tag}")

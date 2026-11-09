@@ -11,7 +11,12 @@ def uleb(v):
 def make_elf32(attributes=None,endian="<"):
     names=b"\0.shstrtab\0.ARM.attributes\0"; attr=b""
     if attributes is not None:
-        body=b"".join(uleb(k)+(v.encode()+b"\0" if isinstance(v,str) else uleb(v)) for k,v in attributes.items())
+        def encode_attr(k,v):
+            if k==64: return uleb(k)
+            if k==32: return uleb(k)+uleb(v[0])+v[1].encode()+b"\0"
+            if isinstance(v,str): return uleb(k)+v.encode()+b"\0"
+            return uleb(k)+uleb(v)
+        body=b"".join(encode_attr(k,v) for k,v in attributes.items())
         payload=uleb(1)+struct.pack(endian+"I",5+len(body))+body; vendor=b"aeabi\0"
         attr=b"A"+struct.pack(endian+"I",4+len(vendor)+len(payload))+vendor+payload
     ident=b"\x7fELF"+bytes([1,1 if endian=="<" else 2,1])+bytes(9)
@@ -31,6 +36,28 @@ class GuestArmElfAuditTests(unittest.TestCase):
         self.assertEqual(d["THUMB_ISA_use"]["name"],"Thumb-2 permitted")
         self.assertEqual(d["FP_arch"]["name"],"VFPv3")
         self.assertEqual(d["Advanced_SIMD_arch"]["name"],"NEONv1")
+    def test_compatibility_and_no_defaults_types(self):
+        r=audit.audit_elf(make_elf32({32:(1,"ArmCompiler"),64:None,67:"2025Q4"}))
+        attrs=r["arm_attributes"]["file_attributes"]
+        self.assertEqual(attrs["compatibility"],{"flag":1,"vendor":"ArmCompiler"})
+        self.assertTrue(attrs["tag_64"])
+        self.assertEqual(attrs["conformance"],"2025Q4")
+    def test_section_and_symbol_scopes(self):
+        def scope(tag, attrs, indexes=()):
+            content=b"".join(uleb(i) for i in indexes)+(b"\0" if tag in (2,3) else b"")
+            content+=b"".join(uleb(k)+(v.encode()+b"\0" if isinstance(v,str) else uleb(v)) for k,v in attrs.items())
+            return uleb(tag)+struct.pack("<I",1+4+len(content))+content
+        encoded=b"A"+struct.pack("<I",4+6+len(scope(1,{6:10})+scope(2,{9:2},(3,)) + scope(3,{10:3},(7,))))+b"aeabi\0"+scope(1,{6:10})+scope(2,{9:2},(3,))+scope(3,{10:3},(7,))
+        parsed=audit.parse_arm_attributes(encoded,"<")
+        self.assertEqual([x["scope"] for x in parsed["scopes"]],["file","section","symbol"])
+        self.assertEqual(parsed["scopes"][1]["indexes"],[3])
+        self.assertEqual(parsed["scopes"][2]["indexes"],[7])
+    def test_private_vendor_payload_is_preserved_opaque(self):
+        payload=b"private-bytes"
+        vendor=b"gnu\0"
+        section=b"A"+struct.pack("<I",4+len(vendor)+len(payload))+vendor+payload
+        parsed=audit.parse_arm_attributes(section,"<")
+        self.assertEqual(parsed["private_vendor_payloads"][0]["data_hex"],payload.hex())
     def test_big_endian(self):
         r=audit.audit_elf(make_elf32({6:6},">"))
         self.assertEqual(r["endianness"],"big")

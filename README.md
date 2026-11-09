@@ -5,3 +5,12 @@ Stage 119T adds a read-only ELF/ARM ABI metadata auditor with synthetic fixtures
     python3 tools/guest_arm_elf_audit.py /path/to/guest.elf --json /tmp/guest-elf-report.json
 
 See docs/STAGE119T_GUEST_ELF_ARM_ABI_AUDIT.md, docs/STATUS.md, and ROADMAP.md. Host CI is pending. No game boot or playable build is claimed.
+
+
+## Stage 119U — ARM attribute and evidence tooling
+
+The Stage 119U branch extends AEABI attribute parsing and adds an external metadata capture helper. For local analysis use:
+
+    python3 tools/guest_arm_elf_evidence.py /path/to/guest.elf --tool auto --json /tmp/guest-evidence.json
+
+The helper records source hash and tool version, and does not execute the ELF. Review raw output before sharing because symbols and paths may be sensitive.
