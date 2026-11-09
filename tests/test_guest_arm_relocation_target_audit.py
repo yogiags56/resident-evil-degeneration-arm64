@@ -48,6 +48,19 @@ class TargetRangeTests(unittest.TestCase):
         self.assertEqual(r["status"],"no_target_access")
         self.assertEqual(r["matches"],[])
 
+    def test_reports_thumb32_alignment_metadata(self):
+        r=module.classify_target(0x1082,4,[LOAD],2)
+        self.assertTrue(r["alignment_valid"])
+        self.assertEqual(r["required_alignment"],2)
+
+    def test_reports_misaligned_arm_instruction_target(self):
+        r=module.classify_target(0x1082,4,[LOAD],4)
+        self.assertFalse(r["alignment_valid"])
+
+    def test_rejects_invalid_alignment(self):
+        with self.assertRaises(ELFAuditError):
+            module.classify_target(0x1080,4,[LOAD],0)
+
     def test_rejects_invalid_width(self):
         with self.assertRaises(ELFAuditError):
             module.classify_target(0x1080,-1,[LOAD])
