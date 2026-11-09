@@ -1,0 +1,14 @@
+Stage 120E validation record
+============================
+
+Focused command:
+  python3 -m unittest discover -s tests -p 'test_guest_arm_aps2_relocation_audit.py' -v
+
+Full Python command:
+  python3 -m unittest discover -s tests -v
+
+Full host suite:
+  bash tools/run_tests.sh
+
+IMPORTANT:
+This file is a command record, not a claim that these commands have passed in the current environment. Append actual command output and counts after running them in a repository checkout.
