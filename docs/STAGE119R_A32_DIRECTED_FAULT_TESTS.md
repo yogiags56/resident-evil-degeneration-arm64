@@ -20,7 +20,7 @@ The tests verify emulator-side transactional safety for the supported scalar hel
 
 ## Validation
 
-The test is registered in `tools/run_tests.sh`. CI for this Stage 119R branch is pending. Stage 119Q host CI passed on commit `c4325e6`, including 512 independent reference-model cases and the Stage 119P integration suite.
+The test is registered in `tools/run_tests.sh`. Host CI passed on code commit `46a8d8a` (run 42584904344): 75 Python checks, native C syntax checks, Stage 119P integration tests, 512 differential cases, and the directed fault/decoder test all passed. The latest documentation-only revision is undergoing CI. Stage 119Q host CI passed on commit `c4325e6`, including 512 independent reference-model cases and the Stage 119P integration suite.
 
 ## Next
 
