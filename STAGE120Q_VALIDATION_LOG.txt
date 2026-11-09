@@ -1,0 +1,15 @@
+Stage 120Q validation record
+============================
+
+Status: pending GitHub Actions validation.
+
+Branch: stage-120q-relr-differential-reconciliation
+
+Scope:
+- Canonical RELR decoder consolidation.
+- Standalone audit parity.
+- Android and mixed tag aliases.
+- Empty bitmap and zero-sized table behavior.
+- Android RELR reconciliation integration.
+
+Independent toolchain/Bionic differential validation remains future work.
