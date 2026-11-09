@@ -85,8 +85,16 @@ def decode_aps2(blob: bytes, kind: str, max_relocations: int = MAX_RELOCATIONS) 
             grouped_delta, pos = _sleb128(blob, pos, "grouped offset delta")
         if flags & GROUPED_BY_INFO:
             grouped_info, pos = _sleb128(blob, pos, "grouped relocation info")
+            info = grouped_info & 0xffffffff
         if has_addend and flags & GROUPED_BY_ADDEND:
             grouped_addend, pos = _sleb128(blob, pos, "grouped addend delta")
+        if kind == "RELA":
+            if not has_addend:
+                addend = 0
+            elif grouped_addend is not None:
+                addend += grouped_addend
+                if addend < -(1 << 31) or addend > 0x7fffffff:
+                    raise ELFAuditError("APS2 cumulative addend exceeds signed 32-bit range")
         for group_index in range(group_size):
             if grouped_delta is None:
                 delta, pos = _sleb128(blob, pos, "relocation offset delta")
@@ -98,20 +106,12 @@ def decode_aps2(blob: bytes, kind: str, max_relocations: int = MAX_RELOCATIONS) 
             if offset > 0xffffffff:
                 raise ELFAuditError("APS2 relocation offset overflows ELF32")
             if grouped_info is None:
-                info_delta, pos = _sleb128(blob, pos, "relocation info delta")
-                # APS2 stores r_info deltas, not absolute r_info values.
-                info += info_delta
-            elif group_index == 0:
-                # GROUPED_BY_INFO supplies one r_info delta for the entire
-                # group. Apply it once, then reuse the resulting r_info.
-                info += grouped_info
-            if info < 0 or info > 0xffffffff:
-                raise ELFAuditError("APS2 cumulative relocation info exceeds ELF32 range")
-            if has_addend:
-                if grouped_addend is None:
-                    delta_addend, pos = _sleb128(blob, pos, "relocation addend delta")
-                else:
-                    delta_addend = grouped_addend
+                raw_info, pos = _sleb128(blob, pos, "relocation info")
+                # r_info is an absolute field value, not a delta. SLEB128
+                # sign extension is converted back to the ELF32 bit pattern.
+                info = raw_info & 0xffffffff
+            if has_addend and grouped_addend is None:
+                delta_addend, pos = _sleb128(blob, pos, "relocation addend delta")
                 addend += delta_addend
                 if addend < -(1 << 31) or addend > 0x7fffffff:
                     raise ELFAuditError("APS2 cumulative addend exceeds signed 32-bit range")
