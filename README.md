@@ -463,4 +463,4 @@ Unified relocation reconciliation now annotates each target against ELF32 PT_LOA
 
     python3 tools/guest_arm_relocation_reconciliation.py /path/to/guest.elf --json /tmp/relocation-reconciliation.json
 
-See STAGE120J_REPORT.md and docs/STAGE120J_RELOCATION_TARGET_RANGE_AUDIT.md. GitHub Actions Source checks passed 187 Python tests plus host C/native regressions. The audit does not read or modify target bytes, calculate load bias, apply relocations, or claim game boot.
+See STAGE120J_REPORT.md and docs/STAGE120J_RELOCATION_TARGET_RANGE_AUDIT.md. GitHub Actions Source checks passed 188 Python tests plus host C/native regressions. The audit does not read or modify target bytes, calculate load bias, apply relocations, or claim game boot.
