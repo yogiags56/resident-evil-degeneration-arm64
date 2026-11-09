@@ -89,7 +89,7 @@ int main(void) {
  assert(re_guest_cpu_arm_scalar_transfer(&cpu,&scalar,0xe5b10000u)==RE_CPU_E_UNIMPLEMENTED);
  assert(re_guest_cpu_arm_scalar_transfer(&cpu,&scalar,0xe59f0000u)==RE_CPU_E_UNIMPLEMENTED);
  assert(re_guest_cpu_arm_scalar_transfer(&cpu,&scalar,0xe7910002u)==RE_CPU_E_UNIMPLEMENTED);
- assert(re_guest_cpu_arm_scalar_transfer(&cpu,&scalar,0xe1d100d0u)==RE_CPU_E_UNIMPLEMENTED);
+ assert(re_guest_cpu_arm_scalar_transfer(&cpu,&scalar,0xe1d10090u)==RE_CPU_E_UNIMPLEMENTED);
  assert(re_guest_cpu_arm_scalar_transfer(NULL,&scalar,0xe5910000u)==RE_CPU_E_ARGUMENT);
 
  puts("A32 scalar transfer integration tests: PASS");
