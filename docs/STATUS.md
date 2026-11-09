@@ -52,3 +52,8 @@ Added CPU-facing data-memory facade `re_guest_cpu_memory.h/.c` for checked byte/
 ## Stage 119K update
 
 Added an isolated A32 immediate load/store helper (`re_guest_cpu_transfer.h/.c`) using the Stage 119J CPU memory facade. Initial supported forms are AL-condition LDR/STR word and LDRB/STRB, immediate offset, pre-index, no writeback, with PC operands rejected. Added `tests/test_re_guest_cpu_transfer.c`, registered it in `tools/run_tests.sh`, and included the helper in Android CMake. The test now includes seven differential cases against the legacy interpreter. CI caught and helped correct test-fixture issues; the latest differential test run is pending. The helper is not wired into the production CPU interpreter; legacy decoder behavior remains unchanged. See [Stage 119K report](STAGE119K_A32_LOAD_STORE_HELPER.md).
+
+
+## Stage 119L update
+
+Extended `tests/test_re_guest_cpu_transfer.c` with write-permission rejection, unmapped-load destination preservation, and unmapped-store memory-preservation cases. These supplement the seven Stage 119K differential cases. CI is pending for the latest source revision. The helper remains isolated and is not connected to the production CPU interpreter.
