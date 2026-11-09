@@ -23,7 +23,7 @@ def _section_tables(report, elf):
                 "target":int(e["offset"],16) if is_virtual else e["target_section_offset"],
                 "symbol_index":e["symbol_index"],"symbol":e["symbol"],"type":e["type"],
                 "type_name":e["type_name"],"addend":e["addend"],
-                "symbol_namespace":f"SHT_SYMTAB:{table['symbol_table_index']}"})
+                "symbol_namespace":f"SHT_SYMTAB:{table['symbol_table_index']}","symbol_version":None})
         result.append({"source_table":f"SHT_{table['type']}:{table['name']}","encoding":table["type"],
             "kind":table["type"],"file_offset":relsec["offset"],"size":relsec["size"],
             "entry_count":len(entries),"entries":entries})
@@ -37,15 +37,19 @@ def _convert(report, namespace, packed=False):
         for e in table["entries"]:
             entries.append({"index":e["index"],"target_domain":"virtual","target":int(e["target_address"],16),
                 "symbol_index":e["symbol_index"],"symbol":e.get("symbol"),"type":e["type"],
-                "type_name":e["type_name"],"addend":e.get("addend"),"symbol_namespace":namespace})
+                "type_name":e["type_name"],"addend":e.get("addend"),"symbol_namespace":namespace,"symbol_version":e.get("symbol_version")})
         result.append({"source_table":table["source_tag"],"encoding":f"APS2_{table['kind']}" if packed else table["kind"],
             "kind":table["kind"],"file_offset":table["file_offset"],
             "size":table["packed_size"] if packed else table["size"],
             "entry_count":len(entries),"entries":entries})
     return result
 
+def _version_identity(e):
+    version=e.get("symbol_version")
+    if not version: return None
+    return (version.get("index"),version.get("kind"),version.get("name"),version.get("library"),version.get("hidden"))
 def _core(e):
-    return (e["target_domain"],e["target"],e["type"],e["symbol_index"],e["addend"])
+    return (e["target_domain"],e["target"],e["type"],e["symbol_index"],e["addend"],_version_identity(e))
 def _identity(e):
     return _core(e)+(e["symbol_namespace"],)
 
@@ -60,7 +64,7 @@ def reconcile_tables(tables):
         sources=sorted({x["source_table"] for x in items})
         if len(sources)>1:
             duplicates.append({"target_domain":key[0],"target":key[1],"type":key[2],
-                "symbol_index":key[3],"addend":key[4],"symbol_namespace":key[5],
+                "symbol_index":key[3],"addend":key[4],"symbol_version":items[0].get("symbol_version"),"symbol_namespace":key[6],
                 "sources":sources,"occurrences":len(items)})
     candidates=[]
     for key,items in core.items():
@@ -68,7 +72,7 @@ def reconcile_tables(tables):
         namespaces=sorted({x["symbol_namespace"] for x in items})
         if len(sources)>1 and len(namespaces)>1:
             candidates.append({"target_domain":key[0],"target":key[1],"type":key[2],
-                "symbol_index":key[3],"addend":key[4],"symbol_namespaces":namespaces,
+                "symbol_index":key[3],"addend":key[4],"symbol_version":items[0].get("symbol_version"),"symbol_namespaces":namespaces,
                 "sources":sources,"classification":"candidate_only_symbol_table_identity_not_proven"})
     overlaps=[]
     for i,left in enumerate(tables):
@@ -86,7 +90,7 @@ def reconcile_tables(tables):
         "file_range_overlaps":overlaps,"file_range_overlap_count":len(overlaps),
         "records":records,"policy":[
             "No source table or relocation record is removed or silently deduplicated.",
-            "Exact duplicates require matching target domain, target, type, symbol index, addend, and symbol-table namespace.",
+            "Exact duplicates require matching target, type, symbol index, addend, symbol version identity, and symbol-table namespace.",
             "Matching tuples from different symbol-table namespaces are candidates only.",
             "REL implicit addends remain null and are not reconstructed from target bytes.",
             "File-range overlap is reported independently from semantic record equality."]}
