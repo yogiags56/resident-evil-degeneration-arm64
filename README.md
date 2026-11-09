@@ -455,3 +455,12 @@ Added a read-only ELF32 EM_ARM decoder for DT_RELR/DT_RELRSZ/DT_RELRENT. It expa
     python3 tools/guest_arm_relocation_reconciliation.py /path/to/guest.elf --json /tmp/relocation-reconciliation.json
 
 See STAGE120I_REPORT.md and docs/STAGE120I_ELF32_RELR_DECODING.md. GitHub Actions Source checks passed 177 Python tests plus host C/native regressions. No relocation is applied and no game boot is claimed.
+
+
+## Stage 120J — Relocation target segment and memory-range validation
+
+Unified relocation reconciliation now annotates each target against ELF32 PT_LOAD memory ranges. It distinguishes file-backed bytes, zero-fill/BSS, cross-boundary targets, segment-end crossings, out-of-range addresses, and ambiguous overlapping PT_LOAD mappings. Known ARM relocation widths are checked; unknown widths are left unknown, and R_ARM_NONE is treated as no target memory access.
+
+    python3 tools/guest_arm_relocation_reconciliation.py /path/to/guest.elf --json /tmp/relocation-reconciliation.json
+
+See STAGE120J_REPORT.md and docs/STAGE120J_RELOCATION_TARGET_RANGE_AUDIT.md. GitHub Actions Source checks passed 187 Python tests plus host C/native regressions. The audit does not read or modify target bytes, calculate load bias, apply relocations, or claim game boot.
