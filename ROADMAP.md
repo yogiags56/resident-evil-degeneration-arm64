@@ -355,3 +355,19 @@ Later milestones: guest system control/MMU semantics, narrow checked-step integr
 2. Inspect .dynsym, .dynstr, .dynamic, PLT/GOT and dynamic relocation sections.
 3. Identify import names only when explicitly present in binary metadata.
 4. Keep S3E/Marmalade import identities provisional until matching known ABI/API evidence exists.
+
+
+## Stage 120A — Dynamic import inventory
+
+- Inventory ELF32 EM_ARM SHT_DYNSYM and named undefined symbols.
+- Parse SHT_DYNAMIC entries and DT_NEEDED / SONAME / RPATH / RUNPATH strings.
+- Parse dynamic REL/RELA sections linked to DYNSYM and correlate by symbol index.
+- Preserve unknown tags and relocation numbers.
+- Do not infer S3E/Marmalade API identity or apply relocations.
+
+### Next — Stage 120B: Dynamic address tables and PLT/GOT cross-reference
+
+1. Parse DT_PLTGOT, DT_JMPREL, DT_PLTRELSZ, DT_PLTREL and dynamic address/size pairs.
+2. Correlate PLT/JUMP_SLOT entries with undefined dynamic symbols.
+3. Add PT_DYNAMIC/PT_LOAD mapping so stripped ELF files can be audited without section headers.
+4. Record unresolved and unsupported packed-relocation formats explicitly.
