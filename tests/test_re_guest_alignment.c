@@ -31,8 +31,12 @@ int main(void) {
   RE_GUEST_ACCESS_HALFWORD)==RE_GUEST_ALIGN_E_FAULT);
  assert(re_guest_alignment_check(&memory,&policy,0x3001u,4u,
   RE_GUEST_ACCESS_WORD)==RE_GUEST_ALIGN_E_FAULT);
+ assert(re_guest_alignment_check(&memory,&policy,0x1000u,4u,
+  RE_GUEST_ACCESS_EXCLUSIVE)==RE_GUEST_ALIGN_OK);
  assert(re_guest_alignment_check(&memory,&policy,0x1001u,4u,
   RE_GUEST_ACCESS_EXCLUSIVE)==RE_GUEST_ALIGN_E_FAULT);
+ assert(re_guest_alignment_check(&memory,&policy,0x1000u,8u,
+  RE_GUEST_ACCESS_DOUBLEWORD)==RE_GUEST_ALIGN_OK);
  assert(re_guest_alignment_check(&memory,&policy,0x1001u,8u,
   RE_GUEST_ACCESS_DOUBLEWORD)==RE_GUEST_ALIGN_E_FAULT);
  assert(re_guest_alignment_check(&memory,&policy,0x1001u,8u,
