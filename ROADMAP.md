@@ -212,3 +212,18 @@ Later milestones: guest system control/MMU semantics, narrow checked-step integr
 3. Test read-only store rejection, unmapped loads, and destination preservation using the A32 decoder API.
 4. Check address wraparound and boundary behavior.
 5. Keep the helper isolated until host CI and Android ARM64 build pass on the same source revision.
+
+## Stage 119R — Directed A32 decoder and fault validation
+
+- Added directed read-only memory, cross-region, address-wrap, and subtraction-underflow tests.
+- Added rejection tests for unsupported condition, post-index, writeback, PC operands, register-offset, LDRD, STRSB, and STRSH.
+- Tests verify failed stores do not mutate backing memory and failed loads preserve destination registers.
+- CI pending.
+
+### Next — Stage 119S: guest system-control profile research
+
+1. Identify the target ARM architecture/profile from the game runtime and platform ABI evidence.
+2. Research guest SCTLR reset and write semantics from that profile.
+3. Determine whether the existing SCTLR.A policy can be tied to actual guest system-control state.
+4. Keep unknown control bits conservative and avoid inventing reset values.
+5. Do not enable production instruction dispatch until control-state and exception behavior are evidence-backed.
