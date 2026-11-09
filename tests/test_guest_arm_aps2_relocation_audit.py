@@ -121,7 +121,7 @@ class APS2DecodeTests(unittest.TestCase):
         blob += sleb(2) + sleb(0x2000)
         blob += sleb(2) + sleb(0)  # two records, no grouped fields
         blob += sleb(4) + sleb((1 << 8) | 22)
-        blob += sleb(4) + sleb(1)  # second r_info is previous + one
+        blob += sleb(4) + sleb(257)  # second r_info delta advances symbol and type
         entries = module.decode_aps2(bytes(blob), "REL")
         self.assertEqual([e["symbol_index"] for e in entries], [1, 2])
         self.assertEqual([e["type"] for e in entries], [22, 23])
