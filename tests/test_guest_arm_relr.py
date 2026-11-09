@@ -13,6 +13,24 @@ def words(values, endian="<"):
     return b"".join(struct.pack(endian + "I", value) for value in values)
 
 
+
+def make_relr_elf32_fixture():
+    """Create a minimal ELF32 ARM DYN file with a SHT_RELR section."""
+    blob = bytearray(0x1f8)
+    ident = b"\\x7fELF" + bytes([1, 1, 1]) + bytes(9)
+    struct.pack_into(
+        "<16sHHIIIIIHHHHHH", blob, 0, ident,
+        3, 40, 1, 0, 52, 0x180, 0, 52, 32, 1, 40, 3, 2,
+    )
+    struct.pack_into("<IIIIIIII", blob, 52, 1, 0, 0x1000, 0x1000, 0x140, 0x140, 5, 0x1000)
+    struct.pack_into("<III", blob, 0x100, 0x2000, 0x0b, 0x2080)
+    names = b"\\0.relr.dyn\\0.shstrtab\\0"
+    blob[0x120:0x120 + len(names)] = names
+    struct.pack_into("<IIIIIIIIII", blob, 0x180 + 40, 1, 19, 2, 0x1100, 0x100, 12, 0, 0, 4, 4)
+    struct.pack_into("<IIIIIIIIII", blob, 0x180 + 80, 11, 3, 0, 0, 0x120, len(names), 0, 0, 1, 0)
+    return bytes(blob)
+
+
 class RELRDecodeTests(unittest.TestCase):
     def test_direct_and_bitmap_entries_expand_in_order(self):
         blob = words([0x1000, 0x0b, 0x1084])
@@ -71,6 +89,34 @@ class RELRDecodeTests(unittest.TestCase):
         with self.assertRaises(ELFAuditError):
             module.decode_relr(words([0x1000]), word_size=8)
 
+
+
+class RELRDifferentialTests(unittest.TestCase):
+    def test_matches_gnu_readelf_expanded_relocation_addresses(self):
+        import re
+        import shutil
+        import subprocess
+        import tempfile
+
+        readelf = shutil.which("readelf")
+        if readelf is None:
+            self.skipTest("GNU readelf is unavailable")
+        fixture = make_relr_elf32_fixture()
+        raw = fixture[0x100:0x10c]
+        expected = [0x2000, 0x2004, 0x200c, 0x2080]
+        self.assertEqual(module.decode_relr(raw), expected)
+        with tempfile.NamedTemporaryFile(suffix=".elf") as file:
+            file.write(fixture)
+            file.flush()
+            result = subprocess.run(
+                [readelf, "-rW", file.name],
+                check=True, capture_output=True, text=True,
+            )
+        reported = {
+            int(value, 16)
+            for value in re.findall(r"(?m)^\\s+([0-9a-fA-F]{8})\\s+<no sym>", result.stdout)
+        }
+        self.assertEqual(reported, set(expected), result.stdout)
 
 class RELRTagTests(unittest.TestCase):
     @staticmethod
