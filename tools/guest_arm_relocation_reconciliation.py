@@ -92,16 +92,24 @@ def reconcile_tables(tables):
             "File-range overlap is reported independently from semantic record equality."]}
 
 def audit(data):
-    elf=audit_elf(data)
-    if elf["elf_class"]!=32 or elf["machine"]!=40: raise ELFAuditError("Stage 120F requires ELF32 EM_ARM")
-    try:
-        sec_report=audit_relocations(data)
-        sec_tables=_section_tables(sec_report,elf)
-        sec_status={"available":True,"reason":None}
-    except ELFAuditError as exc:
-        sec_tables=[]; sec_status={"available":False,"reason":str(exc)}
-    dyn=audit_dynamic(data)
+    # PT_DYNAMIC/PT_LOAD parsing is the primary path and must work even when
+    # section headers have been stripped from the ELF.
     ph=parse_program_headers(data)
+    if len(data)<52 or data[4]!=1 or ph["machine"]!=40:
+        raise ELFAuditError("Stage 120F requires ELF32 EM_ARM")
+    elf=None
+    sec_tables=[]
+    if ph["section_headers_present"]:
+        try:
+            elf=audit_elf(data)
+            sec_report=audit_relocations(data)
+            sec_tables=_section_tables(sec_report,elf)
+            sec_status={"available":True,"reason":None}
+        except ELFAuditError as exc:
+            sec_status={"available":False,"reason":str(exc)}
+    else:
+        sec_status={"available":False,"reason":"ELF has no section headers; section-backed inventory unavailable"}
+    dyn=audit_dynamic(data)
     _,tags,_,_=_read_dynamic(data,ph)
     has_aps2=any(tag in tags for tag in (0x6000000f,0x60000011))
     aps=audit_aps2(data) if has_aps2 else {"packed_relocation_tables":[],"symbol_resolution":{"available":False,"reason":"no APS2 dynamic tags"}}
@@ -109,8 +117,8 @@ def audit(data):
     namespace=f"DT_SYMTAB@0x{symaddr:08x}" if symaddr is not None else "DT_SYMTAB:unavailable"
     tables=sec_tables+_convert(dyn,namespace)+_convert(aps,namespace,packed=True)
     return {"source_size":len(data),"sha256":hashlib.sha256(data).hexdigest(),
-        "elf_class":32,"machine":"ARM","endianness":elf["endianness"],"elf_type":elf["type"],
-        "section_headers_present":bool(elf.get("sections")),"section_backed_audit":sec_status,
+        "elf_class":32,"machine":"ARM","endianness":ph["endianness"],"elf_type":ph["type"],
+        "section_headers_present":ph["section_headers_present"],"section_backed_audit":sec_status,
         "dynamic_symbol_resolution":dyn.get("symbol_resolution"),
         "aps2_symbol_resolution":aps.get("symbol_resolution"),"tables":tables,
         "reconciliation":reconcile_tables(tables),
