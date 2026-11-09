@@ -71,6 +71,23 @@ def elf_fixture_with_symbols(kind="REL", reloc_type=20, symbol_size=37, section_
     return bytes(data)
 
 
+
+def elf_fixture_with_relr(kind="REL"):
+    data = bytearray(elf_fixture(kind))
+    tags = [
+        (0x6000000f if kind == "REL" else 0x60000011, 0x1220),
+        (0x60000010 if kind == "REL" else 0x60000012, len(packed(kind))),
+        (36, 0x1260), (35, 8), (37, 4), (0, 0),
+    ]
+    struct.pack_into("<IIIIIIII", data, 84, 2, 0x100, 0x1100, 0, len(tags) * 8, len(tags) * 8, 4, 4)
+    for index, (tag, value) in enumerate(tags):
+        struct.pack_into("<iI", data, 0x100 + index * 8, tag, value)
+    blob = packed(kind)
+    data[0x220:0x220 + len(blob)] = blob
+    struct.pack_into("<II", data, 0x260, 0x1300, 0x0b)
+    return bytes(data)
+
+
 class SlebTests(unittest.TestCase):
     def test_signed_values_round_trip(self):
         for value in (-2147483648, -8193, -65, -64, -1, 0, 63, 64, 8192, 2147483647):
@@ -146,6 +163,21 @@ class APS2DecodeTests(unittest.TestCase):
             self.assertEqual(report["relocation_count"], 2)
             self.assertEqual(report["packed_relocation_tables"][0]["kind"], kind)
             self.assertEqual(report["packed_relocation_tables"][0]["file_offset"], 0x220)
+
+
+    def test_reports_relr_coexisting_with_aps2_rel(self):
+        report = module.audit(elf_fixture_with_relr("REL"))
+        self.assertEqual(report["relocation_count"], 2)
+        self.assertEqual(report["relr_relocation_count"], 3)
+        self.assertEqual(report["packed_relocation_tables"][0]["kind"], "REL")
+        self.assertEqual(report["relr_tables"][0]["targets"],
+                         ["0x00001300", "0x00001304", "0x0000130c"])
+
+    def test_reports_relr_coexisting_with_aps2_rela(self):
+        report = module.audit(elf_fixture_with_relr("RELA"))
+        self.assertEqual(report["relocation_count"], 2)
+        self.assertEqual(report["relr_relocation_count"], 3)
+        self.assertEqual(report["packed_relocation_tables"][0]["kind"], "RELA")
 
     def test_aps2_entries_preserve_symbol_size_and_definition_state(self):
         report = module.audit(elf_fixture_with_symbols())
