@@ -1,6 +1,6 @@
 # Stage 120Q Report — Canonical RELR Decoder and Cross-Audit Parity
 
-Status: implementation committed to branch; CI validation pending.
+Status: implementation complete; GitHub Actions passed 277 Python tests plus host C/native regressions.
 
 ## Delivered
 
