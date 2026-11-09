@@ -114,9 +114,15 @@ class APS2DecodeTests(unittest.TestCase):
         blob = b"APS2" + sleb(1) + sleb(4) + sleb(1) + sleb(0) + sleb(-1) + sleb(0)
         with self.assertRaises(module.ELFAuditError):
             module.decode_aps2(blob, "REL")
-        blob = b"APS2" + sleb(1) + sleb(0xffffffff) + sleb(1) + sleb(0) + sleb(1) + sleb(0)
+        blob = b"APS2" + sleb(1) + sleb(-1) + sleb(1) + sleb(0) + sleb(1) + sleb(0)
         with self.assertRaises(module.ELFAuditError):
             module.decode_aps2(blob, "REL")
+
+    def test_unsigned_elf32_initial_offset_with_high_bit(self):
+        blob = b"APS2" + sleb(1) + sleb(-0x80000000)
+        blob += sleb(1) + sleb(3) + sleb(4) + sleb((1 << 8) | 22)
+        entry = module.decode_aps2(blob, "REL")[0]
+        self.assertEqual(entry["target_address"], "0x80000004")
 
     def test_rejects_addends_in_rel_stream(self):
         with self.assertRaises(module.ELFAuditError):
