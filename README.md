@@ -502,3 +502,6 @@ Cross-checking against Android Bionic also corrected APS2 decoding: r_info is ab
 
 
 Stage 120N is complete. GitHub Actions run 42614083636 passed 229 Python tests and host C/native regressions. APS2 now preserves bounded symbol metadata and follows Android Bionic's absolute r_info and grouped-addend semantics. See STAGE120N_REPORT.md and STAGE120N_VALIDATION_LOG.txt.
+
+
+Stage 120O is complete: the APS2 parser now validates signed 32-bit SLEB128 fifth-byte payloads, and the conformance suite covers all legal REL/RELA group flag combinations plus malformed streams and multi-group state transitions. GitHub Actions run 42615891583 passed 244 Python tests and host C/native regressions. See STAGE120O_REPORT.md and STAGE120O_VALIDATION_LOG.txt.
