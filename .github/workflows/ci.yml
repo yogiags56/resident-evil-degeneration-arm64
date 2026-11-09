@@ -30,7 +30,7 @@ jobs:
         run: bash ./tools/run_tests.sh
         
 
-      - name: Report Stage 120N-120W source SHA-256
+      - name: Report Stage 120N-120X source SHA-256
         if: always()
         run: |
           sha256sum \
@@ -56,6 +56,9 @@ jobs:
             tests/test_re_guest_permission_finalize.c docs/STAGE120V_PERMISSION_FINALIZATION.md \
             runtime/guest/re_guest_relocation_apply.h runtime/guest/re_guest_relocation_apply.c \
             tests/test_re_guest_relocation_apply.c docs/STAGE120W_RELOCATION_APPLICATION.md \
+            runtime/guest/re_guest_symbol_resolve.h runtime/guest/re_guest_symbol_resolve.c \
+            tests/test_re_guest_symbol_resolve.c docs/STAGE120X_SYMBOL_RESOLUTION.md \
+            STAGE120X_REPORT.md STAGE120X_VALIDATION_LOG.txt \
             STAGE120W_REPORT.md STAGE120W_VALIDATION_LOG.txt \
             STAGE120V_REPORT.md STAGE120V_VALIDATION_LOG.txt \
             STAGE120U_REPORT.md STAGE120U_VALIDATION_LOG.txt \
