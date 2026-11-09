@@ -20,7 +20,9 @@ See STAGE120N_REPORT.md and docs/STAGE120N_PACKED_DYNAMIC_SYMBOL_PARITY.md.
 - Added resource-limit, truncation, malformed flag, and overlong encoding tests.
 - See STAGE120O_REPORT.md and docs/STAGE120O_APS2_CONFORMANCE.md.
 
-## Current milestone: Stage 120P — APS2/RELR coexistence and dynamic relocation cross-checks
+## Completed milestone: Stage 120P — APS2/RELR coexistence and dynamic relocation cross-checks
+
+GitHub Actions run 42618941160 passed 272 Python tests and host C/native regressions. See STAGE120P_VALIDATION_LOG.txt.
 
 - Added ELF32 RELR direct-entry and bitmap decoding.
 - Supports standard DT_RELR and Android DT_ANDROID_RELR aliases, including mixed aliases.
