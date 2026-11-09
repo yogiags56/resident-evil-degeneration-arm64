@@ -64,7 +64,7 @@ class ReconciliationTests(unittest.TestCase):
         self.assertEqual(entry["symbol"],"foo")
         self.assertEqual(entry["symbol_size"],37)
         self.assertTrue(entry["symbol_defined"])
-        self.assertEqual(entry["symbol_namespace"],"DT_SYMTAB@0x000011d0")
+        self.assertEqual(entry["symbol_namespace"],"DT_SYMTAB@0x000011e0")
         self.assertEqual(entry["target_access_width"],37)
         self.assertEqual(entry["target_range"]["width_source"],"validated_symbol_st_size")
 
@@ -74,7 +74,9 @@ class ReconciliationTests(unittest.TestCase):
         entry=aps["entries"][0]
         self.assertEqual(entry["symbol_namespace"],"DT_SYMTAB:unresolved")
         self.assertIsNone(entry.get("symbol_size"))
-        self.assertFalse(entry["target_range"]["width_known"])
+        self.assertTrue(entry["target_range"]["width_known"])
+        self.assertEqual(entry["target_range"]["width_source"],"abi_fixed")
+        self.assertEqual(entry["target_access_width"],4)
 
     def test_integrates_relr_without_fabricating_symbol_or_addend(self):
         report=module.audit(relr_fixture())
