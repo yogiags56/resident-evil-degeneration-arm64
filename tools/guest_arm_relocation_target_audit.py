@@ -2,12 +2,10 @@
 """Classify relocation target ranges against ELF32 PT_LOAD memory mappings."""
 from __future__ import annotations
 from guest_arm_elf_audit import ELFAuditError
+from guest_arm_relocation_abi import known_widths, get_spec
 
 # ARM ELF relocation access widths. Unknown types intentionally remain unknown.
-ARM_WIDTHS={
-    0:0, 1:4, 2:4, 3:4, 10:4, 21:4, 22:4, 23:4, 28:4, 29:4, 30:4,
-    38:4, 42:4, 43:4, 44:4, 47:4, 48:4,
-}
+ARM_WIDTHS=known_widths()
 MAX_TARGETS=4_000_000
 ADDRESS_LIMIT=0x100000000
 
@@ -80,6 +78,7 @@ def audit_target_ranges(reconciliation, program_headers):
                 "target":entry.get("target"),
                 "relocation_type":entry.get("type"),
                 "relocation_type_name":entry.get("type_name"),
+                "abi_spec":get_spec(entry.get("type")),
                 "access_width":width,
                 "width_known":width is not None,
             })
