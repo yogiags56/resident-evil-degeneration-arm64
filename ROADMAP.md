@@ -20,25 +20,24 @@ See STAGE120N_REPORT.md and docs/STAGE120N_PACKED_DYNAMIC_SYMBOL_PARITY.md.
 - Added resource-limit, truncation, malformed flag, and overlong encoding tests.
 - See STAGE120O_REPORT.md and docs/STAGE120O_APS2_CONFORMANCE.md.
 
-## Current milestone: Stage 120O — Independent APS2 conformance and malformed-input hardening
+## Current milestone: Stage 120P — APS2/RELR coexistence and dynamic relocation cross-checks
 
-GitHub Actions run 42615891583 passed 244 Python tests and host C/native regressions. See STAGE120O_VALIDATION_LOG.txt.
+- Added ELF32 RELR direct-entry and bitmap decoding.
+- Supports standard DT_RELR and Android DT_ANDROID_RELR aliases, including mixed aliases.
+- Preserves optional DT_ANDROID_RELRCOUNT as a non-authoritative hint.
+- Integrates RELR into ordinary dynamic and APS2 audits.
+- Reports cross-format relocation target collisions without silently deduplicating them.
+- Adds endian, malformed-tag, alignment, ordering, overflow, resource-bound, and coexistence fixtures.
 
-- Exact signed 32-bit SLEB128 fifth-byte validation.
-- Complete legal REL/RELA group-flag matrix and illegal-combination tests.
-- Multi-group addend reset/accumulation and offset state validation.
-- Zero/excessive counts, excessive group sizes, unknown flags, malformed and truncated stream validation.
+See STAGE120P_REPORT.md and docs/STAGE120P_APS2_RELR_COEXISTENCE.md.
 
-See STAGE120O_REPORT.md and docs/STAGE120O_APS2_CONFORMANCE.md.
+## Next milestone: Stage 120Q — Independent RELR differential validation and relocation-source reconciliation
 
-## Next milestone: Stage 120P — APS2/RELR coexistence and independent toolchain differential validation
-
-1. Add differential APS2 vectors transcribed from the AOSP/LLVM format examples.
-2. Test all legal group-flag combinations for REL and RELA.
-3. Validate signed SLEB128 edge cases and ELF32 r_info bit patterns.
-4. Exercise multiple groups, cumulative offsets, grouped addends, and mixed grouped/ungrouped fields.
-5. Keep malformed streams bounded and reject overflows, trailing bytes, and impossible counts.
-6. Retain a read-only parser; never apply relocations.
+1. Compare RELR expansion against independent toolchain/Bionic-produced vectors.
+2. Validate DT_ANDROID_RELRCOUNT and mixed alias behavior across Bionic/API revisions.
+3. Reconcile standard REL, PLT, APS2, and RELR target sets with provenance.
+4. Preserve collision evidence and do not silently discard duplicate target reports.
+5. Keep all audits read-only; no relocation application or runtime load-bias calculation.
 
 ## Remaining major gates
 
