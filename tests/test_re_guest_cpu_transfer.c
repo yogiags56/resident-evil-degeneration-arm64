@@ -15,7 +15,7 @@ static void setup_bus(REGUESTMEMORY *map, REGUESTMEMBUS *bus,
 
 static void differential_case(uint32_t instruction, uint32_t base,
     uint32_t source, uint32_t initial_word) {
-    uint8_t legacy_data[32] = {0};
+    uint8_t legacy_data[0x7020] = {0};
     uint8_t bus_data[32] = {0};
     REGUESTMEM legacy_memory;
     REGUESTMEMORY map;
@@ -24,15 +24,19 @@ static void differential_case(uint32_t instruction, uint32_t base,
     REGUESTCPU legacy_cpu, helper_cpu;
     unsigned rd = (instruction >> 12) & 15u;
 
-    legacy_data[0] = (uint8_t)initial_word;
-    legacy_data[1] = (uint8_t)(initial_word >> 8);
-    legacy_data[2] = (uint8_t)(initial_word >> 16);
-    legacy_data[3] = (uint8_t)(initial_word >> 24);
-    memcpy(bus_data, legacy_data, sizeof(bus_data));
+    legacy_data[0] = (uint8_t)instruction;
+    legacy_data[1] = (uint8_t)(instruction >> 8);
+    legacy_data[2] = (uint8_t)(instruction >> 16);
+    legacy_data[3] = (uint8_t)(instruction >> 24);
+    legacy_data[0x7000] = (uint8_t)initial_word;
+    legacy_data[0x7001] = (uint8_t)(initial_word >> 8);
+    legacy_data[0x7002] = (uint8_t)(initial_word >> 16);
+    legacy_data[0x7003] = (uint8_t)(initial_word >> 24);
+    memcpy(bus_data, legacy_data + 0x7000, sizeof(bus_data));
 
     legacy_memory.bytes = legacy_data;
     legacy_memory.size = sizeof(legacy_data);
-    legacy_memory.guest_base = 0x8000u;
+    legacy_memory.guest_base = 0x1000u;
 
     setup_bus(&map, &bus, &memory, bus_data, sizeof(bus_data));
     re_guest_cpu_reset(&legacy_cpu, 0x1000u, 0);
@@ -45,7 +49,7 @@ static void differential_case(uint32_t instruction, uint32_t base,
         &helper_cpu, &memory, instruction) == RE_CPU_OK);
 
     assert(legacy_cpu.r[rd] == helper_cpu.r[rd]);
-    assert(memcmp(legacy_data, bus_data, sizeof(legacy_data)) == 0);
+    assert(memcmp(legacy_data + 0x7000, bus_data, sizeof(bus_data)) == 0);
 }
 
 int main(void) {
@@ -88,7 +92,7 @@ int main(void) {
     /* Differential parity against the legacy interpreter. */
     differential_case(0xe5910000u, 0x8000u, 0u, 0x12345678u);
     differential_case(0xe5910004u, 0x8000u, 0u, 0x12345678u);
-    differential_case(0xe5110001u, 0x8004u, 0u, 0x12345678u);
+    differential_case(0xe5110004u, 0x8004u, 0u, 0x12345678u);
     differential_case(0xe5810004u, 0x8000u, 0xa1b2c3d4u, 0u);
     differential_case(0xe5010001u, 0x8004u, 0xa1b2c3d4u, 0u);
     differential_case(0xe5d10002u, 0x8000u, 0u, 0x78563412u);
