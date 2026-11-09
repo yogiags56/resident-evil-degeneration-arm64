@@ -7,13 +7,13 @@ from guest_arm_elf_audit import ELFAuditError
 from guest_arm_relocation_abi import SPECS
 from guest_arm_pt_dynamic_audit import parse_program_headers, map_vaddr, PT_LOAD, PT_DYNAMIC
 from guest_arm_relr import (collect_relr_tables, find_cross_format_overlaps, DT_ANDROID_RELR, DT_ANDROID_RELRSZ, DT_ANDROID_RELRENT, DT_ANDROID_RELRCOUNT)
-DT_NULL=0; DT_HASH=4; DT_STRTAB=5; DT_SYMTAB=6; DT_RELA=7; DT_RELASZ=8
+DT_NULL=0; DT_NEEDED=1; DT_HASH=4; DT_STRTAB=5; DT_SYMTAB=6; DT_RELA=7; DT_RELASZ=8
 DT_RELAENT=9; DT_STRSZ=10; DT_SYMENT=11; DT_REL=17; DT_RELSZ=18
 DT_RELENT=19; DT_PLTREL=20; DT_JMPREL=23; DT_PLTRELSZ=2
 DT_GNU_HASH=0x6ffffef5
 DT_VERSYM=0x6ffffff0; DT_VERDEF=0x6ffffffc; DT_VERDEFNUM=0x6ffffffd
 DT_VERNEED=0x6ffffffe; DT_VERNEEDNUM=0x6fffffff
-TAGS={0:"DT_NULL",2:"DT_PLTRELSZ",4:"DT_HASH",5:"DT_STRTAB",6:"DT_SYMTAB",
+TAGS={0:"DT_NULL",1:"DT_NEEDED",2:"DT_PLTRELSZ",4:"DT_HASH",5:"DT_STRTAB",6:"DT_SYMTAB",
 7:"DT_RELA",8:"DT_RELASZ",9:"DT_RELAENT",10:"DT_STRSZ",11:"DT_SYMENT",
 17:"DT_REL",18:"DT_RELSZ",19:"DT_RELENT",20:"DT_PLTREL",23:"DT_JMPREL",35:"DT_RELRSZ",36:"DT_RELR",37:"DT_RELRENT",DT_ANDROID_RELR:"DT_ANDROID_RELR",DT_ANDROID_RELRSZ:"DT_ANDROID_RELRSZ",DT_ANDROID_RELRENT:"DT_ANDROID_RELRENT",DT_ANDROID_RELRCOUNT:"DT_ANDROID_RELRCOUNT",DT_GNU_HASH:"DT_GNU_HASH",DT_VERSYM:"DT_VERSYM",DT_VERDEF:"DT_VERDEF",DT_VERDEFNUM:"DT_VERDEFNUM",DT_VERNEED:"DT_VERNEED",DT_VERNEEDNUM:"DT_VERNEEDNUM"}
 RELOCS={0:"R_ARM_NONE",1:"R_ARM_PC24",2:"R_ARM_ABS32",3:"R_ARM_REL32",
@@ -37,7 +37,7 @@ def _read_dynamic(data, ph):
     if not terminated: raise ELFAuditError("PT_DYNAMIC has no DT_NULL terminator")
     tags={}
     for item in entries:
-        if item["tag"] in (DT_NULL,): continue
+        if item["tag"] in (DT_NULL,DT_NEEDED): continue
         if item["tag"] in tags and tags[item["tag"]]!=item["value"]:
             raise ELFAuditError(f"conflicting duplicate {item['tag_name']}")
         tags[item["tag"]]=item["value"]
@@ -318,6 +318,20 @@ def _parse_symbol_versions(data,tags,loads,endian,symbols,symbol_info):
       "definitions":definitions,"requirements":requirements,
       "version_index_count":len(version_records)}
 
+def _needed_libraries(data,entries,tags,loads):
+    offsets=[item["value"] for item in entries if item["tag"]==DT_NEEDED]
+    if not offsets:
+        return []
+    if DT_STRTAB not in tags or DT_STRSZ not in tags:
+        raise ELFAuditError("DT_NEEDED requires bounded DT_STRTAB and DT_STRSZ")
+    _,strraw=_mapped(data,tags[DT_STRTAB],tags[DT_STRSZ],loads,"DT_STRTAB")
+    names=[]
+    for offset in offsets:
+        names.append(_version_string(strraw,offset,"DT_NEEDED"))
+    if len(set(names))!=len(names):
+        raise ELFAuditError("duplicate DT_NEEDED library name")
+    return names
+
 def _reloc_table(data,address,size,entry_size,kind,loads,endian,label,symbols):
     expected=8 if kind=="REL" else 12
     if entry_size!=expected: raise ELFAuditError(f"{label}: entry size must be {expected}")
@@ -382,7 +396,7 @@ def audit(data):
       "elf_class":32,"machine":"ARM","endianness":ph["endianness"],
       "section_headers_present":ph["section_headers_present"],"dynamic_entries":entries,
       "dynamic_tags":{TAGS.get(k,f"DT_UNKNOWN_{k}"):v for k,v in tags.items()},
-      "symbol_resolution":symbol_info,"symbol_versioning":version_info,"relocation_tables":tables,
+      "symbol_resolution":symbol_info,"symbol_versioning":version_info,\n      "dynamic_symbols":symbols if symbols is not None else [],\n      "needed_libraries":_needed_libraries(data,entries,tags,loads),\n      "relocation_tables":tables,
       "relocation_count":sum(x["entry_count"] for x in tables),
       "relr_tables":relr_tables,
       "relr_relocation_count":sum(x["relocation_count"] for x in relr_tables),
