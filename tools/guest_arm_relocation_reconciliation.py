@@ -12,7 +12,7 @@ from guest_arm_aps2_relocation_audit import audit as audit_aps2
 from guest_arm_relr_audit import audit as audit_relr
 from guest_arm_pt_dynamic_audit import parse_program_headers
 from guest_arm_relocation_target_audit import audit_target_ranges
-from guest_arm_relocation_abi import get_spec, SPECS
+from guest_arm_relocation_abi import get_spec, SPECS, contract_for
 ET_EXEC,ET_DYN=2,3
 
 def _section_tables(report, elf):
@@ -142,12 +142,19 @@ def audit(data):
     reconciliation=reconcile_tables(tables)
     target_ranges=audit_target_ranges({"tables":tables},ph)
     abi_counts={}
+    contract_counts={}
+    contract_issue_count=0
     for table in tables:
         for entry in table["entries"]:
             code=entry.get("type")
             spec=get_spec(code)
             key=spec["name"] if spec else f"R_ARM_UNKNOWN_{code}"
             abi_counts[key]=abi_counts.get(key,0)+1
+            contract=contract_for(code,entry.get("symbol_index"),entry.get("target_domain"),table.get("encoding"))
+            entry["abi_contract"]=contract
+            ckey=contract["symbol_policy"]+"/"+contract["target_policy"]+"/"+contract["applicability"]
+            contract_counts[ckey]=contract_counts.get(ckey,0)+1
+            contract_issue_count+=len(contract["contract_issues"])
     abi_known=sum(count for name,count in abi_counts.items() if not name.startswith("R_ARM_UNKNOWN_"))
     return {"source_size":len(data),"sha256":hashlib.sha256(data).hexdigest(),
         "elf_class":32,"machine":"ARM","endianness":ph["endianness"],"elf_type":ph["type"],
@@ -157,7 +164,9 @@ def audit(data):
         "reconciliation":reconciliation,"target_range_audit":target_ranges,
         "relocation_abi":{"registry_entry_count":len(SPECS),
             "known_relocation_count":abi_known,"unknown_relocation_count":sum(abi_counts.values())-abi_known,
-            "type_counts":abi_counts,"unknown_types_preserved":True},
+            "type_counts":abi_counts,"unknown_types_preserved":True,
+            "contract_counts":contract_counts,"contract_issue_count":contract_issue_count,
+            "contract_issues_preserved":True},
         "evidence_limits":[
             "ELF32 EM_ARM only; input is parsed read-only.",
             "Section-backed reconciliation uses the conventional SHT_SYMTAB Stage 119X parser; unsupported combinations are reported unavailable.",
