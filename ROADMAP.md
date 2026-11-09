@@ -443,12 +443,22 @@ Later milestones: guest system control/MMU semantics, narrow checked-step integr
 - Shares the resolver with ordinary dynamic and APS2 relocation audits.
 - GitHub Actions run 42599401095 passed 157 Python tests and host C/native regression checks.
 
-### Next — Stage 120H: Dynamic version metadata and symbol identity
+## Stage 120H — Dynamic symbol version metadata and identity
 
-1. Parse DT_VERSYM through bounded PT_LOAD reads.
-2. Parse DT_VERDEF and DT_VERNEED headers and auxiliary chains.
-3. Correlate symbols using version indices and names, not numeric symbol index alone.
-4. Preserve hidden, local, weak, and unresolved version states.
-5. Reject malformed linked lists, cyclic chains, and invalid string/index offsets.
-6. Add little-endian and big-endian fixtures.
-7. Keep provider lookup and relocation application disabled.
+- Parses DT_VERSYM, DT_VERDEF/DT_VERDEFNUM, and DT_VERNEED/DT_VERNEEDNUM.
+- Bounds version structures, auxiliary records, and version strings through PT_LOAD and DT_STRSZ.
+- Associates symbols with local/global, definition/requirement, version name, dependency library, and hidden bit.
+- Integrates version metadata into ordinary dynamic relocation and APS2 reports.
+- Relocation reconciliation now includes version identity in semantic matching.
+- Rejects malformed record counts, invalid auxiliary offsets, missing version records, and unterminated strings.
+- GitHub Actions run 42600277144 passed 165 Python tests plus host C/native regression checks.
+
+### Next — Stage 120I: ELF32 RELR relative relocation decoding
+
+1. Verify ELF32 RELR dynamic tags and word encoding against the generic ABI and Android linker behavior.
+2. Parse DT_RELRSZ, DT_RELR, and DT_RELRENT through PT_DYNAMIC/PT_LOAD.
+3. Decode direct-address and bitmap entries with 32-bit overflow and alignment checks.
+4. Preserve table offsets and target addresses without reading or applying relocations.
+5. Reconcile RELR targets with REL/RELA/APS2 inventories without fabricating symbol indices or addends.
+6. Add malformed, truncated, overflow, empty-bitmap, and endian fixtures.
+7. Keep runtime load-bias calculation and relocation application disabled.
