@@ -1,23 +1,23 @@
 # Project Roadmap
 
-## Current milestone: Stage 120M — Independent ELF cross-check and COPY symbol-size validation
+## Current milestone: Stage 120N — Packed and dynamic relocation metadata parity
 
-GitHub Actions run 42605382359 passed 218 Python tests (including a real readelf cross-check when available) and host C/native regression checks. See STAGE120M_VALIDATION_LOG.txt.
+- Carry bounded symbol size, definition state, section index, and symbol version into APS2 entries.
+- Mark DT_SYMTAB namespace unresolved unless dynamic symbol bounds are proven.
+- Apply R_ARM_COPY st_size only with complete symbol provenance.
+- Correct APS2 decoding to AOSP Bionic semantics: absolute r_info, grouped info reuse, grouped addend applied once per group, per-entry addend deltas, and zero addend when HAS_ADDEND is absent.
+- Verify sectionless PT_DYNAMIC/APS2 and ordinary dynamic/packed symbol metadata parity.
 
-- Compare section-backed ELF32 EM_ARM relocation offsets/types against GNU readelf or LLVM llvm-readelf.
-- Keep tool absence as an explicit skip; no host tool is a runtime dependency.
-- Resolve R_ARM_COPY width only from a defined, nonzero, namespaced symbol with positive st_size.
-- Keep COPY width unknown when symbol-size provenance is incomplete; APS2 size provenance remains unresolved.
-- Preserve unknown external relocation names and comparison mismatches.
+See STAGE120N_REPORT.md and docs/STAGE120N_PACKED_DYNAMIC_SYMBOL_PARITY.md.
 
-## Next milestone: Stage 120N — Packed and dynamic relocation symbol metadata parity
+## Next milestone: Stage 120O — Independent APS2 conformance fixtures and malformed-input hardening
 
-1. Carry bounded dynamic symbol size, definition state, and version metadata consistently into APS2 normalized records.
-2. Prove symbol namespace identity before using a symbol index to resolve COPY metadata.
-3. Add sectionless PT_DYNAMIC and APS2 fixtures for symbol metadata parity.
-4. Cross-check dynamic relocation tags and records without requiring section headers.
-5. Preserve explicit unknown/unresolved states for missing hashes, symbol bounds, and provider resolution.
-6. Keep all target bytes read-only; do not apply relocations.
+1. Add differential APS2 vectors transcribed from the AOSP/LLVM format examples.
+2. Test all legal group-flag combinations for REL and RELA.
+3. Validate signed SLEB128 edge cases and ELF32 r_info bit patterns.
+4. Exercise multiple groups, cumulative offsets, grouped addends, and mixed grouped/ungrouped fields.
+5. Keep malformed streams bounded and reject overflows, trailing bytes, and impossible counts.
+6. Retain a read-only parser; never apply relocations.
 
 ## Remaining major gates
 
