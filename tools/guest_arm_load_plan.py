@@ -71,6 +71,8 @@ def plan_load_segments(data: bytes, page_size: int = DEFAULT_PAGE_SIZE) -> dict:
             page_start = page_end = start
             file_page_offset = None
         else:
+            if (start - segment["offset"]) % page_size:
+                raise ELFAuditError("PT_LOAD virtual address and file offset are not page-congruent")
             page_start = _align_down(start, page_size)
             page_end = _align_up(end_memory, page_size)
             leading = start - page_start
