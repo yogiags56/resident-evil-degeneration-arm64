@@ -1,8 +1,24 @@
 Stage 120Q validation record
 ============================
 
-Status: pending final GitHub Actions run.
+Status: PASS
+GitHub Actions run: 42640031158
+URL: https://github.com/yogiags56/resident-evil-degeneration-arm64/actions/runs/42640031158
+Python test result: 273 passed in 5.135 seconds.
+Host C mock compilation: passed.
+Native C regression checks: passed.
+CI SHA-256 reporting step: passed.
 
-The branch adds a GNU readelf differential test for ELF32 SHT_RELR, corrects DT_ANDROID_RELRCOUNT compatibility with Bionic, and exposes the count hint in both audit JSON reports.
+Differential result:
+- Generated ELF32 ARM DYN fixture includes a SHT_RELR section.
+- Project RELR decoder expanded four target addresses.
+- GNU readelf -rW reported the exact same four target addresses.
+- The differential test is conditional only on readelf availability; GitHub Actions runner had GNU readelf installed and the test ran successfully.
 
-Final test totals, workflow run URL, and source SHA-256 values will be recorded after CI completes.
+Bionic compatibility:
+- DT_ANDROID_RELRCOUNT is ignored/non-authoritative metadata.
+- It is not required to accompany a RELR table and is not used as table size or decoded relocation count.
+- The value is exposed as android_relr_count_hint in both dynamic and APS2 audit reports.
+
+Scope:
+Offline ELF32 EM_ARM analysis only. No relocation is applied, no target contents are read or written, no runtime load bias is calculated, and no Android device execution or original game boot is claimed.
