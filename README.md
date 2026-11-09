@@ -1,6 +1,6 @@
 # Resident Evil: Degeneration — Native ARM64 Port Research
 
-[![Stage](https://img.shields.io/badge/stage-118-blue)](#project-status)
+[![Stage](https://img.shields.io/badge/stage-119M-blue)](#project-status)
 [![Platform](https://img.shields.io/badge/platform-Android%20ARM64-green)](#build-the-android-probe)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
@@ -336,3 +336,10 @@ This automation script is provided because the connected GitHub integration in t
 ## Stage 117–118 runtime foundation
 
 Stage 117 compiles the partial ARM32/Thumb CPU interpreter, AAPCS32 dispatcher, and runtime coordinator into the Android ARM64 native library. Its CI build and source checks passed on commit `b090f90`. Stage 118 adds runtime stop/fault diagnostics and tests for unresolved imports, failed import dispatch, and invalid guest instruction fetch. See [Stage 118 report and roadmap](docs/STAGE118_RUNTIME_DIAGNOSTICS_AND_ROADMAP.md). The native probe remains a research harness: no physical-device execution or original game boot is claimed.
+
+
+## Current engineering milestone — Stage 119M
+
+The latest documented source milestone is Stage 119M (ARMv7-A/R unaligned-access research). The report is a documentation-only architecture decision record; the checked memory bus remains strict-alignment by default. Stage 119N will add explicit guest memory attributes and an SCTLR.A-driven alignment policy before any permissive unaligned data access is implemented.
+
+See [current status](docs/STATUS.md), [Stage 119M research](docs/STAGE119M_ARMV7_UNALIGNED_ACCESS_RESEARCH.md), and [project roadmap](ROADMAP.md). Stage 119M has not yet passed branch CI. No production CPU migration, original game boot, or playable build is claimed.
