@@ -72,6 +72,17 @@ def audit_target_ranges(reconciliation, program_headers):
                 typ=entry.get("type")
                 spec=get_spec(typ)
                 width=spec["width"] if spec else None
+                width_source="abi_fixed" if spec and width is not None else "unknown"
+                if typ==20:
+                    sym_size=entry.get("symbol_size")
+                    if (isinstance(sym_size,int) and sym_size>0 and entry.get("symbol_defined") is True
+                        and isinstance(entry.get("symbol_index"),int) and entry["symbol_index"]>0
+                        and entry.get("symbol_namespace") not in (None,"","unknown")):
+                        width=sym_size
+                        width_source="validated_symbol_st_size"
+                    else:
+                        width=None
+                        width_source="unresolved_copy_symbol_size"
                 alignment=spec["alignment"] if spec else 1
                 if entry.get("encoding")=="RELR" or table.get("encoding")=="RELR":
                     width=4
@@ -88,6 +99,7 @@ def audit_target_ranges(reconciliation, program_headers):
                 "required_alignment":item.get("required_alignment"),
                 "alignment_valid":item.get("alignment_valid"),
                 "access_width":width,
+                "width_source":width_source if entry.get("target_domain")=="virtual" else "not_applicable",
                 "width_known":width is not None,
             })
             report.append(item)
