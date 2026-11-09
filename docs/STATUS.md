@@ -1,6 +1,6 @@
 # Current Status
 
-**Current source milestone: Stage 119P — isolated A32 scalar transfer integration implemented on branch `stage-119p-a32-scalar-integration`; CI pending.** Stage 117 integrated a partial ARM32/Thumb guest CPU, AAPCS32 dispatcher, runtime coordinator, and ABI support into the Android ARM64 native target. A prior Android ARM64 workflow passed on commit `b090f90`; this is not validation of the current branch.
+**Current source milestone: Stage 119Q — A32 scalar differential reference tests added on branch `stage-119q-a32-scalar-differential`; CI pending.** Stage 117 integrated a partial ARM32/Thumb guest CPU, AAPCS32 dispatcher, runtime coordinator, and ABI support into the Android ARM64 native target. A prior Android ARM64 workflow passed on commit `b090f90`; this is not validation of the current branch.
 
 Stage 118 adds guest runtime stop diagnostics. Stages 119A–119L introduced guest memory management, checked bus, CPU adapters, checked instruction fetch, CPU data facade, isolated transfer helper, and fault regressions. Stage 119M documented ARMv7-A/R alignment. Stage 119N added memory attributes and strict-by-default SCTLR.A policy; host CI passed on commit `529a7ee`.
 
@@ -31,3 +31,8 @@ Added checked scalar data transfers for byte, halfword, and word widths using ex
 ## Stage 119P update
 
 Added isolated A32 scalar instruction decoding for ordinary immediate pre-indexed/no-writeback byte/word LDR/STR plus LDRH/STRH/LDRSB/LDRSH. Signed loads sign-extend. The helper routes accesses through Stage 119O, preserves destination registers on failed loads, and fails closed for unsupported forms. Host tests and Android CMake registration added. Current branch CI pending.
+
+
+## Stage 119Q update
+
+Added a deterministic independent byte-array reference model covering 512 A32 scalar transfer cases across word/byte/halfword and signed loads. The test compares all CPU registers and the complete memory region after every operation. It is registered in the host test runner. CI is pending; the model is not an external hardware oracle and the helper remains isolated from production CPU dispatch.
