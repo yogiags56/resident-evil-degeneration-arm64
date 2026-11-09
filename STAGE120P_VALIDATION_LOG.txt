@@ -1,6 +1,29 @@
 Stage 120P validation record
 ============================
 
-Status: pending final CI run.
+GitHub Actions workflow: Source checks
+Run ID: 42618941160
+Validated implementation commit: 291dedbda357ca9efc50135739af638962766f49
+Result: success
 
-The final implementation adds ELF32 RELR decoding and integrates it with standard REL/RELA and Android APS2 reports. The final run ID and test totals will be recorded after GitHub Actions completes.
+Observed:
+- 272 Python tests passed in 12.026 seconds.
+- RELR direct-entry and 31-bit ELF32 bitmap expansion passed.
+- Little-endian and big-endian RELR fixtures passed.
+- Standard DT_RELR and Android DT_ANDROID_RELR aliases passed, including mixed aliases.
+- Optional DT_ANDROID_RELRCOUNT hint is preserved but not used as a table size.
+- Malformed tag sets, invalid entry sizes, partial words, unaligned/backwards targets, and address/cursor overflow were rejected.
+- Expanded relocation count safety bound passed.
+- RELR coexistence with APS2 REL and APS2 RELA passed.
+- Cross-encoding target collisions are reported without silently deduplicating.
+- Existing host C mock compilation and native C regression checks passed.
+
+Workflow run: https://github.com/yogiags56/resident-evil-degeneration-arm64/actions/runs/42618941160
+
+Reference behavior:
+- https://android.googlesource.com/platform/bionic/+/main/libc/include/elf.h
+- https://android.googlesource.com/platform/bionic/+/master/linker/linker.cpp
+- https://android.googlesource.com/platform/bionic/+/9da992c2714205a7643c4b2f2aaaa0627e061914/linker/linker.cpp
+
+Scope:
+Read-only ELF32 EM_ARM analysis. No relocation is applied, no target contents are dereferenced or modified, and no runtime load bias is calculated. No Android device execution or original game boot is claimed.
