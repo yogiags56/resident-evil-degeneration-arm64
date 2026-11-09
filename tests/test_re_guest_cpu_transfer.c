@@ -53,7 +53,7 @@ static void differential_case(uint32_t instruction, uint32_t base,
     REGUESTCPUStatus helper_status = re_guest_cpu_arm_transfer_imm(
         &helper_cpu, &memory, instruction);
     if (helper_status != RE_CPU_OK) {
-        fprintf(stderr, "helper failed instruction=0x%08x status=%d\\n",
+        fprintf(stderr, "helper failed instruction=0x%08x status=%d\n",
             instruction, (int)helper_status);
     }
     assert(helper_status == RE_CPU_OK);
