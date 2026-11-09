@@ -1,0 +1,8 @@
+Stage 120Q validation record
+============================
+
+Status: pending final GitHub Actions run.
+
+The branch adds a GNU readelf differential test for ELF32 SHT_RELR, corrects DT_ANDROID_RELRCOUNT compatibility with Bionic, and exposes the count hint in both audit JSON reports.
+
+Final test totals, workflow run URL, and source SHA-256 values will be recorded after CI completes.
