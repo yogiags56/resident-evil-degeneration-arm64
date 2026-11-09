@@ -227,7 +227,9 @@ class APS2DecodeTests(unittest.TestCase):
         for flags in (0, 1, 2, 3):
             with self.subTest(flags=flags):
                 entries = module.decode_aps2(self._group_blob("REL", flags), "REL")
-                self.assertEqual([e["target_address"] for e in entries], ["0x00001004", "0x0000100c"])
+                self.assertEqual([e["target_address"] for e in entries],
+                         ["0x00001004", "0x00001008"] if flags & module.GROUPED_BY_OFFSET_DELTA
+                         else ["0x00001004", "0x0000100c"])
                 if flags & module.GROUPED_BY_INFO:
                     self.assertEqual([(e["symbol_index"], e["type"]) for e in entries], [(1, 22), (1, 22)])
                 else:
@@ -258,7 +260,7 @@ class APS2DecodeTests(unittest.TestCase):
                 module.decode_aps2(self._group_blob("RELA", flags), "RELA")
 
     def test_rela_addend_state_transitions_across_groups(self):
-        blob = b"APS2" + sleb(3) + sleb(0x2000)
+        blob = b"APS2" + sleb(4) + sleb(0x2000)
         # First group: per-entry addend deltas +5, then +3.
         blob += sleb(2) + sleb(8)
         blob += sleb(4) + sleb((1 << 8) | 22) + sleb(5)
@@ -269,7 +271,7 @@ class APS2DecodeTests(unittest.TestCase):
         # Third group: grouped delta is applied to the reset value.
         blob += sleb(1) + sleb(13) + sleb((1 << 8) | 22) + sleb(-2)
         entries = module.decode_aps2(blob, "RELA")
-        self.assertEqual([e["addend"] for e in entries], [5, 8, 0])
+        self.assertEqual([e["addend"] for e in entries], [5, 8, 0, -2])
 
     def test_offset_delta_accumulation_across_groups(self):
         blob = b"APS2" + sleb(3) + sleb(0x1000)
