@@ -20,6 +20,17 @@ See STAGE120N_REPORT.md and docs/STAGE120N_PACKED_DYNAMIC_SYMBOL_PARITY.md.
 - Added resource-limit, truncation, malformed flag, and overlong encoding tests.
 - See STAGE120O_REPORT.md and docs/STAGE120O_APS2_CONFORMANCE.md.
 
+## Current milestone: Stage 120O — Independent APS2 conformance and malformed-input hardening
+
+GitHub Actions run 42615891583 passed 244 Python tests and host C/native regressions. See STAGE120O_VALIDATION_LOG.txt.
+
+- Exact signed 32-bit SLEB128 fifth-byte validation.
+- Complete legal REL/RELA group-flag matrix and illegal-combination tests.
+- Multi-group addend reset/accumulation and offset state validation.
+- Zero/excessive counts, excessive group sizes, unknown flags, malformed and truncated stream validation.
+
+See STAGE120O_REPORT.md and docs/STAGE120O_APS2_CONFORMANCE.md.
+
 ## Next milestone: Stage 120P — APS2/RELR coexistence and independent toolchain differential validation
 
 1. Add differential APS2 vectors transcribed from the AOSP/LLVM format examples.
