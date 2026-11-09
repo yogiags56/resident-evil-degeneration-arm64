@@ -46,3 +46,8 @@ Added directed A32 scalar permission, cross-region, address-wrap/underflow, and 
 ## Stage 119S update
 
 Audited what the repository proves about the guest ARM profile. Confirmed ARM32/Thumb guest code and AAPCS32 argument convention; exact architecture revision/profile, optional extensions, guest endianness control, privilege/MMU model, and SCTLR reset/write behavior remain unproven. The ARMv7-A/R alignment reference is conditional research, not evidence of the target's exact profile. No guessed system-control state is added.
+
+
+## Stage 119T update
+
+Added a read-only ELF32/ELF64 auditor and synthetic fixtures for ELF class, endianness, machine, section bounds, and selected AEABI ARM attributes. The original guest executable is not in the repository, so no game-specific metadata is claimed. The first CI attempt exposed incorrect ARM attribute subsection-length accounting; the parser and fixture were corrected. Latest source checks and Android ARM64 build are running on commit ed33482. See STAGE119T_GUEST_ELF_ARM_ABI_AUDIT.md.

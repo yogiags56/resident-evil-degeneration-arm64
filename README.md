@@ -343,3 +343,12 @@ Stage 117 compiles the partial ARM32/Thumb CPU interpreter, AAPCS32 dispatcher, 
 The latest documented source milestone is Stage 119S (guest ARM architecture-profile evidence audit). The opt-in helper routes immediate pre-indexed/no-writeback byte, word, and halfword transfers through the Stage 119O scalar helper, including signed LDRSB/LDRSH. It is not called by the production CPU interpreter.
 
 See [current status](docs/STATUS.md), [Stage 119S report](docs/STAGE119S_GUEST_ARM_PROFILE_AUDIT.md), [Stage 119R report](docs/STAGE119R_A32_DIRECTED_FAULT_TESTS.md), [Stage 119Q report](docs/STAGE119Q_A32_SCALAR_DIFFERENTIAL.md), [Stage 119P report](docs/STAGE119P_A32_SCALAR_TRANSFER_INTEGRATION.md), [Stage 119O report](docs/STAGE119O_CHECKED_SCALAR_TRANSFER.md), and [project roadmap](ROADMAP.md). Stage 119Q host CI passed on commit `c4325e6` (75 Python checks, native C syntax checks, integration tests, and 512 differential cases). Stage 119R host CI passed on code commit `46a8d8a` (75 Python checks, native C syntax checks, integration tests, 512 differential cases, and directed fault tests). Stage 119P and 119Q Android ARM64 builds passed; Stage 119R host CI and Android ARM64 build passed on commit `080203b`. No production CPU migration, original game boot, or playable build is claimed.
+
+
+## Current engineering milestone — Stage 119T
+
+Stage 119T adds a read-only ELF/ARM ABI metadata auditor with synthetic fixtures. It inspects locally supplied ELF32/ELF64 files and selected AEABI .ARM.attributes; it does not execute or modify the binary. The original game executable is not stored in this repository, so game-specific CPU attributes remain unknown.
+
+    python3 tools/guest_arm_elf_audit.py /path/to/guest.elf --json /tmp/guest-elf-report.json
+
+See docs/STAGE119T_GUEST_ELF_ARM_ABI_AUDIT.md, docs/STATUS.md, and ROADMAP.md. CI is running; no game boot or playable build is claimed.
