@@ -329,7 +329,7 @@ def _reloc_table(data,address,size,entry_size,kind,loads,endian,label,symbols):
         if symbols is not None:
             if sym_index>=len(symbols): raise ELFAuditError(f"{label}: symbol index {sym_index} out of range")
             sym=symbols[sym_index]
-            symbol={"index":sym_index,"name":sym["name"],"undefined":sym["undefined"]}
+            symbol={"index":sym_index,"name":sym["name"],"undefined":sym["undefined"],"version":sym.get("version")}
         else: symbol={"index":sym_index,"name":None,"undefined":None}
         entries.append({"index":index,"target_address":f"0x{target:08x}",
           "symbol_index":sym_index,"symbol":symbol["name"],"symbol_undefined":symbol["undefined"],"symbol_version":symbol.get("version"),
