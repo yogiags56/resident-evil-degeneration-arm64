@@ -418,3 +418,12 @@ Added a read-only ELF32 EM_ARM auditor for Android APS2 packed REL/RELA streams 
     python3 tools/guest_arm_aps2_relocation_audit.py /path/to/guest.elf --json /tmp/aps2-relocations.json
 
 See STAGE120E_REPORT.md, ROADMAP_THROUGH_STAGE120E.md, and docs/STAGE120E_ANDROID_APS2_PACKED_RELOCATIONS.md. The original game executable is not included, so no game-specific APS2 presence or boot status is claimed.
+
+
+## Stage 120F — Dynamic relocation reconciliation
+
+Added a read-only unified audit across section-backed REL/RELA, PT_DYNAMIC REL/RELA/JMPREL, and Android APS2 records. The report preserves source tables, normalizes relocation identities, flags exact duplicates only within matching symbol-table namespaces, and reports exact/partial file-range overlaps. Stripped ELF inputs remain supported through the PT_DYNAMIC path.
+
+    python3 tools/guest_arm_relocation_reconciliation.py /path/to/guest.elf --json /tmp/relocation-reconciliation.json
+
+See STAGE120F_REPORT.md, ROADMAP_THROUGH_STAGE120F.md, and docs/STAGE120F_DYNAMIC_RELOCATION_RECONCILIATION.md. GitHub Actions host suite passed 147 tests; no relocation is applied and no game boot is claimed.
