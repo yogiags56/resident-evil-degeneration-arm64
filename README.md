@@ -1,6 +1,6 @@
 # Resident Evil: Degeneration — Native ARM64 Port Research
 
-[![Stage](https://img.shields.io/badge/stage-119R-blue)](#project-status)
+[![Stage](https://img.shields.io/badge/stage-119S-blue)](#project-status)
 [![Platform](https://img.shields.io/badge/platform-Android%20ARM64-green)](#build-the-android-probe)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
@@ -338,8 +338,8 @@ This automation script is provided because the connected GitHub integration in t
 Stage 117 compiles the partial ARM32/Thumb CPU interpreter, AAPCS32 dispatcher, and runtime coordinator into the Android ARM64 native library. Its CI build and source checks passed on commit `b090f90`. Stage 118 adds runtime stop/fault diagnostics and tests for unresolved imports, failed import dispatch, and invalid guest instruction fetch. See [Stage 118 report and roadmap](docs/STAGE118_RUNTIME_DIAGNOSTICS_AND_ROADMAP.md). The native probe remains a research harness: no physical-device execution or original game boot is claimed.
 
 
-## Current engineering milestone — Stage 119R
+## Current engineering milestone — Stage 119S
 
-The latest documented source milestone is Stage 119R (directed A32 scalar decoder and fault tests). The opt-in helper routes immediate pre-indexed/no-writeback byte, word, and halfword transfers through the Stage 119O scalar helper, including signed LDRSB/LDRSH. It is not called by the production CPU interpreter.
+The latest documented source milestone is Stage 119S (guest ARM architecture-profile evidence audit). The opt-in helper routes immediate pre-indexed/no-writeback byte, word, and halfword transfers through the Stage 119O scalar helper, including signed LDRSB/LDRSH. It is not called by the production CPU interpreter.
 
-See [current status](docs/STATUS.md), [Stage 119R report](docs/STAGE119R_A32_DIRECTED_FAULT_TESTS.md), [Stage 119Q report](docs/STAGE119Q_A32_SCALAR_DIFFERENTIAL.md), [Stage 119P report](docs/STAGE119P_A32_SCALAR_TRANSFER_INTEGRATION.md), [Stage 119O report](docs/STAGE119O_CHECKED_SCALAR_TRANSFER.md), and [project roadmap](ROADMAP.md). Stage 119Q host CI passed on commit `c4325e6` (75 Python checks, native C syntax checks, integration tests, and 512 differential cases). Stage 119R host CI passed on code commit `46a8d8a` (75 Python checks, native C syntax checks, integration tests, 512 differential cases, and directed fault tests). No production CPU migration, original game boot, or playable build is claimed.
+See [current status](docs/STATUS.md), [Stage 119S report](docs/STAGE119S_GUEST_ARM_PROFILE_AUDIT.md), [Stage 119R report](docs/STAGE119R_A32_DIRECTED_FAULT_TESTS.md), [Stage 119Q report](docs/STAGE119Q_A32_SCALAR_DIFFERENTIAL.md), [Stage 119P report](docs/STAGE119P_A32_SCALAR_TRANSFER_INTEGRATION.md), [Stage 119O report](docs/STAGE119O_CHECKED_SCALAR_TRANSFER.md), and [project roadmap](ROADMAP.md). Stage 119Q host CI passed on commit `c4325e6` (75 Python checks, native C syntax checks, integration tests, and 512 differential cases). Stage 119R host CI passed on code commit `46a8d8a` (75 Python checks, native C syntax checks, integration tests, 512 differential cases, and directed fault tests). Stage 119P and 119Q Android ARM64 builds passed; Stage 119R host CI and Android ARM64 build passed on commit `080203b`. No production CPU migration, original game boot, or playable build is claimed.
