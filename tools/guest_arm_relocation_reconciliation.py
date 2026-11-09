@@ -133,7 +133,7 @@ def audit(data):
     dyn=audit_dynamic(data)
     _,tags,_,_=_read_dynamic(data,ph)
     has_aps2=any(tag in tags for tag in (0x6000000f,0x60000011))
-    has_relr=any(tag in tags for tag in (35,36,37))
+    has_relr=any(tag in tags for tag in (35,36,37,0x6fffe000,0x6fffe001,0x6fffe003))
     aps=audit_aps2(data) if has_aps2 else {"packed_relocation_tables":[],"symbol_resolution":{"available":False,"reason":"no APS2 dynamic tags"}}
     relr=audit_relr(data) if has_relr else None
     symaddr=dyn.get("dynamic_tags",{}).get("DT_SYMTAB")
