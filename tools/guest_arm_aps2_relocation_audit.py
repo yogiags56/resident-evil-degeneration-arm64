@@ -183,6 +183,9 @@ def audit(data: bytes) -> dict:
                 entry["symbol_defined"] = None
                 entry["symbol_section_index"] = None
                 entry["symbol_version"] = None
+    overlap_groups = [(table["source_tag"], [entry["target_address"] for entry in table["entries"]]) for table in decoded]
+    overlap_groups += [(table["source_tag"], table["targets"]) for table in relr_tables]
+    cross_format_overlaps = find_cross_format_overlaps(overlap_groups)
     return {
         "source_size": len(data), "sha256": hashlib.sha256(data).hexdigest(),
         "elf_class": 32, "machine": "ARM", "endianness": ph["endianness"],
@@ -194,7 +197,8 @@ def audit(data: bytes) -> dict:
         "packed_relocation_tables": decoded,
         "relocation_count": sum(x["entry_count"] for x in decoded),
         "relr_tables": relr_tables,
-        "relr_relocation_count": sum(x["relocation_count"] for x in relr_tables),\n        "cross_format_target_overlaps": cross_format_overlaps,
+        "relr_relocation_count": sum(x["relocation_count"] for x in relr_tables),
+        "cross_format_target_overlaps": cross_format_overlaps,
         "evidence_limits": [
             "Only ELF32 EM_ARM Android APS2 REL/RELA streams described by PT_DYNAMIC are supported.",
             "Packed relocation targets are reported but never dereferenced, patched, or applied.",
