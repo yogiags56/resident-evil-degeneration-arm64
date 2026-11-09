@@ -529,3 +529,8 @@ Added an ELF32 EM_ARM fixture exposing one RELR stream through PT_DYNAMIC/PT_LOA
 ## Stage 120S — ELF32 ARM PT_LOAD load-plan preparation
 
 Added a read-only PT_LOAD layout planner that reports file-backed, memory, BSS zero-fill, and page-rounded ranges, detects page overlaps and combined W+X permissions, and preserves ET_DYN load-bias selection as a later runtime decision. No memory is allocated or modified. See `STAGE120S_REPORT.md` and `docs/STAGE120S_PT_LOAD_LOAD_PLAN.md`.
+
+
+## Stage 120T — Guest memory mapping transaction
+
+Added a rollback-safe multi-region mapping API. Failed requests remove only mappings created by that transaction while preserving pre-existing regions. See `docs/STAGE120T_GUEST_MAP_TRANSACTION.md`.
