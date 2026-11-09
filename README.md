@@ -404,3 +404,8 @@ Added a conservative PLT/GOT report for section-backed ELF32 ARM dynamic relocat
 ## Stage 120C — PT_DYNAMIC / PT_LOAD parser
 
 Added a section-header-independent ELF32 EM_ARM program-header auditor. It maps virtual ranges only through unique PT_LOAD file-backed bytes and parses PT_DYNAMIC/DT_NEEDED without relying on section headers. See docs/STAGE120C_PT_DYNAMIC_LOAD_PARSER.md.
+
+
+## Stage 120D — Dynamic relocation segment mapping
+
+Added a section-header-independent ELF32 EM_ARM dynamic relocation auditor for DT_REL, DT_RELA, and DT_JMPREL tables. It maps file-backed table bytes through PT_LOAD and correlates symbol identities when SysV DT_HASH provides safe bounds. See docs/STAGE120D_DYNAMIC_RELOCATION_SEGMENT_MAPPING.md.

@@ -404,3 +404,20 @@ Later milestones: guest system control/MMU semantics, narrow checked-step integr
 3. Cross-check section-backed relocation entries when section headers exist.
 4. Preserve unknown relocation types and reject malformed entry ranges.
 5. Defer Android APS2/RELR decoding to a separate evidence-backed substage.
+
+
+## Stage 120D — Dynamic relocation segment mapping
+
+- Parse DT_REL/DT_RELA table metadata and entries.
+- Parse DT_JMPREL and its REL/RELA selector.
+- Map relocation ranges through unique PT_LOAD file-backed regions.
+- Correlate symbol names when DT_HASH bounds DT_SYMTAB.
+- Do not apply relocations or infer runtime providers.
+
+### Next — Stage 120E: Android packed relocations
+
+1. Research Android APS2 packed relocation encoding and platform scope.
+2. Add a bounded SLEB128/ULEB128 decoder.
+3. Decode packed REL/RELA relocation groups without applying them.
+4. Test truncation, overflow, invalid group flags, and address-delta accumulation.
+5. Keep RELR as a distinct format and only add if the target binary evidence warrants it.
