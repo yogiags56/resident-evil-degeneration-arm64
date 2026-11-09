@@ -269,7 +269,7 @@ class APS2DecodeTests(unittest.TestCase):
         blob += sleb(1) + sleb(0)
         blob += sleb(4) + sleb((1 << 8) | 22)
         # Third group: grouped delta is applied to the reset value.
-        blob += sleb(1) + sleb(13) + sleb(4) + sleb((1 << 8) | 22) + sleb(-2)
+        blob += sleb(1) + sleb(13) + sleb((1 << 8) | 22) + sleb(-2) + sleb(4)
         entries = module.decode_aps2(blob, "RELA")
         self.assertEqual([e["addend"] for e in entries], [5, 8, 0, -2])
 
