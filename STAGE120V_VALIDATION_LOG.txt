@@ -1,0 +1,13 @@
+Stage 120V validation record
+============================
+
+Status: PENDING
+Branch: stage-120v-guest-permission-finalization
+
+Required checks:
+- Full Python unittest discovery.
+- Host C mock compilation.
+- Native C guest memory and permission finalization regressions.
+- CI source SHA-256 provenance step.
+
+No test pass is claimed until GitHub Actions reports success.

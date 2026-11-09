@@ -67,6 +67,10 @@ Stage 120T introduces rollback-safe multi-region guest mapping. Failed requests 
 
 Added a preflighted helper to copy file-backed segment bytes and zero-fill BSS in existing writable guest mappings. It rejects invalid source ranges, file_size > memory_size, guest-address overflow, overlapping destination segments, and inaccessible destinations before modifying guest memory. CI validation is pending.
 
+## Stage 120V — Guest permission finalization
+
+Added an atomic all-or-nothing permission metadata update for exact guest mappings, with W+X, duplicate, missing mapping, invalid flags, and address-range rejection. This is software guest permission enforcement only; host mprotect/VirtualProtect and instruction-cache work are out of scope. CI validation is pending.
+
 ## Remaining major gates
 
 1. Build liblzma for Android ARM64 and complete a real Android NDK build.
