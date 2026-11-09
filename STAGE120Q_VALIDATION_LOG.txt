@@ -1,15 +1,23 @@
 Stage 120Q validation record
 ============================
 
-Status: pending GitHub Actions validation.
+GitHub Actions workflow: Source checks
+Run ID: 42638644884
+Validated implementation commit: e8f598c211713a6454646667107c142943b3054e
+Result: success
 
-Branch: stage-120q-relr-differential-reconciliation
+Observed:
+- 277 Python tests passed in 5.799 seconds.
+- Canonical RELR record decoder and address-only compatibility wrapper passed.
+- Standalone RELR audit output matches canonical per-entry provenance.
+- Empty bitmap (entry value 1) is accepted and advances the bitmap cursor by 31 ELF32 words without emitting a target.
+- Zero-sized RELR table is accepted and reports zero entries and targets.
+- Standard, Android, and mixed RELR tag aliases pass.
+- Android RELR aliases flow through full relocation reconciliation.
+- Existing malformed-input, alignment, file-backed mapping, overflow, and resource-bound tests pass.
+- Host C mock compilation and native C regression checks passed.
+
+Workflow run: https://github.com/yogiags56/resident-evil-degeneration-arm64/actions/runs/42638644884
 
 Scope:
-- Canonical RELR decoder consolidation.
-- Standalone audit parity.
-- Android and mixed tag aliases.
-- Empty bitmap and zero-sized table behavior.
-- Android RELR reconciliation integration.
-
-Independent toolchain/Bionic differential validation remains future work.
+Read-only ELF32 EM_ARM analysis. No target memory is dereferenced or modified, no runtime load bias is calculated, and no relocation is applied. No independent readelf/Bionic differential claim is made in this stage.
