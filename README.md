@@ -389,3 +389,8 @@ Added a report correlating ELF32 ARM relocation sites with local ARM/Thumb/data 
 ## Stage 119Z — Function-symbol inventory
 
 Added ELF32 ARM STT_FUNC inventory with $a/$t/$d overlap classification, Thumb state-bit reporting, and CALL/JUMP relocation correlation by exact symbol-table and symbol index. Zero-size and out-of-section extents remain explicit. See docs/STAGE119Z_FUNCTION_SYMBOL_INVENTORY.md.
+
+
+## Stage 120A — Dynamic import inventory
+
+Added a read-only ELF32 ARM dynamic metadata auditor for DYNSYM undefined symbols, DT_NEEDED dependencies, SHT_DYNAMIC tags, and SHT_REL/SHT_RELA sections linked to dynamic symbol tables. No relocation is applied and undefined symbols are not guessed to be S3E imports. See docs/STAGE120A_DYNAMIC_IMPORT_INVENTORY.md.
