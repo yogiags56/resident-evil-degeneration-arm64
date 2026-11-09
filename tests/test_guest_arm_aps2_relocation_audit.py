@@ -77,7 +77,7 @@ def elf_fixture_with_relr(kind="REL"):
     tags = [
         (0x6000000f if kind == "REL" else 0x60000011, 0x1220),
         (0x60000010 if kind == "REL" else 0x60000012, len(packed(kind))),
-        (36, 0x1260), (35, 8), (37, 4), (0, 0),
+        (36, 0x1260), (35, 8), (37, 4), (0x6fffe005, 77), (0, 0),
     ]
     struct.pack_into("<IIIIIIII", data, 84, 2, 0x100, 0x1100, 0, len(tags) * 8, len(tags) * 8, 4, 4)
     for index, (tag, value) in enumerate(tags):
@@ -169,6 +169,7 @@ class APS2DecodeTests(unittest.TestCase):
         report = module.audit(elf_fixture_with_relr("REL"))
         self.assertEqual(report["relocation_count"], 2)
         self.assertEqual(report["relr_relocation_count"], 3)
+        self.assertEqual(report["android_relr_count_hint"], 77)
         self.assertEqual(report["packed_relocation_tables"][0]["kind"], "REL")
         self.assertEqual(report["relr_tables"][0]["targets"],
                          ["0x00001300", "0x00001304", "0x0000130c"])
