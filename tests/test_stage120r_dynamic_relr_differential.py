@@ -66,7 +66,7 @@ class DynamicRELRDifferentialTests(unittest.TestCase):
         readelf_targets = {
             int(value, 16)
             for value in re.findall(
-                r"(?m)^\\s*([0-9a-fA-F]{8})\\s*$", result.stdout
+                r"(?m)^\s*([0-9a-fA-F]{8})\s*$", result.stdout
             )
         }
         self.assertEqual(readelf_targets, set(expected), result.stdout)
