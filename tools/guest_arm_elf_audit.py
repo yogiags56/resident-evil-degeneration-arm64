@@ -171,7 +171,7 @@ def audit_elf(data):
         sh=unpack(endian+("IIIIIIIIII" if cls==1 else "IIQQQQIIQQ"),data,off,"section header")
         name,stype,sflags,addr,foff,size,link,info,align,entsize=sh
         if stype!=8 and foff+size>len(data): raise ELFAuditError(f"section {i} data out of bounds")
-        sections.append({"name_offset":name,"type":stype,"flags":sflags,"offset":foff,"size":size})
+        sections.append({"name_offset":name,"type":stype,"flags":sflags,"address":addr,"offset":foff,"size":size})
     ns=sections[shstrndx]; names=data[ns["offset"]:ns["offset"]+ns["size"]]
     for s in sections: s["name"],_=cstring(names,s["name_offset"],len(names),"section name")
     arm=next((s for s in sections if s["name"]==".ARM.attributes"),None)
