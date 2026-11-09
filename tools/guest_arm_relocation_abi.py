@@ -79,7 +79,7 @@ def contract_for(relocation_type, symbol_index=None, target_domain="virtual", en
         return {"known":False,"symbol_policy":"unknown","applicability":"unknown",
                 "target_policy":"unknown","contract_issues":[]}
     no_symbol={0,23}
-    mandatory_symbol={17,18,19,20,21,22}
+    mandatory_symbol={18,20,21,22}
     if relocation_type in no_symbol:
         symbol_policy="must_be_zero_or_absent"
     elif relocation_type in mandatory_symbol:
@@ -101,8 +101,8 @@ def contract_for(relocation_type, symbol_index=None, target_domain="virtual", en
             issues.append("unexpected_symbol_index_for_symbol_free_relocation")
         elif symbol_policy=="must_be_nonzero" and symbol_index==0:
             issues.append("required_symbol_index_is_zero")
-    if target_domain!="virtual" and spec["width"] not in (0,None):
-        issues.append("non_virtual_target_domain_for_address_relocation")
+    if not target_domain or target_domain=="unknown":
+        issues.append("missing_target_domain")
     if encoding=="RELR" and relocation_type!=23:
         issues.append("unexpected_relocation_type_for_RELR")
     return {"known":True,"symbol_policy":symbol_policy,"applicability":applicability,
