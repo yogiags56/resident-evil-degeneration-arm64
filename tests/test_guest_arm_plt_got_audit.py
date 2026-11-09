@@ -24,7 +24,7 @@ class PltGotCrossReferenceTests(unittest.TestCase):
         # The fixture relocation's low byte is the relocation type (22 = JUMP_SLOT).
         elf=load("guest_elf_audit_for_plt_test",ROOT/"tools"/"guest_arm_elf_audit.py").audit_elf(bytes(data))
         relsec=next(s for s in elf["sections"] if s["type"]==9)
-        data[relsec["offset"]+4]=(2<<8)|2
+        struct.pack_into("<I",data,relsec["offset"]+4,(2<<8)|2)
         report=plt.audit_plt_got(bytes(data))
         self.assertEqual(report["jump_slot_count"],0)
 if __name__=="__main__": unittest.main()
