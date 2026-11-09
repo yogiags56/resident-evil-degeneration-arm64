@@ -3,7 +3,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"tools"))
 import guest_arm_relocation_reconciliation as module
-from test_guest_arm_aps2_relocation_audit import elf_fixture
+from test_guest_arm_aps2_relocation_audit import elf_fixture, elf_fixture_with_symbols
 from test_guest_arm_relr_audit import fixture as relr_fixture
 
 def entry(target=0x1304,typ=22,sym=1,addend=None,namespace="DT_SYMTAB@0x1000"):
@@ -56,6 +56,25 @@ class ReconciliationTests(unittest.TestCase):
         self.assertEqual(r["duplicate_group_count"],0)
         self.assertEqual(r["namespace_ambiguous_match_count"],1)
 
+
+    def test_aps2_symbol_size_and_namespace_reach_copy_target_audit(self):
+        report=module.audit(elf_fixture_with_symbols("REL",20,37,2))
+        aps=[t for t in report["tables"] if t["encoding"]=="APS2_REL"][0]
+        entry=aps["entries"][0]
+        self.assertEqual(entry["symbol"],"foo")
+        self.assertEqual(entry["symbol_size"],37)
+        self.assertTrue(entry["symbol_defined"])
+        self.assertEqual(entry["symbol_namespace"],"DT_SYMTAB@0x000011d0")
+        self.assertEqual(entry["target_access_width"],37)
+        self.assertEqual(entry["target_range"]["width_source"],"validated_symbol_st_size")
+
+    def test_aps2_namespace_remains_unresolved_without_bounded_hash(self):
+        report=module.audit(elf_fixture("REL"))
+        aps=[t for t in report["tables"] if t["encoding"]=="APS2_REL"][0]
+        entry=aps["entries"][0]
+        self.assertEqual(entry["symbol_namespace"],"DT_SYMTAB:unresolved")
+        self.assertIsNone(entry.get("symbol_size"))
+        self.assertFalse(entry["target_range"]["width_known"])
 
     def test_integrates_relr_without_fabricating_symbol_or_addend(self):
         report=module.audit(relr_fixture())
