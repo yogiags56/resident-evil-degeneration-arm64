@@ -8,12 +8,21 @@
 - Keeps REL implicit addends unresolved.
 - Added synthetic reconciliation and integrated APS2 tests.
 
-### Next — Stage 120G: Dynamic symbol namespace and GNU hash bounds
+## Stage 120G — Dynamic symbol namespace and GNU hash bounds
 
-1. Parse DT_GNU_HASH header, bloom filter, buckets, and chain termination with strict bounds.
-2. Derive safe dynamic symbol count without assuming SysV DT_HASH exists.
-3. Cross-check SysV DT_HASH nchain and GNU-hash-derived bounds when both are present.
-4. Resolve symbols only when hash metadata safely bounds complete symbol/string ranges.
-5. Preserve unavailable/ambiguous symbol status; do not guess.
-6. Add malformed chain, bucket, bloom, overflow, and big-endian fixtures.
-7. Keep RELR and relocation application out of scope.
+- Added bounded DT_GNU_HASH parsing for ELF32 EM_ARM.
+- Validates header dimensions, power-of-two bloom size, bloom shift width, bloom filter, bucket indices, chain bounds, and terminators.
+- Derives a safe dynamic symbol count without requiring DT_HASH.
+- Verifies GNU chain hashes and bloom membership against bounded DT_SYMTAB/DT_STRTAB names.
+- Cross-checks GNU-derived symbol bounds against SysV DT_HASH nchain when both exist.
+- Reuses the improved resolver for ordinary dynamic REL/RELA/JMPREL and APS2 relocation audits.
+- Added GNU-hash-only, bloom corruption, chain corruption, and dimension-boundary fixtures.
+
+### Next — Stage 120H: Dynamic version metadata and symbol identity
+
+1. Parse DT_VERSYM and version index metadata with PT_LOAD-bounded reads.
+2. Parse DT_VERDEF/DT_VERNEED and their auxiliary chains.
+3. Correlate versioned symbols without treating equal symbol indices as equivalent identities.
+4. Preserve unresolved, hidden, local, and weak version states.
+5. Add malformed linked-list, string-offset, and index fixtures.
+6. Keep provider lookup and relocation application disabled.
