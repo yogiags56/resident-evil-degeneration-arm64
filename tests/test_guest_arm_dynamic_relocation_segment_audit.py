@@ -61,6 +61,16 @@ def versioned_fixture():
     struct.pack_into("<HH",data,0x230,0,2)
     return bytes(data)
 
+
+def versioned_definition_fixture():
+    data=bytearray(versioned_fixture())
+    # Swap DT_VERNEED/NUM for DT_VERDEF/NUM and encode one Elf32_Verdef + Verdaux.
+    struct.pack_into("<iI",data,0x100+12*8,0x6ffffffc,0x1210)
+    struct.pack_into("<iI",data,0x100+13*8,0x6ffffffd,1)
+    struct.pack_into("<HHHHIII",data,0x210,1,0,2,1,0,20,0)
+    struct.pack_into("<II",data,0x224,15,0)
+    return bytes(data)
+
 class DynamicRelocationSegmentTests(unittest.TestCase):
     def test_maps_rel_and_jmprel_through_pt_load_and_resolves_symbol(self):
         report=module.audit(fixture())
@@ -171,6 +181,20 @@ class DynamicRelocationSegmentTests(unittest.TestCase):
         self.assertEqual(symbol["symbol_version"]["name"],"VER_1")
         self.assertEqual(symbol["symbol_version"]["kind"],"requirement")
         self.assertFalse(symbol["symbol_version"]["hidden"])
+
+
+    def test_resolves_symbol_version_definition(self):
+        report=module.audit(versioned_definition_fixture())
+        self.assertEqual(report["symbol_versioning"]["definitions"][0]["name"],"VER_1")
+        symbol=report["relocation_tables"][0]["entries"][0]
+        self.assertEqual(symbol["symbol_version"]["kind"],"definition")
+        self.assertEqual(symbol["symbol_version"]["name"],"VER_1")
+
+    def test_preserves_versym_hidden_bit(self):
+        data=bytearray(versioned_fixture())
+        struct.pack_into("<H",data,0x232,0x8002)
+        report=module.audit(bytes(data))
+        self.assertTrue(report["relocation_tables"][0]["entries"][0]["symbol_version"]["hidden"])
 
     def test_rejects_versym_index_without_version_record(self):
         data=bytearray(versioned_fixture())
