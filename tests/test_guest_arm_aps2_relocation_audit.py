@@ -1,0 +1,120 @@
+import struct
+import sys
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "tools"))
+import guest_arm_aps2_relocation_audit as module
+
+
+def sleb(value):
+    out = bytearray()
+    more = True
+    while more:
+        byte = value & 0x7f
+        value >>= 7
+        sign = byte & 0x40
+        more = not ((value == 0 and not sign) or (value == -1 and sign))
+        out.append(byte | (0x80 if more else 0))
+    return bytes(out)
+
+
+def packed(kind="REL"):
+    out = bytearray(b"APS2")
+    out += sleb(2) + sleb(0x1300)
+    flags = 3 if kind == "REL" else 15
+    out += sleb(2) + sleb(flags)
+    out += sleb(4) + sleb((1 << 8) | 22)
+    if kind == "RELA":
+        out += sleb(5)
+    return bytes(out)
+
+
+def elf_fixture(kind="REL"):
+    data = bytearray(0x300)
+    data[:7] = b"\x7fELF" + bytes([1, 1, 1])
+    struct.pack_into("<HHIIIIIHHHHHH", data, 16, 3, 40, 1, 0x1000, 52, 0, 0, 52, 32, 2, 40, 0, 0)
+    struct.pack_into("<IIIIIIII", data, 52, 1, 0, 0x1000, 0, 0x300, 0x400, 5, 0x1000)
+    struct.pack_into("<IIIIIIII", data, 84, 2, 0x100, 0x1100, 0, 0x78, 0x78, 4, 4)
+    tags = [(0x6000000f if kind == "REL" else 0x60000011, 0x1220),
+            (0x60000010 if kind == "REL" else 0x60000012, len(packed(kind))),
+            (0, 0)]
+    for i, (tag, value) in enumerate(tags):
+        struct.pack_into("<iI", data, 0x100 + i * 8, tag, value)
+    blob = packed(kind)
+    data[0x220:0x220 + len(blob)] = blob
+    return bytes(data)
+
+
+class SlebTests(unittest.TestCase):
+    def test_signed_values_round_trip(self):
+        for value in (-2147483648, -8193, -65, -64, -1, 0, 63, 64, 8192, 2147483647):
+            self.assertEqual(module._sleb128(sleb(value), 0)[0], value)
+
+    def test_rejects_truncated_and_overlong_values(self):
+        with self.assertRaises(module.ELFAuditError):
+            module._sleb128(b"\x80", 0)
+        with self.assertRaises(module.ELFAuditError):
+            module._sleb128(b"\x80\x80\x80\x80\x80", 0)
+
+
+class APS2DecodeTests(unittest.TestCase):
+    def test_decodes_grouped_rel_entries(self):
+        entries = module.decode_aps2(packed("REL"), "REL")
+        self.assertEqual([e["target_address"] for e in entries], ["0x00001304", "0x00001308"])
+        self.assertEqual(entries[0]["type_name"], "R_ARM_JUMP_SLOT")
+        self.assertIsNone(entries[0]["addend"])
+
+    def test_decodes_rela_cumulative_addends(self):
+        entries = module.decode_aps2(packed("RELA"), "RELA")
+        self.assertEqual([e["addend"] for e in entries], [5, 10])
+
+    def test_rejects_bad_magic_and_trailing_bytes(self):
+        with self.assertRaises(module.ELFAuditError):
+            module.decode_aps2(b"NOPE", "REL")
+        with self.assertRaises(module.ELFAuditError):
+            module.decode_aps2(packed() + b"\0", "REL")
+
+    def test_rejects_invalid_group_flags_and_sizes(self):
+        blob = b"APS2" + sleb(1) + sleb(0) + sleb(1) + sleb(4)
+        with self.assertRaises(module.ELFAuditError):
+            module.decode_aps2(blob, "REL")
+        blob = b"APS2" + sleb(1) + sleb(0) + sleb(2) + sleb(0)
+        with self.assertRaises(module.ELFAuditError):
+            module.decode_aps2(blob, "REL")
+
+    def test_rejects_negative_offset_delta_and_overflow(self):
+        blob = b"APS2" + sleb(1) + sleb(4) + sleb(1) + sleb(0) + sleb(-1) + sleb(0)
+        with self.assertRaises(module.ELFAuditError):
+            module.decode_aps2(blob, "REL")
+        blob = b"APS2" + sleb(1) + sleb(0xffffffff) + sleb(1) + sleb(0) + sleb(1) + sleb(0)
+        with self.assertRaises(module.ELFAuditError):
+            module.decode_aps2(blob, "REL")
+
+    def test_rejects_addends_in_rel_stream(self):
+        with self.assertRaises(module.ELFAuditError):
+            module.decode_aps2(packed("RELA"), "REL")
+
+    def test_audits_dynamic_aps2_rel_and_rela(self):
+        for kind in ("REL", "RELA"):
+            report = module.audit(elf_fixture(kind))
+            self.assertEqual(report["relocation_count"], 2)
+            self.assertEqual(report["packed_relocation_tables"][0]["kind"], kind)
+            self.assertEqual(report["packed_relocation_tables"][0]["file_offset"], 0x220)
+
+    def test_requires_paired_dynamic_tags(self):
+        data = bytearray(elf_fixture())
+        struct.pack_into("<iI", data, 0x108, 0, 0)
+        with self.assertRaises(module.ELFAuditError):
+            module.audit(bytes(data))
+
+    def test_rejects_non_file_backed_packed_table(self):
+        data = bytearray(elf_fixture())
+        struct.pack_into("<I", data, 0x108, 0x1400)
+        with self.assertRaises(module.ELFAuditError):
+            module.audit(bytes(data))
+
+
+if __name__ == "__main__":
+    unittest.main()
