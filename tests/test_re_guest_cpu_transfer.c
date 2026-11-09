@@ -115,6 +115,43 @@ int main(void) {
         &cpu, &memory, 0xe5913000u) == RE_CPU_E_MEMORY);
     assert(cpu.r[3] == 0xfeedfaceu);
 
+    /* Permission fault: readable but non-writable region rejects STR. */
+    {
+        REGUESTMEMORY ro_map;
+        REGUESTMEMBUS ro_bus;
+        REGUESTCPUMEMORY ro_memory;
+        uint8_t ro_data[8] = {0};
+        re_guest_memory_init(&ro_map);
+        assert(re_guest_memory_map(&ro_map, 0x9000u, sizeof(ro_data),
+            ro_data, RE_GUEST_MEM_READ) == RE_GUEST_MEM_OK);
+        re_guest_memory_bus_init(&ro_bus, &ro_map);
+        re_guest_cpu_memory_init(&ro_memory, &ro_bus);
+        cpu.r[1] = 0x9000u;
+        cpu.r[0] = 0x11223344u;
+        assert(re_guest_cpu_arm_transfer_imm(
+            &cpu, &ro_memory, 0xe5810000u) == RE_CPU_E_PERMISSION);
+        assert(ro_data[0] == 0u && ro_data[1] == 0u &&
+            ro_data[2] == 0u && ro_data[3] == 0u);
+    }
+
+    /* A failed load from an unmapped region preserves the destination. */
+    cpu.r[1] = 0xa000u;
+    cpu.r[2] = 0xdecafbadU;
+    assert(re_guest_cpu_arm_transfer_imm(
+        &cpu, &memory, 0xe5912000u) == RE_CPU_E_MEMORY);
+    assert(cpu.r[2] == 0xdecafbadU);
+
+    /* A failed store to an unmapped region changes no mapped bytes. */
+    {
+        uint8_t before[sizeof(data)];
+        memcpy(before, data, sizeof(data));
+        cpu.r[1] = 0xa000u;
+        cpu.r[0] = 0x55667788u;
+        assert(re_guest_cpu_arm_transfer_imm(
+            &cpu, &memory, 0xe5810000u) == RE_CPU_E_MEMORY);
+        assert(memcmp(before, data, sizeof(data)) == 0);
+    }
+
     /* Unsupported forms fail closed. */
     assert(re_guest_cpu_arm_transfer_imm(
         &cpu, &memory, 0xe7910002u) == RE_CPU_E_UNIMPLEMENTED);
