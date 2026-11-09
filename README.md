@@ -399,3 +399,8 @@ Added a read-only ELF32 ARM dynamic metadata auditor for DYNSYM undefined symbol
 ## Stage 120B — PLT/GOT cross-reference
 
 Added a conservative PLT/GOT report for section-backed ELF32 ARM dynamic relocations. It identifies R_ARM_JUMP_SLOT entries, correlates them to undefined dynamic symbols, and preserves DT_PLTGOT/DT_JMPREL/DT_PLTRELSZ/DT_PLTREL when present. It does not infer resolved GOT contents or apply relocations. See docs/STAGE120B_PLT_GOT_CROSS_REFERENCE.md.
+
+
+## Stage 120C — PT_DYNAMIC / PT_LOAD parser
+
+Added a section-header-independent ELF32 EM_ARM program-header auditor. It maps virtual ranges only through unique PT_LOAD file-backed bytes and parses PT_DYNAMIC/DT_NEEDED without relying on section headers. See docs/STAGE120C_PT_DYNAMIC_LOAD_PARSER.md.

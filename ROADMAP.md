@@ -387,3 +387,20 @@ Later milestones: guest system control/MMU semantics, narrow checked-step integr
 3. Parse PT_DYNAMIC tags for stripped ELF inputs.
 4. Cross-check section-backed and segment-backed dynamic metadata when both exist.
 5. Keep BSS-only virtual ranges distinct from file-backed bytes.
+
+
+## Stage 120C — PT_DYNAMIC / PT_LOAD parser
+
+- Parse ELF32 EM_ARM program headers independently of section headers.
+- Map virtual addresses only through unique PT_LOAD file-backed ranges.
+- Parse PT_DYNAMIC through DT_NULL.
+- Decode DT_NEEDED and related strings through DT_STRTAB/DT_STRSZ.
+- Reject BSS-only reads and ambiguous mappings.
+
+### Next — Stage 120D: Dynamic relocation segment mapping
+
+1. Map DT_REL / DT_RELA and DT_JMPREL address ranges through PT_LOAD.
+2. Validate DT_RELSZ/DT_RELENT and DT_RELASZ/DT_RELAENT.
+3. Cross-check section-backed relocation entries when section headers exist.
+4. Preserve unknown relocation types and reject malformed entry ranges.
+5. Defer Android APS2/RELR decoding to a separate evidence-backed substage.
