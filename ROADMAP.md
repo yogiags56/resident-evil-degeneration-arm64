@@ -304,3 +304,20 @@ Later milestones: guest system control/MMU semantics, narrow checked-step integr
 3. Cross-check mapping symbols, function symbols, and executable ranges.
 4. Preserve unknown relocations without guessing target addresses.
 5. Add synthetic relocation fixtures before analyzing the original binary.
+
+
+## Stage 119X — ARM relocation audit
+
+- Add ELF32 EM_ARM SHT_REL and SHT_RELA parser.
+- Resolve relocation symbol references through conventional SHT_SYMTAB/SHT_STRTAB.
+- Validate sh_link, sh_info, entry sizes, symbol indices, target offsets, and file bounds.
+- Report common ARM relocation names; retain unknown numeric types without inferred meaning.
+- Keep REL implicit addends untouched; report explicit RELA addends.
+- Dynamic relocations, APS2/RELR, extended symbol indices, and ELF64 remain future work.
+
+### Next — Stage 119Y: Relocation/mapping-symbol cross-check and control-flow references
+
+1. Correlate relocation target offsets with $a/$t/$d ranges.
+2. Flag relocations landing in data or unknown ranges.
+3. Annotate only symbol-backed call/jump relocations; do not resolve final addresses without link context.
+4. Add ET_EXEC/ET_DYN virtual-address fixtures and malformed table cases.
