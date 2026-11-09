@@ -269,3 +269,20 @@ Later milestones: guest system control/MMU semantics, narrow checked-step integr
 3. Cross-check ELF attributes against observed instruction classes without treating attributes as proof of instruction use.
 4. Record tool versions and hashes; do not store proprietary binaries or full symbol dumps in the repository.
 5. Use evidence to prioritize missing guest CPU instructions before enabling production dispatch.
+
+
+## Stage 119V — ARM/Thumb instruction inventory
+
+- Added optional Capstone-based instruction inventory for ELF32 EM_ARM executable sections.
+- Requires explicit ARM or Thumb mode; no guessed automatic mode.
+- Reports raw executable bytes, decoded bytes, undecoded ranges, mnemonic counts, capped samples, decoder version, and source SHA-256.
+- Added mocked decoder tests for mode, byte accounting, gaps, and section filtering.
+- Mixed-mode mapping symbols and real guest instruction inventory remain pending; original binary is absent.
+
+### Next — Stage 119W: ARM mapping symbols and mode-aware section decoding
+
+1. Parse .symtab/.strtab and local mapping symbols $a, $t, $d (including suffixed forms).
+2. Split executable sections into ARM, Thumb, and data ranges.
+3. Decode each range with the correct mode and preserve undecoded gaps.
+4. Add symbol-table bounds, relocation, and malformed mapping-symbol tests.
+5. Only then run the inventory on the original guest ELF when a permitted copy is available.
