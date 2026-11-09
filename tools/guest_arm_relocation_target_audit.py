@@ -5,7 +5,7 @@ from guest_arm_elf_audit import ELFAuditError
 
 # ARM ELF relocation access widths. Unknown types intentionally remain unknown.
 ARM_WIDTHS={
-    1:4, 2:4, 3:4, 10:4, 21:4, 22:4, 23:4, 28:4, 29:4, 30:4,
+    0:0, 1:4, 2:4, 3:4, 10:4, 21:4, 22:4, 23:4, 28:4, 29:4, 30:4,
     38:4, 42:4, 43:4, 44:4, 47:4, 48:4,
 }
 MAX_TARGETS=4_000_000
@@ -16,6 +16,8 @@ def classify_target(target, width, loads):
         return {"status":"invalid_target_address","matches":[]}
     if width is not None and (not isinstance(width,int) or width<=0):
         raise ELFAuditError("relocation target width must be positive or unknown")
+    if width==0:
+        return {"status":"no_target_access","matches":[]}
     end=target+(width or 0)
     if end>ADDRESS_LIMIT:
         return {"status":"target_range_overflows_elf32","matches":[]}
