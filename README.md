@@ -510,3 +510,6 @@ Stage 120O is complete: the APS2 parser now validates signed 32-bit SLEB128 fift
 ## Stage 120P — APS2 and RELR coexistence
 
 The ELF32 ARM audit now expands standard and Android RELR direct/bitmap entries alongside APS2 and ordinary REL/RELA tables. It preserves tag provenance, supports mixed standard/Android RELR aliases, bounds expanded target counts, and reports cross-format target collisions without modifying target contents. See STAGE120P_REPORT.md and docs/STAGE120P_APS2_RELR_COEXISTENCE.md.
+
+
+Stage 120P is complete: ELF32 RELR direct/bitmap decoding now coexists with APS2 and ordinary REL/RELA inventories. Standard and Android RELR aliases, mixed alias tags, malformed inputs, resource limits, and cross-format target collisions are covered. GitHub Actions run 42618941160 passed 272 Python tests and host C/native regressions. See STAGE120P_REPORT.md and STAGE120P_VALIDATION_LOG.txt.
