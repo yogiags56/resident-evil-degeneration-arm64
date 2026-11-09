@@ -178,7 +178,7 @@ class APS2DecodeTests(unittest.TestCase):
         report = module.audit(elf_fixture_with_relr("REL"))
         self.assertEqual(report["cross_format_target_overlaps"], [
             {"target_address": "0x00001304",
-             "formats": ["DT_ANDROID_REL", "DT_RELR"]}
+             "formats": ["APS2_REL", "RELR"]}
         ])
 
     def test_reports_relr_coexisting_with_aps2_rela(self):
