@@ -198,6 +198,10 @@ if pkg-config --exists liblzma; then
     runtime/guest/re_guest_xe3u_image.c runtime/archive/re_dtrz_lzma.c \
     "${LZMA_LIBS[@]}" -o build/host-tests/test_re_guest_xe3u_decode
   "$CC" "${CFLAGS[@]}" "${LZMA_CFLAGS[@]}" -I runtime/archive \
+    tools/xe3u_native_audit.c runtime/guest/re_guest_xe3u_decode.c \
+    runtime/guest/re_guest_xe3u_image.c runtime/archive/re_dtrz_lzma.c \
+    "${LZMA_LIBS[@]}" -o build/host-tests/xe3u_native_audit
+  "$CC" "${CFLAGS[@]}" "${LZMA_CFLAGS[@]}" -I runtime/archive \
     tests/test_re_dtrz_lzma.c runtime/archive/re_dtrz_lzma.c \
     "${LZMA_LIBS[@]}" -o build/host-tests/test_re_dtrz_lzma
   "$CC" "${CFLAGS[@]}" "${LZMA_CFLAGS[@]}" -I runtime/archive \
