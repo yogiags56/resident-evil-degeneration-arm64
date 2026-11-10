@@ -7,6 +7,34 @@
 static void put32(uint8_t *p,uint32_t v) {
  p[0]=(uint8_t)v;p[1]=(uint8_t)(v>>8);p[2]=(uint8_t)(v>>16);p[3]=(uint8_t)(v>>24);
 }
+
+static void test_thumb_mapped(void) {
+ REGUESTMEMORY memory;REGUESTMEMBUS bus;REGUESTCPU cpu;
+ uint8_t code[4]={0x09,0x20,0x03,0x30};
+ re_guest_memory_init(&memory);
+ assert(re_guest_memory_map(&memory,0x4000,sizeof(code),code,
+   RE_GUEST_MEM_READ|RE_GUEST_MEM_EXEC)==RE_GUEST_MEM_OK);
+ re_guest_memory_bus_init(&bus,&memory);
+ re_guest_cpu_reset(&cpu,0x4000,1);
+ assert(re_guest_cpu_step_mapped(&cpu,&bus)==RE_CPU_OK);
+ assert(cpu.r[0]==9&&cpu.r[15]==0x4002);
+ assert(re_guest_cpu_step_mapped(&cpu,&bus)==RE_CPU_OK);
+ assert(cpu.r[0]==12&&cpu.r[15]==0x4004);
+}
+static void test_thumb2_fetch_permission(void) {
+ REGUESTMEMORY memory;REGUESTMEMBUS bus;REGUESTCPU cpu;
+ uint8_t first[2]={0x40,0xf2},second[2]={0x2a,0x00};
+ re_guest_memory_init(&memory);
+ assert(re_guest_memory_map(&memory,0x5000,2,first,
+   RE_GUEST_MEM_READ|RE_GUEST_MEM_EXEC)==RE_GUEST_MEM_OK);
+ assert(re_guest_memory_map(&memory,0x5002,2,second,
+   RE_GUEST_MEM_READ)==RE_GUEST_MEM_OK);
+ re_guest_memory_bus_init(&bus,&memory);
+ re_guest_cpu_reset(&cpu,0x5000,1);
+ assert(re_guest_cpu_step_mapped(&cpu,&bus)==RE_CPU_E_PERMISSION);
+ assert(cpu.r[0]==0&&cpu.r[15]==0x5000&&cpu.steps==0);
+}
+
 int main(void) {
  REGUESTMEMORY memory;REGUESTMEMBUS bus;REGUESTCPU cpu;
  uint8_t code[12]={0},data[16]={0};
@@ -35,6 +63,7 @@ int main(void) {
  /* A missing region is a guest memory fault, not host pointer access. */
  re_guest_cpu_reset(&cpu,0x3000,0);
  assert(re_guest_cpu_step_mapped(&cpu,&bus)==RE_CPU_E_MEMORY);
+ test_thumb_mapped();test_thumb2_fetch_permission();
  puts("Guest CPU mapped multi-region execution tests: PASS");
  return 0;
 }
