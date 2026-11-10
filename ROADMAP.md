@@ -24,19 +24,16 @@ The original `libjirobiodg.so` has 137 symbol-based relocation references across
 4. Audit the 101 libc/POSIX/Bionic candidates for actual use, structure layouts, and API-level availability. Prioritize JNI_OnLoad, file access, threading, and renderer startup.
 5. Verify the complete six-library dependency closure and every relocation before reserving a guest address range and loading the ELF32 provider.
 
-### Active milestone — Stage 123I: connect guest dynamic-loader bridge to original ELF32 provider
+### Stage 123I foundation — guest dynamic-loader bridge primitive
 
-1. Add a host provider registry for the compiled GLES1/GLES2 fallback rows and the `OGLES*_Lib_N` configuration keys. Resolve only verified symbols to guest-callable Thumb trampoline addresses.
-2. Identify whether `libhgl.so` is an optional compatibility provider, an S3E shim, or a required module; fail closed until its role is known.
-3. Bind Stage 123I `dlopen`/`dlsym`/`dlclose`/`dlerror` mapped handlers to the exact dynamic-symbol IDs in `libjirobiodg.so`, using module-qualified binding IDs and the opaque guest-handle table.
-4. Install the dynamic-loader bridge/provider registry before guest `JNI_OnLoad`: its call at `0x34056` enters GL initializer `0x3d3b0`, which initializes the global state and opens the GLES libraries. Continue tracing the remaining JNI method registration and Java/native startup contract.
-5. Build a read-only relocation/provider plan for the original ELF32 module. Select no load bias until its `0x8000` PT_LOAD alignment and guest address-space reservation are accounted for.
-6. Audit the six `DT_NEEDED` libraries (`libc.so`, `libm.so`, `liblog.so`, `libstdc++.so`, `libz.so`, `libdl.so`) and map all 137 symbol-based relocation references across 136 unique undefined names to verified providers or explicit guest bridges.
-7. Bridge only verified system APIs to ARM64 handlers; never load ARM32 system libraries through the ARM64 process linker. Keep unknown imports fail-closed.
+- Added callback-driven guest `dlopen`/`dlsym`/`dlclose`/`dlerror` handlers, generation-tagged opaque 32-bit guest handles, and a host-only native-handle table.
+- Added guest-address-only symbol resolution, transactional mapped-handler registration, and retryable `close_all` shutdown cleanup.
+- Host tests passed in run `42884464704`; Android ARM64 build including cleanup passed in run `42884437640`.
+- This is a tested bridge primitive, not yet wired to the actual `libjirobiodg.so` dynamic import indices or real host GLES providers. See `docs/STAGE123I_GUEST_DL_BRIDGE.md`.
 
 ### Remaining real-game gates
 
-1. Complete Stage 123I actual ELF32 provider loading and dependency bridging.
+1. Complete Stage 123J actual ELF32 provider loading and dependency bridging.
 2. Build the production 227-symbol import manifest; resolve file APIs through the audited VFS bridge, allocator cells through explicit allocator callbacks, and GL cells through verified providers.
 3. Implement internal relocation application from the candidate plan and zero-fill the memory-only tail; verify the `data_offset` split and code/data/BSS permissions.
 4. Connect LZMA decode, XE3U header/fixup parse, image mapping, internal relocation apply, external import plan/apply, and runtime entry into one rollback-safe loader.
