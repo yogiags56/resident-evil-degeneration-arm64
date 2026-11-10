@@ -19,7 +19,7 @@
 - No code/data/BSS mapping, internal relocation writes, external S3E import binding, constructor execution for XE3U, or game entry execution is implemented here.
 
 ## Validation
-Host CI run 42869087966 passed and explicitly reported:
+Host CI run 42869522643 passed, including strict compilation of the native audit CLI, and explicitly reported:
 - Guest XE3U LZMA decode tests: PASS
 - Guest XE3U header and fixup parser tests: PASS
 
