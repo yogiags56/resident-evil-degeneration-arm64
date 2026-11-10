@@ -1,52 +1,54 @@
 #include "re_guest_cpu.h"
 #include "re_guest_memory_bus.h"
+typedef struct { const REGUESTMEM *legacy; REGUESTMEMBUS *bus; int *bus_fault; } REGUESTMEMACCESS;
 
-static int map_bus_status(const REGUESTMEM *m, REGUESTMEMStatus s) {
+static int map_bus_status(const REGUESTMEMACCESS *m, REGUESTMEMStatus s) {
  if(m && m->bus_fault)*m->bus_fault=(int)s;
  if(s==RE_GUEST_MEM_OK)return 1;
  if(s==RE_GUEST_MEM_E_PERMISSION)return 0;
  if(s==RE_GUEST_MEM_E_RANGE)return -1;
  return 0;
 }
-static int range(const REGUESTMEM*m,uint32_t a,size_t n,size_t*o){
- if(!m||!m->bytes||a<m->guest_base)return 0;
- *o=(size_t)(a-m->guest_base);
- return (uint64_t)*o+n<=m->size;
+static int range(const REGUESTMEMACCESS*m,uint32_t a,size_t n,size_t*o){
+ const REGUESTMEM *l=m?m->legacy:NULL;
+ if(!l||!l->bytes||a<l->guest_base)return 0;
+ *o=(size_t)(a-l->guest_base);
+ return (uint64_t)*o+n<=l->size;
 }
-static int rd8(const REGUESTMEM*m,uint32_t a,uint8_t*v){
+static int rd8(const REGUESTMEMACCESS*m,uint32_t a,uint8_t*v){
  size_t o;if(m&&m->bus)return map_bus_status(m,re_guest_memory_read8(m->bus,a,v));
- if(!range(m,a,1,&o))return 0;*v=m->bytes[o];return 1;
+ if(!range(m,a,1,&o))return 0;*v=m->legacy->bytes[o];return 1;
 }
-static int wr8(const REGUESTMEM*m,uint32_t a,uint8_t v){
+static int wr8(const REGUESTMEMACCESS*m,uint32_t a,uint8_t v){
  size_t o;if(m&&m->bus)return map_bus_status(m,re_guest_memory_write8(m->bus,a,v));
  if(!range(m,a,1,&o))return 0;m->bytes[o]=v;return 1;
 }
-static int read16(const REGUESTMEM*m,uint32_t a,uint16_t*v){
+static int read16(const REGUESTMEMACCESS*m,uint32_t a,uint16_t*v){
  size_t o;if(a&1)return -1;
  if(m&&m->bus)return map_bus_status(m,re_guest_memory_read16(m->bus,a,v));
- if(!range(m,a,2,&o))return 0;*v=(uint16_t)(m->bytes[o]|((uint16_t)m->bytes[o+1]<<8));return 1;
+ if(!range(m,a,2,&o))return 0;*v=(uint16_t)(m->bytes[o]|((uint16_t)m->legacy->bytes[o+1]<<8));return 1;
 }
-static int write16(const REGUESTMEM*m,uint32_t a,uint16_t v){
+static int write16(const REGUESTMEMACCESS*m,uint32_t a,uint16_t v){
  size_t o;if(a&1)return -1;
  if(m&&m->bus)return map_bus_status(m,re_guest_memory_write16(m->bus,a,v));
  if(!range(m,a,2,&o))return 0;m->bytes[o]=(uint8_t)v;m->bytes[o+1]=(uint8_t)(v>>8);return 1;
 }
-static int read32(const REGUESTMEM*m,uint32_t a,uint32_t*v){
+static int read32(const REGUESTMEMACCESS*m,uint32_t a,uint32_t*v){
  size_t o;if(a&3)return -1;
  if(m&&m->bus)return map_bus_status(m,re_guest_memory_read32(m->bus,a,v));
- if(!range(m,a,4,&o))return 0;*v=(uint32_t)m->bytes[o]|((uint32_t)m->bytes[o+1]<<8)|((uint32_t)m->bytes[o+2]<<16)|((uint32_t)m->bytes[o+3]<<24);return 1;
+ if(!range(m,a,4,&o))return 0;*v=(uint32_t)m->bytes[o]|((uint32_t)m->bytes[o+1]<<8)|((uint32_t)m->legacy->bytes[o+2]<<16)|((uint32_t)m->legacy->bytes[o+3]<<24);return 1;
 }
-static int write32(const REGUESTMEM*m,uint32_t a,uint32_t v){
+static int write32(const REGUESTMEMACCESS*m,uint32_t a,uint32_t v){
  size_t o;if(a&3)return -1;
  if(m&&m->bus)return map_bus_status(m,re_guest_memory_write32(m->bus,a,v));
  if(!range(m,a,4,&o))return 0;m->bytes[o]=(uint8_t)v;m->bytes[o+1]=(uint8_t)(v>>8);m->bytes[o+2]=(uint8_t)(v>>16);m->bytes[o+3]=(uint8_t)(v>>24);return 1;
 }
-static int fetch16(const REGUESTMEM*m,uint32_t a,uint16_t*v){
+static int fetch16(const REGUESTMEMACCESS*m,uint32_t a,uint16_t*v){
  if(a&1u)return -1;
  if(m&&m->bus)return map_bus_status(m,re_guest_memory_fetch16(m->bus,a,v));
  return read16(m,a,v);
 }
-static int fetch32(const REGUESTMEM*m,uint32_t a,uint32_t*v){
+static int fetch32(const REGUESTMEMACCESS*m,uint32_t a,uint32_t*v){
  if(a&3u)return -1;
  if(m&&m->bus)return map_bus_status(m,re_guest_memory_fetch32(m->bus,a,v));
  return read32(m,a,v);
@@ -63,7 +65,7 @@ static uint32_t shift_imm(uint32_t v,unsigned type,unsigned n,uint32_t*carry,uin
  if(type==2){if(!n){*carry=v>>31;return (uint32_t)((int32_t)v>>31);}*carry=(v>>(n-1))&1;return (uint32_t)((int32_t)v>>n);}
  if(!n){*carry=v&1;return (oldc<<31)|(v>>1);}*carry=(v>>(n-1))&1;return ror(v,n);
 }
-static REGUESTCPUStatus arm(REGUESTCPU*c,const REGUESTMEM*m,uint32_t pc){
+static REGUESTCPUStatus arm(REGUESTCPU*c,const REGUESTMEMACCESS*m,uint32_t pc){
  uint32_t x,a,b,r,addr,carry=(c->cpsr&RE_CPSR_C)!=0;unsigned op,rn,rd,rm,rs,sh,rot,count;int q=fetch32(m,pc,&x);
  if(q<0)return RE_CPU_E_ALIGNMENT;
  if(!q)return RE_CPU_E_MEMORY;
@@ -144,7 +146,7 @@ static void it_advance(REGUESTCPU*c){
  it_set(c,v);
 }
 
-static REGUESTCPUStatus thumb(REGUESTCPU*c,const REGUESTMEM*m,uint32_t pc){
+static REGUESTCPUStatus thumb(REGUESTCPU*c,const REGUESTMEMACCESS*m,uint32_t pc){
  uint16_t x;uint32_t a,b,r,addr;unsigned rd,rs,rm,imm,op;int q=fetch16(m,pc,&x);
  if(q<0)return RE_CPU_E_ALIGNMENT;
  if(!q)return RE_CPU_E_MEMORY;
@@ -269,7 +271,7 @@ static REGUESTCPUStatus thumb(REGUESTCPU*c,const REGUESTMEM*m,uint32_t pc){
  return RE_CPU_E_UNIMPLEMENTED;
 }
 void re_guest_cpu_reset(REGUESTCPU*c,uint32_t entry,int thumb){if(!c)return;for(size_t i=0;i<sizeof(*c);i++)((uint8_t*)c)[i]=0;c->thumb=!!thumb;c->r[15]=entry&(thumb?~1u:~3u);it_sync(c);}
-static int thumb_control_flow(const REGUESTMEM*m,uint32_t pc,uint16_t first){
+static int thumb_control_flow(const REGUESTMEMACCESS*m,uint32_t pc,uint16_t first){
  /* 16-bit conditional/unconditional branches and BX/BLX-register. */
  if((first&0xf800u)==0xe000u)return 1;
  if((first&0xf000u)==0xd000u && ((first>>8)&15u)<14u)return 1;
@@ -290,8 +292,8 @@ static int thumb_control_flow(const REGUESTMEM*m,uint32_t pc,uint16_t first){
  }
  return 0;
 }
-REGUESTCPUStatus re_guest_cpu_step(REGUESTCPU*c,const REGUESTMEM*m){
- if(!c||!m||!m->bytes)return RE_CPU_E_ARGUMENT;
+static REGUESTCPUStatus cpu_step_access(REGUESTCPU*c,const REGUESTMEMACCESS*m){
+ if(!c||!m||(!m->legacy&&!m->bus))return RE_CPU_E_ARGUMENT;
  if(c->halted)return RE_CPU_HALTED;
  uint32_t pc=c->r[15]; REGUESTCPUStatus s;
  if(c->thumb && c->itstate){
@@ -314,4 +316,29 @@ REGUESTCPUStatus re_guest_cpu_step(REGUESTCPU*c,const REGUESTMEM*m){
  if(s==RE_CPU_OK)c->steps++;
  return s;
 }
-REGUESTCPUStatus re_guest_cpu_run(REGUESTCPU*c,const REGUESTMEM*m,uint64_t limit,uint64_t*done){uint64_t n=0;if(done)*done=0;if(!c||!m||!limit)return RE_CPU_E_ARGUMENT;while(n<limit){REGUESTCPUStatus s=re_guest_cpu_step(c,m);if(s!=RE_CPU_OK){if(done)*done=n;return s;}n++;}if(done)*done=n;return RE_CPU_OK;}
+REGUESTCPUStatus re_guest_cpu_step(REGUESTCPU*c,const REGUESTMEM*m){
+ REGUESTMEMACCESS access={m,NULL,NULL};
+ if(!m||!m->bytes)return RE_CPU_E_ARGUMENT;
+ return cpu_step_access(c,&access);
+}
+REGUESTCPUStatus re_guest_cpu_run(REGUESTCPU*c,const REGUESTMEM*m,uint64_t limit,uint64_t*done){
+ uint64_t n=0;if(done)*done=0;
+ if(!c||!m||!limit)return RE_CPU_E_ARGUMENT;
+ while(n<limit){REGUESTCPUStatus s=re_guest_cpu_step(c,m);if(s!=RE_CPU_OK){if(done)*done=n;return s;}n++;}
+ if(done)*done=n;return RE_CPU_OK;
+}
+REGUESTCPUStatus re_guest_cpu_step_mapped(REGUESTCPU *cpu, REGUESTMEMBUS *bus) {
+ REGUESTMEMACCESS access;int fault=RE_GUEST_MEM_OK;REGUESTCPUStatus status;
+ if(!cpu||!bus||!bus->memory)return RE_CPU_E_ARGUMENT;
+ access.legacy=NULL;access.bus=bus;access.bus_fault=&fault;
+ status=cpu_step_access(cpu,&access);
+ if(fault==RE_GUEST_MEM_E_PERMISSION)return RE_CPU_E_PERMISSION;
+ return status;
+}
+REGUESTCPUStatus re_guest_cpu_run_mapped(REGUESTCPU *cpu, REGUESTMEMBUS *bus,
+ uint64_t limit,uint64_t *done) {
+ uint64_t n=0;if(done)*done=0;
+ if(!cpu||!bus||!limit)return RE_CPU_E_ARGUMENT;
+ while(n<limit){REGUESTCPUStatus s=re_guest_cpu_step_mapped(cpu,bus);if(s!=RE_CPU_OK){if(done)*done=n;return s;}n++;}
+ if(done)*done=n;return RE_CPU_OK;
+}
