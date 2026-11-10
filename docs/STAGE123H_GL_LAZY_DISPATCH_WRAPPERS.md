@@ -55,7 +55,7 @@ Further disassembly resolves the key unknown in the preceding paragraph:
 - A non-null result is passed with the name to helper `0x3d4f4`, then returned to the wrapper for caching in the BSS slot.
 - The same library contains a path/handle wrapper at `0x35a7c` that calls PLT `0x0000a198` (`dlopen`) with flags value `2`. Separate wrappers call PLT `dlclose` at `0x0000a078` and `dlerror` at `0x00009ebc`.
 
-This confirms that the GL wrapper resolver is a guest-side search across up to three dynamic-loader handles, not a hardcoded GLES function table. The names and creation/ownership of the three handles, the exact `dlopen` call sites, and the initialization order of the global structure remain open. A port must bridge guest `dlopen/dlsym/dlclose/dlerror` semantics; it must not place 64-bit host pointers directly into this 32-bit guest structure. The bridge should translate guest handle tokens to host handles and return guest-callable 32-bit Thumb trampolines for resolved functions.
+This confirms that the GL wrapper resolver is a guest-side search across up to three dynamic-loader handles, not a hardcoded GLES function table. The names and creation/ownership of the three handles and the initialization order of the global structure remain open. A port must bridge guest `dlopen/dlsym/dlclose/dlerror` semantics; it must not place 64-bit host pointers directly into this 32-bit guest structure. The bridge should translate guest handle tokens to host handles and return guest-callable 32-bit Thumb trampolines for resolved functions.
 
 ### Verified dispatch slots
 
@@ -88,6 +88,18 @@ All addresses below are link-time guest virtual addresses; apply the eventual EL
 | glGenTextures | `0x74834` | `0x58` |
 
 The unclaimed `0x40` slot is not assigned to `glTexParameteri` merely because that symbol is another XE3U import; the original export/table evidence does not prove that association. The two zero-valued GL cells in the XE3U executable also remain separate from this ELF BSS dispatch table and must not be patched by guesswork.
+
+
+### Handle initialization routine identified
+
+A further read-only trace found the unlabelled Thumb routine at `0x3d820` that populates and tears down these handles:
+- It reads the `GLESVersion` setting using the literal string at `0x613f8`.
+- It uses format string `%s_Lib_%d` at `0x61414` with library-family strings `OGLES` at `0x61404` and `OGLES2` at `0x6140c`.
+- It calls the wrapper at `0x35a14`, which reaches `dlopen` PLT `0xa198` with flags value `2`.
+- Successful handles are stored into the global structure at offsets `+0x34`, `+0x38`, and `+0x3c`; the same routine later calls the `dlclose` wrapper at `0x35a04` and clears those fields during teardown.
+- It checks symbol availability using the resolver helper for `glVertexPointer` and `glVertexAttribPointer` before completing initialization.
+
+The routine constructs family/ordinal names using `OGLES` or `OGLES2` and `%s_Lib_%d`; exact branch-dependent name-to-slot assignment and the source of the `GLESVersion` setting still need to be transcribed and tested. The library names are not assumed to be Android system sonames. The likely bridge seam is now much clearer: reproduce the observed family/ordinal lookup and handle lifecycle using 32-bit guest handle tokens, with each `dlsym` result mapped to a guest-callable Thumb trampoline. Do not store 64-bit host handles or function pointers in guest memory.
 
 ## Runtime implications
 
