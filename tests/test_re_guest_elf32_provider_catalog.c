@@ -4,9 +4,9 @@
 #include <string.h>
 #define ABS 0xfff1u
 int main(void) {
-    REGUESTELF32LINKSYMBOL a[8]={0},b[2]={0};
+    REGUESTELF32LINKSYMBOL a[10]={0},b[2]={0};
     REGUESTELF32PROVIDERMODULE modules[2]={
-        {"libfirst.so",a,8,0x100000},
+        {"libfirst.so",a,10,0x100000},
         {"libsecond.so",b,2,0x200000}
     };
     REGUESTSYMBOL out[8],before[8];
@@ -27,6 +27,10 @@ int main(void) {
     a[6].visibility=RE_GUEST_STV_DEFAULT;a[6].section_index=0;
     strcpy(a[7].name,"weak");a[7].binding=RE_GUEST_STB_GLOBAL;
     a[7].visibility=RE_GUEST_STV_DEFAULT;a[7].section_index=1;a[7].value=0x700;
+    strcpy(a[8].name,"section_symbol");a[8].binding=RE_GUEST_STB_GLOBAL;
+    a[8].visibility=RE_GUEST_STV_DEFAULT;a[8].section_index=1;a[8].type=3;a[8].value=0x800;
+    strcpy(a[9].name,"file_symbol");a[9].binding=RE_GUEST_STB_GLOBAL;
+    a[9].visibility=RE_GUEST_STV_DEFAULT;a[9].section_index=1;a[9].type=4;a[9].value=0x900;
     strcpy(b[0].name,"second");b[0].binding=RE_GUEST_STB_GLOBAL;
     b[0].visibility=RE_GUEST_STV_DEFAULT;b[0].section_index=1;b[0].value=0x80;
     strcpy(b[1].name,"weak");b[1].binding=RE_GUEST_STB_WEAK;
