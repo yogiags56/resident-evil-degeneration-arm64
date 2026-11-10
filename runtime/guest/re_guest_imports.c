@@ -31,9 +31,28 @@ REGUESTIMPORTStatus re_guest_import_bind(REGUESTIMPORTTable *t,
     t->entries[t->count].symbol_index=id;
     t->entries[t->count].trampoline_address=addr;
     t->entries[t->count].handler=h;
+    t->entries[t->count].mapped_handler=NULL;
     t->entries[t->count].user=user;
     t->count++;
     *ptr=addr|1u; /* All external fixups in this executable are Thumb-tagged. */
+    return RE_IMPORT_OK;
+}
+REGUESTIMPORTStatus re_guest_import_bind_mapped(REGUESTIMPORTTable *t,
+    uint32_t id, REGUESTIMPORTMappedHandler h, void *user, uint32_t *ptr) {
+    if (!t || !h || !ptr) return RE_IMPORT_E_ARGUMENT;
+    if (t->count >= RE_IMPORT_MAX_BINDINGS) return RE_IMPORT_E_CAPACITY;
+    for (size_t i=0;i<t->count;i++)
+        if (t->entries[i].symbol_index == id) return RE_IMPORT_E_DUPLICATE;
+    if (t->trampoline_base > UINT32_MAX - (uint32_t)(t->count*4u) - 4u)
+        return RE_IMPORT_E_CAPACITY;
+    uint32_t addr=t->trampoline_base+(uint32_t)(t->count*4u);
+    t->entries[t->count].symbol_index=id;
+    t->entries[t->count].trampoline_address=addr;
+    t->entries[t->count].handler=NULL;
+    t->entries[t->count].mapped_handler=h;
+    t->entries[t->count].user=user;
+    t->count++;
+    *ptr=addr|1u;
     return RE_IMPORT_OK;
 }
 static const REGUESTIMPORTBinding *find_id(const REGUESTIMPORTTable *t,uint32_t id) {
@@ -61,6 +80,59 @@ int re_guest_import_is_trampoline_pc(const REGUESTIMPORTTable *t,
     for (size_t i=0;i<t->count;i++)
         if (t->entries[i].trampoline_address==pc) return 1;
     return 0;
+}
+
+REGUESTIMPORTStatus re_guest_import_patch_slot_mapped(
+    const REGUESTIMPORTTable *t, uint32_t id, REGUESTMEMBUS *bus, uint32_t slot) {
+    const REGUESTIMPORTBinding *b;
+    if (!t || !bus || !bus->memory) return RE_IMPORT_E_ARGUMENT;
+    b=find_id(t,id);
+    if (!b) return RE_IMPORT_E_UNBOUND;
+    if (slot&3u) return RE_IMPORT_E_MEMORY;
+    return re_guest_memory_write32(bus,slot,b->trampoline_address|1u)==
+        RE_GUEST_MEM_OK ? RE_IMPORT_OK : RE_IMPORT_E_MEMORY;
+}
+
+REGUESTIMPORTStatus re_guest_import_dispatch_mapped(
+    REGUESTIMPORTTable *t, REGUESTCPU *cpu, const REGUESTMEMBUS *bus) {
+    const REGUESTIMPORTBinding *b=NULL;
+    S3EAAPCS32Frame frame;
+    REGUESTIMPORTResult result={0,0};
+    REGUESTCPU before;
+    REGUESTIMPORTStatus hs;
+    uint8_t stack[RE_IMPORT_MAPPED_STACK_BYTES];
+    size_t available=0;
+    uint32_t pc,lr;
+    if (!t || !cpu || !bus || !bus->memory) return RE_IMPORT_E_ARGUMENT;
+    pc=cpu->r[15];
+    for(size_t i=0;i<t->count;i++)
+        if(t->entries[i].trampoline_address==pc){b=&t->entries[i];break;}
+    if(!b || !cpu->thumb) return RE_IMPORT_E_UNBOUND;
+    if(!b->mapped_handler) return RE_IMPORT_E_HANDLER;
+    if(cpu->r[13]&3u) return RE_IMPORT_E_MEMORY;
+    frame.r[0]=cpu->r[0];frame.r[1]=cpu->r[1];
+    frame.r[2]=cpu->r[2];frame.r[3]=cpu->r[3];frame.sp=cpu->r[13];
+    while(available<sizeof(stack)) {
+        uint64_t address=(uint64_t)frame.sp+available;
+        uint8_t value;
+        if(address>UINT32_MAX ||
+           re_guest_memory_read8(bus,(uint32_t)address,&value)!=RE_GUEST_MEM_OK)
+            break;
+        stack[available++]=value;
+    }
+    frame.stack_words=stack;
+    frame.stack_bytes=available;
+    before=*cpu;
+    hs=b->mapped_handler(&frame,bus,b->user,&result);
+    if(hs!=RE_IMPORT_OK) {
+        *cpu=before;
+        return hs==RE_IMPORT_E_UNBOUND?hs:RE_IMPORT_E_HANDLER;
+    }
+    lr=cpu->r[14];
+    cpu->r[0]=result.r0;cpu->r[1]=result.r1;
+    cpu->thumb=(uint8_t)(lr&1u);
+    cpu->r[15]=lr&(cpu->thumb?~1u:~3u);
+    return RE_IMPORT_OK;
 }
 
 REGUESTIMPORTStatus re_guest_import_dispatch(REGUESTIMPORTTable *t,
