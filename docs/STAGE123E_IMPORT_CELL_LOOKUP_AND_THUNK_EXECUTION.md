@@ -22,8 +22,9 @@ A native Clang harness exercised the committed lookup algorithm against the orig
 ### ARM32 import thunk instruction support
 The guest CPU now supports the original thunk's pre-indexed immediate word writeback transfers:
 - `STR lr, [sp, #-4]!` — writeback is committed only after a successful memory write.
-- `LDR pc, [r12, #imm]!` — the loaded ARM-state target is entered and `r12` is updated to the cell address only after a successful aligned read.
+- `LDR pc, [r12, #imm]!` — writeback is committed only after a successful aligned read, and the loaded PC value selects ARM or Thumb state from bit 0 (ARMv5T+ interworking).
 - General pre-indexed word load/store writeback is restricted to supported non-PC base forms; unpredictable load base/destination overlap fails closed.
+- ARM LDR/LDM-to-PC and Thumb-2 LDR-to-PC use the same interworking helper; Thumb PUSH/POP register lists are supported, including POP-to-PC state changes.
 
 A synthetic end-to-end regression executes the exact observed instruction sequence at the per-symbol stub (`0x84`) and shared helper (`0x70)), follows the resolver indirection cell, restores the saved LR, and returns a known value. It verifies the expected `r12`, SP, PC, and return value. The test does not execute the proprietary game image.
 
