@@ -20,6 +20,11 @@ int main(void){
    0x3200,0x6ffff000,trampoline,16,&state,&result)==RE_GUEST_ELF32_INIT_EXEC_OK);
  assert(result.completed_calls==1&&result.total_steps==3&&result.runtime_status==RE_RUNTIME_OK);
  assert(state.return_count==1&&!state.active&&!state.completed);
+ code[0]=0xfe;code[1]=0xe7;
+ assert(re_guest_elf32_execute_init_sequence(&memory,&bus,&imports,&call,1,
+   0x3200,0x6ffff000,trampoline,3,&state,&result)==RE_GUEST_ELF32_INIT_EXEC_E_BUDGET);
+ assert(result.completed_calls==0&&result.failed_call==0&&result.total_steps==3);
+ assert(result.fault_pc==0x1000&&!state.active);
  puts("Guest ELF32 bounded constructor execution tests: PASS");
  return 0;
 }
