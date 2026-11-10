@@ -89,7 +89,7 @@ static int probe_elf32_dynamic_parser(char *report, size_t cap) {
     probe_put_u32le(elf+184,RE_GUEST_ELF32_DT_NEEDED); probe_put_u32le(elf+188,9u);
     probe_put_u32le(elf+192,RE_GUEST_ELF32_DT_SONAME); probe_put_u32le(elf+196,17u);
     probe_put_u32le(elf+200,RE_GUEST_ELF32_DT_NULL);
-    (void)memcpy(elf+208,"\\0libc.so\\0libm.so\\0libroot.so\\0",28u);
+    (void)memcpy(elf+208,"\0libc.so\0libm.so\0libroot.so\0",28u);
     if (re_guest_elf32_parse_image(elf,sizeof(elf),&image,&failed)!=RE_GUEST_ELF32_OK ||
         re_guest_elf32_parse_dynamic(elf,sizeof(elf),&image,&dynamic,&failed)!=
             RE_GUEST_ELF32_DYNAMIC_OK ||
