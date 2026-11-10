@@ -194,6 +194,10 @@ if pkg-config --exists liblzma; then
   LZMA_CFLAGS=( $(pkg-config --cflags liblzma) )
   LZMA_LIBS=( $(pkg-config --libs liblzma) )
   "$CC" "${CFLAGS[@]}" "${LZMA_CFLAGS[@]}" -I runtime/archive \
+    tests/test_re_guest_xe3u_decode.c runtime/guest/re_guest_xe3u_decode.c \
+    runtime/guest/re_guest_xe3u_image.c runtime/archive/re_dtrz_lzma.c \
+    "${LZMA_LIBS[@]}" -o build/host-tests/test_re_guest_xe3u_decode
+  "$CC" "${CFLAGS[@]}" "${LZMA_CFLAGS[@]}" -I runtime/archive \
     tests/test_re_dtrz_lzma.c runtime/archive/re_dtrz_lzma.c \
     "${LZMA_LIBS[@]}" -o build/host-tests/test_re_dtrz_lzma
   "$CC" "${CFLAGS[@]}" "${LZMA_CFLAGS[@]}" -I runtime/archive \
