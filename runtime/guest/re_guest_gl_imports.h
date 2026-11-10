@@ -16,6 +16,13 @@ typedef struct {
  * call-site use were verified in prior stages. Guest image base must match
  * the loaded XE3U image base; slot offsets are image-relative.
  */
+/* Register verified GL handlers for the mapped guest-memory runtime. This
+ * does not patch image slots; the XE3U external import planner applies them.
+ */
+REGUESTIMPORTStatus re_guest_gl_register_verified_mapped(
+    REGUESTIMPORTTable *table,REGUESTGLBackend *backend,
+    uint32_t *tex_parameter_i_ptr,uint32_t *tex_parameter_x_ptr);
+
 REGUESTIMPORTStatus re_guest_gl_bind_verified(REGUESTIMPORTTable *table,
                                                REGUESTMEM *memory,
                                                REGUESTGLBackend *backend,
