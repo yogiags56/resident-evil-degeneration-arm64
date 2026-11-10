@@ -37,10 +37,21 @@ handlers or neither, and emits a two-symbol provider inventory with
 
 ## Validation
 
-The host regression verifies exact symbol-index binding, generated guest
-trampoline exports, missing-symbol rollback, and guest dispatch of both
-functions. It also checks a variadic format containing signed integer,
-guest string, zero-padded hexadecimal, and literal percent conversions.
+The host regression test is written to cover exact symbol-index binding,
+generated guest trampoline exports, missing-symbol rollback, and guest
+dispatch of both functions. It also exercises a variadic format containing
+signed integer, guest string, zero-padded hexadecimal, and literal percent
+conversions. This test has not yet completed in GitHub Actions.
+
+## CI validation status
+
+The Source checks and Android ARM64 workflow jobs for commit
+`e5459e140c8af08e4362c92e0702ddcada3e8d25` were retried. Both attempts ended
+within approximately two seconds with `runner_id = 0`, no runner name, and
+zero executed steps. GitHub Actions did not provision a runner, so these
+results do not establish a source compilation or test failure. The workflow
+logs were unavailable. The source and Android builds remain unverified until
+a runner is provisioned and the jobs actually execute.
 
 ## Limitations
 
