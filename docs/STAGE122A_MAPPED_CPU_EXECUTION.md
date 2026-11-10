@@ -10,6 +10,7 @@ Connect the existing ARM/Thumb instruction decoder to the permission-checked gue
 - Routed Thumb and Thumb-2 instruction fetches, including second halfwords and IT-block preflight, through EXEC-checked bus reads.
 - Routed byte/halfword/word data reads through READ permission and stores through WRITE permission.
 - Maps guest bus permission faults to `RE_CPU_E_PERMISSION`; missing regions remain guest memory faults and alignment faults remain distinct.
+- Executes each mapped CPU step against a saved register/CPSR/IT-state snapshot and restores CPU state if the instruction faults, including a Thumb-2 second-halfword fetch fault.
 - Added a multi-region regression fixture: RX code executes MOV/LDR/STR against a separate RW data mapping; execute-from-data and write-to-code are rejected.
 - Kept the CPU decoder's existing instruction semantics and legacy entry points unchanged.
 
