@@ -35,6 +35,9 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
   runtime/guest/re_guest_elf32_link.c runtime/guest/re_guest_elf32_dynamic.c \
   runtime/guest/re_guest_elf32_image.c \
   -o build/host-tests/test_re_guest_elf32_link
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_elf32_reloc_plan.c \
+  runtime/guest/re_guest_elf32_reloc_plan.c runtime/guest/re_guest_symbol_resolve.c \
+  -o build/host-tests/test_re_guest_elf32_reloc_plan
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_elf32_loader.c \
   runtime/guest/re_guest_elf32_loader.c runtime/guest/re_guest_elf32_dynamic.c \
   runtime/guest/re_guest_elf32_image.c runtime/guest/re_guest_map_transaction.c \
