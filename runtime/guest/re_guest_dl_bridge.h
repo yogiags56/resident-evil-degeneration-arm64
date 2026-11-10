@@ -85,6 +85,10 @@ REGUESTDLStatus re_guest_dl_bridge_symbol(
     const char *name, uint32_t *guest_address);
 REGUESTDLStatus re_guest_dl_bridge_close(
     REGUESTDLBridge *bridge, uint32_t guest_handle_token);
+/* Best-effort shutdown: closes every active handle and retains slots whose
+ * host close callback fails so the caller can retry or report the leak.
+ */
+REGUESTDLStatus re_guest_dl_bridge_close_all(REGUESTDLBridge *bridge);
 REGUESTDLStatus re_guest_dl_bridge_bind_imports(
     REGUESTDLBridge *bridge, REGUESTIMPORTTable *imports,
     const REGUESTDLImportIDs *ids, REGUESTDLImportPointers *pointers);
