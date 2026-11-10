@@ -19,6 +19,10 @@ class ThumbWrapperDecodeTests(unittest.TestCase):
         # LDR r3,[r4,#4].
         self.assertEqual(AUDIT._thumb_ldr_word_imm(0x6863), (3, 4, 4))
 
+    def test_thumb_str_word_immediate_slot(self):
+        # STR r0,[r4,#4].
+        self.assertEqual(AUDIT._thumb_str_word_imm(0x6060), (0, 4, 4))
+
     def test_thumb_bl_target_sign_extension(self):
         # Original libjirobiodg wrapper BL at 0x4a7d0 -> shared helper 0x3d64c.
         self.assertEqual(AUDIT._thumb_bl_target(
