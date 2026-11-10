@@ -11,7 +11,7 @@ int main(void) {
         {"libGLESv1_CM.so", gles, 2u, 0x10000000u},
         {"libEGL.so", egl, 1u, 0x20000000u}
     };
-    REGUESTSYMBOL storage[3];
+    REGUESTSYMBOL storage[3], storage_before[3];
     REGUESTDLProviderCatalog catalog, before;
     size_t count = 99u, failed_module = 99u, failed_symbol = 99u;
     uintptr_t handle = 0;
@@ -39,6 +39,8 @@ int main(void) {
         &failed_module, &failed_symbol) == RE_GUEST_DL_PROVIDER_OK);
     assert(count == 3u && failed_module == 2u && failed_symbol == 0u);
     assert(catalog.count == 2u);
+    assert(catalog.entries[0].symbols == storage);
+    assert(catalog.entries[1].symbols == &storage[2]);
     assert(storage[0].value == 0x10001235u);
     assert(storage[1].value == 0x10002000u);
     assert(storage[2].value == 0x20000001u);
@@ -55,11 +57,13 @@ int main(void) {
     assert(re_guest_dl_provider_catalog_close_callback(handle, &catalog) == 0);
 
     before = catalog;
+    memcpy(storage_before, storage, sizeof(storage));
     assert(re_guest_dl_provider_catalog_init_from_elf32(
         &catalog, modules, 2u, storage, 2u, &count,
         &failed_module, &failed_symbol) == RE_GUEST_DL_PROVIDER_E_ELF32);
     assert(count == 0u && failed_module == 1u);
     assert(memcmp(&catalog, &before, sizeof(catalog)) == 0);
+    assert(memcmp(storage, storage_before, sizeof(storage)) == 0);
 
     {
         REGUESTELF32PROVIDERMODULE duplicate[2] = {modules[0], modules[1]};
@@ -69,6 +73,7 @@ int main(void) {
             &failed_module, &failed_symbol) == RE_GUEST_DL_PROVIDER_E_NAME);
         assert(failed_module == 1u);
         assert(memcmp(&catalog, &before, sizeof(catalog)) == 0);
+        assert(memcmp(storage, storage_before, sizeof(storage)) == 0);
     }
     puts("Guest ELF32-to-dlopen provider adapter tests: PASS");
     return 0;
