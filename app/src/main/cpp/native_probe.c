@@ -31,6 +31,75 @@ static void append(char *out, size_t cap, const char *line) {
     if (used < cap - 1) (void)snprintf(out + used, cap - used, "%s\n", line);
 }
 
+
+static int probe_stage120_loader_primitives(char *report, size_t cap) {
+    int failures = 0;
+    REGUESTMEMORY memory;
+    uint8_t backing[32] = {0};
+    const uint8_t elf_bytes[4] = {0x11u, 0x22u, 0x33u, 0x44u};
+    const REGUESTELFSEGMENT segment = {0x1000u, 0u, sizeof(elf_bytes), 8u};
+    size_t failed_index = 0u;
+    void *resolved = NULL;
+    re_guest_memory_init(&memory);
+    if (re_guest_memory_map_ex(&memory, 0x1000u, sizeof(backing), backing,
+            RE_GUEST_MEM_READ | RE_GUEST_MEM_WRITE,
+            RE_GUEST_MEM_TYPE_NORMAL) != RE_GUEST_MEM_OK) {
+        append(report, cap, "FAIL: Stage 120 guest memory map");
+        return 1;
+    }
+    {
+        REGUESTMEMORY tx_memory;
+        uint8_t tx_backing[8] = {0};
+        const REGUESTMEMMAPREQUEST request = {0x3000u, sizeof(tx_backing),
+            tx_backing, RE_GUEST_MEM_READ | RE_GUEST_MEM_WRITE, RE_GUEST_MEM_TYPE_NORMAL};
+        re_guest_memory_init(&tx_memory);
+        if (re_guest_memory_map_transaction(&tx_memory, &request, 1u,
+                &failed_index, NULL) == RE_GUEST_MAP_TX_OK &&
+            re_guest_memory_region_count(&tx_memory) == 1u)
+            append(report, cap, "PASS: Stage 120 transactional guest mapping");
+        else { append(report, cap, "FAIL: Stage 120 transactional guest mapping"); failures++; }
+    }
+    if (re_guest_elf_materialize(&memory, elf_bytes, sizeof(elf_bytes),
+            &segment, 1u, &failed_index) == RE_GUEST_ELF_MATERIALIZE_OK &&
+        backing[0] == 0x11u && backing[3] == 0x44u &&
+        backing[4] == 0u && backing[7] == 0u)
+        append(report, cap, "PASS: Stage 120 ELF materialization and BSS zeroing");
+    else { append(report, cap, "FAIL: Stage 120 ELF materialization"); failures++; }
+    backing[4] = 3u;
+    {
+        const REGUESTRELOCATION relocation = {0x1004u, RE_ARM_R_RELATIVE,
+            0u, 0u, 0x2000u, 0u, 0u, 0u};
+        if (re_guest_relocations_apply(&memory, &relocation, 1u, &failed_index) ==
+                RE_GUEST_RELOC_APPLY_OK &&
+            backing[4] == 0x03u && backing[5] == 0x20u &&
+            backing[6] == 0u && backing[7] == 0u)
+            append(report, cap, "PASS: Stage 120 ARM RELATIVE relocation");
+        else { append(report, cap, "FAIL: Stage 120 ARM RELATIVE relocation"); failures++; }
+    }
+    {
+        const REGUESTSYMBOLREQUEST request = {"probe_symbol", NULL, NULL, 0u};
+        const REGUESTSYMBOL provider = {"probe_symbol", 0x3456u,
+            RE_GUEST_STB_GLOBAL, RE_GUEST_STV_DEFAULT, 1u, NULL, NULL};
+        REGUESTSYMBOLRESULT result = {0u, 0u, 0u};
+        if (re_guest_symbol_resolve(&request, &provider, 1u, &result) ==
+                RE_GUEST_SYMBOL_OK && result.value == 0x3456u &&
+            result.provider_index == 0u && result.weak == 0u)
+            append(report, cap, "PASS: Stage 120 guest ELF symbol resolution");
+        else { append(report, cap, "FAIL: Stage 120 guest ELF symbol resolution"); failures++; }
+    }
+    {
+        const REGUESTMEMPERMISSIONREQUEST permission = {0x1000u, sizeof(backing),
+            RE_GUEST_MEM_READ | RE_GUEST_MEM_EXEC};
+        if (re_guest_memory_finalize_permissions(&memory, &permission, 1u,
+                &failed_index) == RE_GUEST_PERMISSION_FINALIZE_OK &&
+            re_guest_memory_resolve(&memory, 0x1000u, 4u,
+                RE_GUEST_MEM_EXEC, &resolved) == RE_GUEST_MEM_OK)
+            append(report, cap, "PASS: Stage 120 guest permission finalization");
+        else { append(report, cap, "FAIL: Stage 120 guest permission finalization"); failures++; }
+    }
+    return failures;
+}
+
 JNIEXPORT jstring JNICALL
 Java_org_example_redstage_MainActivity_nativeProbe(JNIEnv *env, jobject self,
                                                        jobject java_manager) {
@@ -178,6 +247,8 @@ Java_org_example_redstage_MainActivity_nativeProbe(JNIEnv *env, jobject self,
         }
         (void)re_guest_memory_unmap(&memory, 0x2000u);
     }
+
+    failures += probe_stage120_loader_primitives(report, sizeof(report));
 
     {
         const char *required[] = {"main.dz", "biohazard.s3e", "s3e.icf"};
