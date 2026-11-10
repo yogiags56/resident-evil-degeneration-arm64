@@ -1,5 +1,9 @@
 # Project Roadmap
 
+## Active milestone update — Stage 123M (ELF32 exports into guest dlopen providers)
+
+Stage 123M adds a bounded adapter that converts already-parsed and already-mapped ELF32 module exports into the Stage 123L exact-SONAME guest DSO catalog. It preserves per-module lookup scope, applies load bias only to non-SHN_ABS symbols, and commits the live catalog only after the complete provider set validates. The host regression covers Thumb/data address preservation, provider-isolated dlsym, insufficient scratch capacity, and duplicate SONAME rollback. CI validation is pending. See docs/STAGE123M_ELF32_DLOPEN_PROVIDER_ADAPTER.md.
+
 ## Active milestone update — Stage 123K (ELF32 libdl import-index binding)
 
 Stages 122D–122H and 123A–123F have host implementation coverage:
