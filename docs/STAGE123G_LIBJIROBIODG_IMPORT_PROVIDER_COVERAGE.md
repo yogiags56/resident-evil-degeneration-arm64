@@ -18,7 +18,7 @@ The eight data cells map to five symbol indices: `glTexParameteri` (1), `glTexPa
 
 ## Exact symbol intersection
 
-The XE3U image contains 227 API symbol names. The original shared object has 56 defined global dynamic exports. An exact-name comparison finds 22 symbols in common (9.7% of the XE3U symbol table). All 22 export values are Thumb-tagged (bit 0 set), which is compatible with the type-4 Thumb import-cell model and the new direct Thumb-trampoline/guest-provider binding path.
+The XE3U image contains 227 API symbol names. The original shared object has 56 defined global dynamic exports. An exact-name comparison finds 22 symbols in common (9.7% of the XE3U symbol table). All 22 export values are Thumb-tagged (bit 0 set). A later Stage 123H disassembly audit establishes that these are lazy GL dispatch wrappers, not direct GLES implementations; see [Stage 123H](STAGE123H_GL_LAZY_DISPATCH_WRAPPERS.md).
 
 | Symbol | ELF32 st_value |
 |---|---:|
@@ -54,18 +54,15 @@ These are link-time ELF symbol values, not runtime guest addresses. A loaded pro
 - The allocator data symbols `s3eMallocBase`, `s3eReallocBase`, and `s3eFreeBase` are not exports; bind them through explicit allocator callbacks.
 - The other 205 XE3U symbols do not match a defined export in this one shared object. This does not prove they are absent from the Android system libraries or other S3E runtime providers.
 
-## Export wrappers are not yet validated direct providers
+## Export wrappers use a shared lazy dlsym dispatch path
 
-Disassembly shows that the matching GL exports are not necessarily simple direct calls into GLES:
-- `glTexParameterx` reads a function pointer from a shared table at offset `+0x4C`; when it is zero, the wrapper calls `s3eFibreExit_asm+0x6C44` to initialize/obtain the pointer, then invokes it with `BLX r3`.
-- `glDisable` uses a different table slot (`+0x38`) and the same lazy initialization helper.
-- `glLoadMatrixx` follows the same function-pointer-table pattern.
+Stage 123H disassembled all 22 matching Thumb exports and found they share a BSS function-pointer table at `0x747dc`. Each wrapper reads its own slot, passes the exact GL name to shared helper `0x3d64c` when the slot is empty, stores the returned pointer back into that slot, and calls it. All 22 table-base literals have `R_ARM_RELATIVE`; all 22 names match; all 22 slots are in the ELF zero-fill tail.
 
-Therefore the 22 exact symbol matches are **candidate guest providers**, not yet proven callable by simply adding the ELF load bias. The global function-pointer table, `s3eFibreExit_asm` behavior, initialization order, and required runtime stack/fibre state must be reconstructed before these exports are used as direct providers. A host GLES wrapper may ultimately be simpler, but it must preserve the fixed-point/API semantics and runtime context expected by the guest.
+The helper `0x3d64c` searches up to three dynamic-loader handles at global structure `0x737f0` offsets `+0x34`, `+0x38`, and `+0x3c`, using `dlsym` through PLT `0xa240`. The unlabelled initialization routine at `0x3d818` reads `GLESVersion`, builds `OGLES`/`OGLES2` configuration keys, and loads the configured libraries with `dlopen`; compiled fallback rows are GLES1 `[libGLESv1_CM.so, libhgl.so, null]` and GLES2 `[libGLESv2.so, libEGL.so, null]`. Handles are stored in success order and closed/cleared on teardown.
 
-The library imports `dlopen`, `dlsym`, `dlclose`, and `dlerror`, which is consistent with dynamic provider initialization; no assumption is made about which library or function each lookup resolves to.
+Consequently, the 22 exports can only serve as guest wrappers after the ELF32 module is mapped, relocated, and its loader-handle initialization path succeeds. They are not final host GLES implementations and must not be bound directly as such. The port needs a guest `dlopen/dlsym/dlclose/dlerror` bridge that maps 32-bit guest handle tokens to host-side handles and returns guest-callable Thumb trampoline addresses; never store 64-bit host pointers in guest memory. The exact Android config override source and callback/handle lifetime remain open. See [Stage 123H GL lazy dispatch audit](STAGE123H_GL_LAZY_DISPATCH_WRAPPERS.md).
 
-The repository already has verified host GLES handlers for `glTexParameteri` (symbol index 0) and `glTexParameterx` (symbol index 1). Stage 123G adds `re_guest_gl_register_verified_mapped`, which registers these handlers for the mapped runtime without patching individual slots; the Stage 123F external import planner can then patch all four corresponding cells (two data cells and two ARM stubs) transactionally. This does not yet bind the other 20 GL exports, nor does it prove the original library's lazy function-pointer table is initialized.
+The repository already has verified host GLES handlers for `glTexParameteri` (symbol index 0) and `glTexParameterx` (symbol index 1). Stage 123G adds `re_guest_gl_register_verified_mapped`, which registers these handlers for the mapped runtime without patching individual slots; the Stage 123F external import planner can then patch all four corresponding XE3U cells transactionally. This is distinct from the provider's own BSS dispatch table.
 
 ## ELF dependency boundary
 
@@ -81,11 +78,11 @@ The generic ELF32 dependency/provider pipeline can be used to load and inspect t
 
 ## Next
 
-1. Run the repository's ELF32 auditor/provider pipeline against the exact original `libjirobiodg.so` and compare it with GNU `readelf`.
-2. Load the shared object into guest memory with a verified load bias and build a provider catalog from its dynamic symbols.
-3. Route the 22 matching XE3U imports to those guest function addresses, preserving Thumb bit 0.
-4. Audit the six DT_NEEDED dependencies and the remaining 205 S3E imports; bridge only verified APIs.
-5. Keep the two zero GL cells and six allocator data cells fail-closed until their providers are confirmed.
+1. Run `tools/xe3u_elf32_provider_audit.py` against the exact original APK locally and compare its ELF metadata with GNU `readelf`; its new wrapper decoder is covered by synthetic host tests but has not yet been run against the proprietary APK in CI.
+2. Reconstruct Android config overrides and implement a guest-handle `dlopen/dlsym/dlclose/dlerror` bridge that returns only guest-callable 32-bit Thumb trampoline addresses.
+3. Audit all six DT_NEEDED dependencies and 137 relocation-referenced undefined ELF names; prepare a complete read-only ELF32 relocation/provider plan.
+4. Only after guest address reservation and dependency preflight, load `libjirobiodg.so` into guest memory and initialize its loader handles.
+5. Keep all remaining XE3U imports and data cells fail-closed until their providers/semantics are verified.
 
 ## Safety boundary
 This is a symbol-table comparison only. No ELF module was loaded or executed, no import cell was patched, and no Android system library ABI was assumed.
