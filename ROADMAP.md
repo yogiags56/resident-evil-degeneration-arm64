@@ -1,6 +1,6 @@
 # Project Roadmap
 
-## Active milestone update — Stage 123H (original ELF32 provider and GL dispatch audit)
+## Active milestone update — Stage 123I (guest dynamic-loader bridge primitive)
 
 Stages 122D–122H and 123A–123F have host implementation coverage:
 - Transactional multi-ELF image loading, ELF32 dependency/provider/relocation planning, and bounded constructor execution.
@@ -12,21 +12,21 @@ Stages 122D–122H and 123A–123F have host implementation coverage:
 
 Host CI passed in run `42877554684`; Android ARM64 NDK build/ELF verification passed in run `42877209331`. The original APK and key assets match Stage 97 hashes exactly.
 
-A deeper Thumb audit shows those 22 exports are lazy GL dispatch wrappers, not direct GLES implementations. All share the zero-filled BSS dispatch table at `0x747dc`, have exact name literals and `R_ARM_RELATIVE`-relocated table-base literals, and cache the returned function pointer in their slot after calling the common helper at `0x3d64c`. Helper `0x3d64c` is now proven to call `dlsym` through guest PLT wrapper `0x35a0c`, searching three handles at global structure offsets `+0x34`, `+0x38`, and `+0x3c`. The unlabelled routine at `0x3d820` reads `GLESVersion`, builds `OGLES`/`OGLES2` library names using `%s_Lib_%d`, opens them with `dlopen(..., 2)`, stores the returned handles in those three fields, and closes/clears them on teardown. The exact version-setting source and branch-dependent library-name-to-slot mapping remain unknown. See [Stage 123H GL wrapper audit](docs/STAGE123H_GL_LAZY_DISPATCH_WRAPPERS.md), [Stage 123G provider coverage](docs/STAGE123G_LIBJIROBIODG_IMPORT_PROVIDER_COVERAGE.md), [Stage 123F external import binding](docs/STAGE123F_TRANSACTIONAL_EXTERNAL_IMPORT_BINDING.md), [Stage 123E thunk execution](docs/STAGE123E_IMPORT_CELL_LOOKUP_AND_THUNK_EXECUTION.md), and [Stage 123D relocation evidence](docs/STAGE123D_INTERNAL_RELOCATION_EVIDENCE.md).
+A deeper Thumb audit shows those 22 exports are lazy GL dispatch wrappers, not direct GLES implementations. All share the zero-filled BSS dispatch table at `0x747dc`, have exact name literals and `R_ARM_RELATIVE`-relocated table-base literals, and cache the returned function pointer in their slot after calling the common helper at `0x3d64c`. Helper `0x3d64c` is now proven to call `dlsym` through guest PLT wrapper `0x35a0c`, searching three handles at global structure offsets `+0x34`, `+0x38`, and `+0x3c`. The unlabelled routine at `0x3d818` reads `GLESVersion` (fallback `1`), builds `OGLES`/`OGLES2` keys using `%s_Lib_%d`, and opens them with `dlopen(..., 2)`. Its caller supplies compiled fallback rows: GLES1 `[libGLESv1_CM.so, libhgl.so, null]`, GLES2 `[libGLESv2.so, libEGL.so, null]`. Successful handles are packed into the three global slots in success order and closed/cleared on teardown. The Android override policy/source remains unknown. See [Stage 123H GL wrapper audit](docs/STAGE123H_GL_LAZY_DISPATCH_WRAPPERS.md), [Stage 123G provider coverage](docs/STAGE123G_LIBJIROBIODG_IMPORT_PROVIDER_COVERAGE.md), [Stage 123F external import binding](docs/STAGE123F_TRANSACTIONAL_EXTERNAL_IMPORT_BINDING.md), [Stage 123E thunk execution](docs/STAGE123E_IMPORT_CELL_LOOKUP_AND_THUNK_EXECUTION.md), and [Stage 123D relocation evidence](docs/STAGE123D_INTERNAL_RELOCATION_EVIDENCE.md).
 
-### Active milestone — Stage 123H: load original ELF32 provider and bridge dependencies
+### Active milestone — Stage 123I: connect guest dynamic-loader bridge to original ELF32 provider
 
-1. Complete the read-only audit of the original `libjirobiodg.so` program headers, dynamic symbols, relocations, ARM attributes, and JNI lifecycle; current evidence is recorded in `docs/STAGE123H_GL_LAZY_DISPATCH_WRAPPERS.md`.
-2. Recover the Android override policy/source for `GLESVersion` and `OGLES*_Lib_N`; verify whether the compiled fallback rows are selected unchanged on the target. Do not reuse the WinMobile-only DLL examples in `s3e.icf`. Preserve successful-handle packing order, three-handle `dlsym` search order, and `dlclose` teardown semantics.
-3. Trace `JNI_OnLoad` and the Java/native startup path to determine whether it initializes the callback state or only registers JNI methods.
-4. Build a read-only relocation/provider plan for the original ELF32 module. Select no load bias until its `0x8000` PT_LOAD alignment and guest address-space reservation are accounted for.
-5. Audit the six `DT_NEEDED` libraries (`libc.so`, `libm.so`, `liblog.so`, `libstdc++.so`, `libz.so`, `libdl.so`) and map all 137 relocation-referenced undefined names to verified providers or explicit guest bridges.
-6. Bridge only verified system APIs to ARM64 handlers; never load ARM32 system libraries through the ARM64 process linker.
-7. Keep the remaining XE3U imports fail-closed until matched to a verified guest provider or host handler.
+1. Add a host provider registry for the compiled GLES1/GLES2 fallback rows and the `OGLES*_Lib_N` configuration keys. Resolve only verified symbols to guest-callable Thumb trampoline addresses.
+2. Identify whether `libhgl.so` is an optional compatibility provider, an S3E shim, or a required module; fail closed until its role is known.
+3. Bind Stage 123I `dlopen`/`dlsym`/`dlclose`/`dlerror` mapped handlers to the exact dynamic-symbol IDs in `libjirobiodg.so`, using module-qualified binding IDs and the opaque guest-handle table.
+4. Trace `JNI_OnLoad` and the Java/native startup path to determine whether it initializes the config/loader state or only registers JNI methods.
+5. Build a read-only relocation/provider plan for the original ELF32 module. Select no load bias until its `0x8000` PT_LOAD alignment and guest address-space reservation are accounted for.
+6. Audit the six `DT_NEEDED` libraries (`libc.so`, `libm.so`, `liblog.so`, `libstdc++.so`, `libz.so`, `libdl.so`) and map all 137 relocation-referenced undefined names to verified providers or explicit guest bridges.
+7. Bridge only verified system APIs to ARM64 handlers; never load ARM32 system libraries through the ARM64 process linker. Keep unknown imports fail-closed.
 
 ### Remaining real-game gates
 
-1. Complete Stage 123H actual ELF32 provider loading and dependency bridging.
+1. Complete Stage 123I actual ELF32 provider loading and dependency bridging.
 2. Build the production 227-symbol import manifest; resolve file APIs through the audited VFS bridge, allocator cells through explicit allocator callbacks, and GL cells through verified providers.
 3. Implement internal relocation application from the candidate plan and zero-fill the memory-only tail; verify the `data_offset` split and code/data/BSS permissions.
 4. Connect LZMA decode, XE3U header/fixup parse, image mapping, internal relocation apply, external import plan/apply, and runtime entry into one rollback-safe loader.
