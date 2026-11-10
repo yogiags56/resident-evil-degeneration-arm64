@@ -91,6 +91,23 @@ The slot order is consistent with the symbol sequence malloc, realloc, free. Thi
 
 The two remaining zero cells (`glTexParameteri` at `0xC7C4C` and `glTexParameterx` at `0xC7C50`) are adjacent data cells near a GL error-checking string/table. Their exact ownership and access path remain unresolved; they are deliberately not classified as ordinary ARM import stubs.
 
+## Shared import resolver indirection observed at code offset 0x70
+
+All 230 per-symbol ARM stubs load the same placeholder target, `0x4A000070`. At code offset `0x70`, a separate ARM sequence:
+- pushes the caller LR;
+- loads a PC-relative literal `0x0013B67C`;
+- adds it to the ARM PC value to form address `0x13B6FC`;
+- performs a pre-indexed `LDR pc, [lr, #8]!`, which reads the word at `0x13B704`.
+
+In the original file-backed code blob:
+- `0x13B6FC` contains `0x4A18B430`, exactly `base_address + code_memory_size` (the image memory end).
+- `0x13B700` contains zero.
+- `0x13B704` contains zero.
+- Per-symbol import cells begin at `0x13B708`.
+
+The per-symbol stub's `LDR pc, [r12, #imm]!` also writes the selected import-cell address back into `r12` before entering the shared code at `0x70`. This strongly suggests a shared runtime resolver receives the import-cell address in `r12`, and the pointer at `0x13B704` is a special resolver entry slot initialized by the S3E runtime. However, the exact resolver ABI and who initializes that slot have not yet been proven. Do not patch the 230 cells directly to host functions or invent a value for `0x13B704`; first recover the special resolver initialization path and AAPCS32 call contract.
+
+
 ## Refined internal target classification
 
 The 36,377 internal pointer targets split by the observed image extents:
