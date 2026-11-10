@@ -1,111 +1,51 @@
 # Project Roadmap
 
-## Current milestone: Stage 108 complete
+## Current milestone: Stage 120N — Packed and dynamic relocation metadata parity
 
-The project now has a standalone offline-testable XZ archive verifier covering checksum, tar paths/links, and version identity; the fetcher delegates to it, and the toolchain doctor checks sdkmanager availability. Android SDK/NDK provisioning and ARM64 liblzma remain pending.
+GitHub Actions run 42614083636 passed 229 Python tests plus host C/native regressions. See STAGE120N_VALIDATION_LOG.txt.
 
-## Next milestone: Stage 109 — Android SDK/NDK Provisioning + ARM64 liblzma Build
+- Carry bounded symbol size, definition state, section index, and symbol version into APS2 entries.
+- Mark DT_SYMTAB namespace unresolved unless dynamic symbol bounds are proven.
+- Apply R_ARM_COPY st_size only with complete symbol provenance.
+- Correct APS2 decoding to AOSP Bionic semantics: absolute r_info, grouped info reuse, grouped addend applied once per group, per-entry addend deltas, and zero addend when HAS_ADDEND is absent.
+- Verify sectionless PT_DYNAMIC/APS2 and ordinary dynamic/packed symbol metadata parity.
 
-Provision Android SDK/NDK and Gradle wrapper, fetch and verify XZ Utils 5.8.4, build `liblzma.a` for `arm64-v8a` API 23, and verify each archive member as ELF64/AArch64 before attempting the application build.
+See STAGE120N_REPORT.md and docs/STAGE120N_PACKED_DYNAMIC_SYMBOL_PARITY.md.
+
+## Current milestone: Stage 120O — Independent APS2 conformance and malformed-input hardening
+
+- Added exact signed 32-bit SLEB128 fifth-byte validation.
+- Added complete legal REL/RELA group-flag matrix tests and illegal combinations.
+- Added cross-group addend reset/accumulation and offset state tests.
+- Added resource-limit, truncation, malformed flag, and overlong encoding tests.
+- See STAGE120O_REPORT.md and docs/STAGE120O_APS2_CONFORMANCE.md.
+
+## Completed milestone: Stage 120P — APS2/RELR coexistence and dynamic relocation cross-checks
+
+GitHub Actions run 42619189507 passed 272 Python tests and host C/native regressions. See STAGE120P_VALIDATION_LOG.txt.
+
+- Added ELF32 RELR direct-entry and bitmap decoding.
+- Supports standard DT_RELR and Android DT_ANDROID_RELR aliases, including mixed aliases.
+- Preserves optional DT_ANDROID_RELRCOUNT as a non-authoritative hint.
+- Integrates RELR into ordinary dynamic and APS2 audits.
+- Reports cross-format relocation target collisions without silently deduplicating them.
+- Adds endian, malformed-tag, alignment, ordering, overflow, resource-bound, and coexistence fixtures.
+
+See STAGE120P_REPORT.md and docs/STAGE120P_APS2_RELR_COEXISTENCE.md.
+
+## Next milestone: Stage 120Q — Independent RELR differential validation and relocation-source reconciliation
+
+1. Compare RELR expansion against independent toolchain/Bionic-produced vectors.
+2. Validate DT_ANDROID_RELRCOUNT and mixed alias behavior across Bionic/API revisions.
+3. Reconcile standard REL, PLT, APS2, and RELR target sets with provenance.
+4. Preserve collision evidence and do not silently discard duplicate target reports.
+5. Keep all audits read-only; no relocation application or runtime load-bias calculation.
 
 ## Remaining major gates
 
 1. Build liblzma for Android ARM64 and complete a real Android NDK build.
 2. Validate AssetManager -> DTRZ VFS -> file adapter on a physical ARM64 device.
-3. Finish `s3eFileRead` partial-item/error behavior using version-matched SDK documentation or controlled original-runtime traces.
+3. Finish s3eFileRead partial-item/error behavior using version-matched SDK documentation or controlled original-runtime traces.
 4. Activate only individually verified guest imports.
 5. Expand guest CPU instruction coverage and runtime diagnostics based on observed execution.
-6. Establish graphics/audio/input lifecycle and observe an original game boot.
-
-See `ROADMAP_THROUGH_STAGE100.md`, `STAGE100_REPORT.md`, `ROADMAP_THROUGH_STAGE99.md`, `STAGE99_REPORT.md`, `ROADMAP_THROUGH_STAGE98.md`, `STAGE95_REPORT.md`, `STAGE96_REPORT.md`, `STAGE97_REPORT.md`, and `STAGE98_REPORT.md` for details.
-
-
-## Stage 101 — Android Asset Packaging + ARM64 Build Readiness
-
-- Added local-only APK asset staging for `main.dz`, `biohazard.s3e`, and `s3e.icf`.
-- Added SHA-256 manifest generation and validation for missing/duplicate assets and DTRZ magic.
-- Android native probe checks that all required payloads are packaged.
-- Host suite: 27 Python tests and all C regression tests pass.
-- Android NDK build remains blocked because `ANDROID_NDK_HOME` is not configured.
-- Production guest imports remain disabled; original `s3eFileRead` partial/error behavior is unresolved.
-
-Next: Stage 102 — real Android NDK build, ELF64/AArch64 inspection, APK packaging, and ARM64 runtime probe.
-
-
-## Stage 102 — Android ARM64 Build Orchestration + ELF Verification
-
-- Gradle now requires liblzma-enabled native build and passes its prefix to CMake.
-- Added one-command Android build script and ELF64/AArch64/JNI verifier.
-- Host suite remains green: 27 Python tests plus all C regression tests.
-- Android build remains blocked: no configured NDK, no ARM64 liblzma prefix, and no Gradle wrapper.
-- No Android ELF/APK/device test or original game boot is claimed.
-
-Next: Stage 103 — provision Android toolchain/dependency, perform real build, inspect ELF and test packaged assets on ARM64.
-
-
-## Stage 103 — ARM64 liblzma Dependency Build Automation
-
-- Added reproducible XZ Utils/liblzma cross-build script for Android `arm64-v8a`, API 23, static/PIC.
-- Android build script now accepts either repository Gradle wrapper or system Gradle 8.9+.
-- NDK preflight checks host-specific LLVM clang.
-- Added tests for build configuration contracts.
-- Host tests pass; Android cross-build remains blocked because NDK and XZ source are unavailable.
-- No Android library, APK, device execution, or game boot is claimed.
-
-Next: Stage 104 — build liblzma with a real NDK, build and inspect the Android shared library, then test APK assets on ARM64.
-
-
-## Stage 104 — liblzma CMake Integration + ARM64 Archive Verification
-
-- Added host CMake smoke test using the production LZMA decoder and `LibLZMA::LibLZMA`.
-- Host liblzma 5.8.1 linked successfully; all 6 decoder scenarios passed.
-- Added archive member verifier requiring ELF64/AArch64; negative test rejected x86_64 archive.
-- Added 4 configuration contract tests; total Python suite: 35 passed.
-- Android cross-build remains blocked by missing NDK and XZ source. Host test is not Android validation.
-
-Next: Stage 105 — obtain NDK/XZ, build and verify Android ARM64 liblzma, then compile and inspect the Android native library.
-
-
-## Stage 107 — Dependency Acquisition & SDK Provisioning Automation
-
-- Pinned XZ Utils 5.8.4 archive SHA-256 and Android NDK r30 Linux package metadata.
-- Added a fetch script with archive checksum verification, tar path traversal rejection, and extracted version-header verification.
-- Added SDK package installer for platform-tools, Android 35, Build Tools 35.0.0, CMake 3.22.1, and NDK 30.0.16248370.
-- Android liblzma build now fetches the pinned XZ source automatically if no source directory is supplied.
-- 48 Python tests and host regressions pass.
-- Android SDK/NDK and XZ source archive were not provisioned in this environment; no ARM64 library, APK, device boot, or playable state is claimed.
-- See `STAGE107_REPORT.md` and `ROADMAP_THROUGH_STAGE107.md`.
-\n\n## Stage 108 — XZ Archive Verification Hardening + SDK Diagnostics\n\n- Added standalone offline XZ source archive verifier: SHA-256, safe tar paths/links, unique version header, exact version.\n- Fetch script now delegates to the verifier before extraction.\n- Added five offline security/identity fixture tests.\n- Toolchain doctor now checks sdkmanager discovery paths.\n- No actual XZ source download, Android SDK/NDK provisioning, ARM64 liblzma build, Android APK, or device run is claimed.\n- See `STAGE108_REPORT.md`.\n
-
-## Stage 110 — Android CLI migration\n\nThe SDK installer now prefers Google's official Android CLI (`android sdk install`), with deprecated `sdkmanager` retained only as a compatibility fallback. The doctor accepts either route. See `STAGE110_REPORT.md` and `ROADMAP_THROUGH_STAGE110.md`.\n\nNext: Stage 111 — provisioned ARM64 liblzma build.\n
-Stage 110 additionally hardened the ARM64 liblzma archive verifier to inspect every object member, not just the first. Two offline tests validate multi-member success and rejection of a bad second member.
-
-
-## Stage 111 — Reproducible Android ARM64 CI\n\nAdded a checksum-verified Gradle 8.9 installer and safe ZIP verifier, plus a GitHub Actions workflow that provisions Android CLI/SDK/NDK, builds XZ/liblzma for ARM64, builds the app, and verifies ELF output. The workflow has not yet been run on GitHub. See `STAGE111_REPORT.md` and `ROADMAP_THROUGH_STAGE111.md`.\n\nNext: Stage 112 — first real CI build.\n
-Stage 111 validation: 69 Python tests, all host C regression tests, six host LZMA smoke scenarios, and 15 shell syntax checks passed. No Android SDK/NDK or ARM64 build output exists yet; the GitHub Actions workflow has not run.
-
-
-## Stage 112 — CI artifact validation and provenance
-
-Added a strict artifact collector that requires the ARM64 native library to be packaged in the APK, rejects proprietary original game assets, and emits a build manifest plus SHA-256 list. GitHub Actions now uploads one curated bootstrap/probe artifact for 14 days. This is not a playable game build. The workflow still awaits a real remote run because no matching GitHub repository was connected in this session. See `STAGE112_REPORT.md` and `ROADMAP_THROUGH_STAGE112.md`.
-
-Next: Stage 113 — NDK environment handoff and artifact consistency.
-
-## Stage 113 — NDK environment handoff and artifact consistency
-
-Fixed the cross-step NDK environment handoff by persisting the verified NDK root through GitHub Actions `GITHUB_ENV`, and added a workflow gate for the exact pinned NDK revision. The artifact collector now compares the standalone ARM64 `.so` hash against the library embedded in the APK. See `STAGE115_REPORT.md` and `ROADMAP_THROUGH_STAGE115.md`.
-
-Next: Stage 114 — GitHub repository bootstrap.
-
-Stage 113 validation: 76 Python tests, host C regression tests, six host LZMA smoke scenarios, 15 shell syntax checks, and workflow YAML parsing passed. No remote Android build has yet been executed.
-
-## Stage 114 — GitHub repository bootstrap
-
-Stage 114 adds `tools/publish_github_repository.sh`, a one-command GitHub CLI publisher. It creates a private repository by default, derives the owner from the authenticated `gh` account, commits the source tree when required, and pushes it. At Stage 115, the publisher is tightened to private-only visibility. The script refuses to repoint an existing `origin` and blocks proprietary assets and generated binaries from entering the Git index. Tests cover the security gates and command construction.
-
-The connected GitHub app currently exposes repository search and Git data operations but no repository-creation action; no online repository has been created or pushed by this session. User-side `gh auth login` and repository-creation permission are required to execute the publisher. Stage 114 does not claim an Android build or playable game.
-
-
-## Stage 115 — Private publication and first CI dispatch
-
-The publication helper now enforces private visibility (no public override), pushes the source on `main`, and dispatches `.github/workflows/android-arm64.yml` after successful publication. If dispatch fails, the repository remains published and the script prints a safe retry command. Workflow artifact naming and Android versionName advance to Stage 115. This session still cannot create the remote repository directly: the available GitHub connection exposes no repository-create action, and no authenticated `gh` CLI exists in this runtime. No remote run or Android APK is claimed.
+6. Establish graphics/audio/input lifecycle.
