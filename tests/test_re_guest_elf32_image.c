@@ -31,7 +31,7 @@ static void valid_elf(uint8_t *b, int little) {
     phdr(b+52,RE_GUEST_ELF32_PT_LOAD,0,0x1000,4,8,
         RE_GUEST_ELF32_PF_R|RE_GUEST_ELF32_PF_X,0x1000,little);
     phdr(b+84,RE_GUEST_ELF32_PT_LOAD,0x80,0x2000,4,12,
-        RE_GUEST_ELF32_PF_R|RE_GUEST_ELF32_PF_W,0x1000,little);
+        RE_GUEST_ELF32_PF_R|RE_GUEST_ELF32_PF_W,4,little);
     phdr(b+116,RE_GUEST_ELF32_PT_DYNAMIC,0x90,0x3000,8,8,
         RE_GUEST_ELF32_PF_R|RE_GUEST_ELF32_PF_W,4,little);
 }
@@ -41,11 +41,11 @@ int main(void) {
     assert(re_guest_elf32_parse_image(bytes,sizeof(bytes),&image,&failed)==RE_GUEST_ELF32_OK);
     assert(image.type==RE_GUEST_ELF32_ET_EXEC && image.machine==RE_GUEST_ELF32_EM_ARM);
     assert(image.little_endian==1 && image.load_count==2 && image.dynamic_count==1);
-    assert(image.entry_in_executable_load==1 && failed==0);
+    assert(image.entry_in_executable_load==1 && failed==3);
 
     valid_elf(bytes,0);
     assert(re_guest_elf32_parse_image(bytes,sizeof(bytes),&image,&failed)==RE_GUEST_ELF32_OK);
-    assert(image.little_endian==0 && image.entry==0x1000);
+    assert(image.little_endian==0 && image.entry==0x1000 && failed==3);
 
     valid_elf(bytes,1); bytes[4]=2;
     assert(re_guest_elf32_parse_image(bytes,sizeof(bytes),&image,&failed)==RE_GUEST_ELF32_E_CLASS);
