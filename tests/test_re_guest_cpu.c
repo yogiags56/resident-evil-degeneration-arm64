@@ -34,6 +34,17 @@ int main(void){
  assert(re_guest_cpu_step(&c,&m)==RE_CPU_E_MEMORY&&c.r[12]==0x5000007c);
  re_guest_cpu_reset(&c,0x50000000,0);c.r[12]=0x5000003d;
  assert(re_guest_cpu_step(&c,&m)==RE_CPU_E_ALIGNMENT&&c.r[12]==0x5000003d);
+ /* ARMv5T LDR-to-PC interworking: bit[0] selects Thumb state. */
+ memset(mem,0,sizeof(mem));put32(mem,0xe5bcf004);put32(mem+0x40,0x50000061);
+ put16(mem+0x60,0x2007);
+ re_guest_cpu_reset(&c,0x50000000,0);c.r[12]=0x5000003c;
+ assert(re_guest_cpu_step(&c,&m)==RE_CPU_OK);
+ assert(c.thumb&&c.r[15]==0x50000060&&c.r[12]==0x50000040);
+ assert(re_guest_cpu_step(&c,&m)==RE_CPU_OK&&c.r[0]==7);
+ /* ARMv5T rejects a loaded PC value whose low bits are 10; no writeback. */
+ memset(mem,0,sizeof(mem));put32(mem,0xe5bcf004);put32(mem+0x40,0x50000062);
+ re_guest_cpu_reset(&c,0x50000000,0);c.r[12]=0x5000003c;
+ assert(re_guest_cpu_step(&c,&m)==RE_CPU_E_ALIGNMENT&&c.r[12]==0x5000003c);
  /* End-to-end synthetic execution of the exact three-instruction ARM import
   * stub and shared 0x70 resolver prologue found in the original XE3U image.
   */
