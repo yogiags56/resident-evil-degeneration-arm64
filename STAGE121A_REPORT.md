@@ -1,6 +1,6 @@
 # Stage 121A Report — Integrated ELF32 ARM Loader
 
-Status: implementation added; CI validation pending.
+Status: implementation added; The first host run exposed a test-fixture ordering issue: the W+X case used an undersized buffer, so the loader correctly rejected the buffer before reaching W+X validation. The fixture now provides a valid buffer for the W+X assertion and reduces capacity only for the separate short-buffer assertion. A fresh CI run on the corrected commit is required; the previous run's retry used the old commit and is not evidence for this correction.
 
 The new native loader coordinator connects existing ELF32 image and dynamic
 parsers, guest map transaction, segment materializer, relocation engine, and
