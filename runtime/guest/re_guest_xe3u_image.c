@@ -66,7 +66,11 @@ REGUESTXE3UStatus re_guest_xe3u_parse_header(
         return RE_GUEST_XE3U_E_RANGE;
     }
     end=(uint64_t)p.code_offset+p.code_file_size;
-    if(end>size)return RE_GUEST_XE3U_E_RANGE;
+    if(end>size||(uint64_t)p.fixup_offset+p.fixup_size>p.code_offset||
+       (p.extra_offset&&p.extra_offset<end)) {
+        if(failed_field)*failed_field=6u;
+        return RE_GUEST_XE3U_E_RANGE;
+    }
     *header=p;
     return RE_GUEST_XE3U_OK;
 }
