@@ -3,7 +3,7 @@ name: Android ARM64 native build
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, stage-120z-dependency-graph-resolution]
     paths:
       - "app/**"
       - "runtime/**"
@@ -86,7 +86,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: resident-evil-degeneration-arm64-stage118-runtime-foundation
+          name: resident-evil-degeneration-arm64-stage123d-xe3u-relocation
           path: dist/android-arm64/
           if-no-files-found: error
           retention-days: 14
