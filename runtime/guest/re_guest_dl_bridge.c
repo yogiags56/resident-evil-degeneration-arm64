@@ -289,6 +289,64 @@ REGUESTDLStatus re_guest_dl_bridge_bind_imports(
     return RE_GUEST_DL_OK;
 }
 
+
+/* Resolve the four libdl import IDs from the decoded ELF32 dynamic-symbol
+ * table. Only undefined, externally visible FUNC/NOTYPE entries qualify.
+ * Ambiguous names fail closed; no import-table mutation occurs until all
+ * four IDs have been identified.
+ */
+REGUESTDLStatus re_guest_dl_bridge_bind_elf_symbols(
+    REGUESTDLBridge *bridge, REGUESTIMPORTTable *imports,
+    const REGUESTELF32LINKSYMBOL *symbols, size_t symbol_count,
+    REGUESTDLImportPointers *pointers, size_t *failed_symbol_index) {
+    static const char *const names[4] = {
+        "dlopen", "dlsym", "dlclose", "dlerror"
+    };
+    REGUESTDLImportIDs ids = {0u, 0u, 0u, 0u};
+    uint32_t *id_values[4] = {
+        &ids.dlopen_id, &ids.dlsym_id, &ids.dlclose_id, &ids.dlerror_id
+    };
+    if (failed_symbol_index) *failed_symbol_index = symbol_count;
+    if (pointers) memset(pointers, 0, sizeof(*pointers));
+    if (!bridge || !imports || (!symbols && symbol_count) || !pointers ||
+        symbol_count > RE_GUEST_ELF32_LINK_MAX_SYMBOLS)
+        return RE_GUEST_DL_E_ARGUMENT;
+
+    for (size_t n = 0; n < 4u; ++n) {
+        size_t found = symbol_count;
+        for (size_t i = 0; i < symbol_count; ++i) {
+            const REGUESTELF32LINKSYMBOL *s = &symbols[i];
+            if (!s->name[0]) continue;
+            if (!memchr(s->name, '\\0', sizeof(s->name))) {
+                if (failed_symbol_index) *failed_symbol_index = i;
+                return RE_GUEST_DL_E_SYMBOL_INDEX;
+            }
+            if (s->section_index != 0u ||
+                (s->binding != RE_GUEST_STB_GLOBAL &&
+                 s->binding != RE_GUEST_STB_WEAK) ||
+                (s->visibility != RE_GUEST_STV_DEFAULT &&
+                 s->visibility != RE_GUEST_STV_PROTECTED) ||
+                strcmp(s->name, names[n]) != 0)
+                continue;
+            if (s->type != 0u && s->type != 2u) {
+                if (failed_symbol_index) *failed_symbol_index = i;
+                return RE_GUEST_DL_E_SYMBOL_INDEX;
+            }
+            if (found != symbol_count) {
+                if (failed_symbol_index) *failed_symbol_index = i;
+                return RE_GUEST_DL_E_SYMBOL_INDEX;
+            }
+            found = i;
+        }
+        if (found == symbol_count) {
+            if (failed_symbol_index) *failed_symbol_index = symbol_count;
+            return RE_GUEST_DL_E_SYMBOL_INDEX;
+        }
+        *id_values[n] = (uint32_t)found;
+    }
+    return re_guest_dl_bridge_bind_imports(bridge, imports, &ids, pointers);
+}
+
 REGUESTDLStatus re_guest_dl_bridge_build_provider_symbols(
     const char *soname, const REGUESTDLImportPointers *pointers,
     REGUESTSYMBOL *symbols, size_t capacity, size_t *symbol_count) {

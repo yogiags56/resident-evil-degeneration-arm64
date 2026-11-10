@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "re_guest_imports.h"
 #include "re_guest_symbol_resolve.h"
+#include "re_guest_elf32_link.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -24,7 +25,8 @@ typedef enum {
     RE_GUEST_DL_E_CLOSE = -905,
     RE_GUEST_DL_E_STRING = -906,
     RE_GUEST_DL_E_MEMORY = -907,
-    RE_GUEST_DL_E_BIND = -908
+    RE_GUEST_DL_E_BIND = -908,
+    RE_GUEST_DL_E_SYMBOL_INDEX = -909
 } REGUESTDLStatus;
 
 /* The host side owns native_handle. It is never copied into guest memory.
@@ -97,6 +99,10 @@ REGUESTDLStatus re_guest_dl_bridge_bind_imports(
  * symbols for the virtual libdl.so provider catalog. The values are guest
  * addresses; version_library is the caller-supplied provider SONAME.
  */
+REGUESTDLStatus re_guest_dl_bridge_bind_elf_symbols(
+    REGUESTDLBridge *bridge, REGUESTIMPORTTable *imports,
+    const REGUESTELF32LINKSYMBOL *symbols, size_t symbol_count,
+    REGUESTDLImportPointers *pointers, size_t *failed_symbol_index);
 REGUESTDLStatus re_guest_dl_bridge_build_provider_symbols(
     const char *soname, const REGUESTDLImportPointers *pointers,
     REGUESTSYMBOL *symbols, size_t symbol_capacity, size_t *symbol_count);

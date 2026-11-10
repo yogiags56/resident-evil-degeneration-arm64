@@ -62,7 +62,10 @@ int main(void) {
     REGUESTRuntime runtime;
     REGUESTDLBridge bridge;
     REGUESTDLImportIDs ids={0xD100u,0xD101u,0xD102u,0xD103u};
-    REGUESTDLImportPointers pointers;
+    REGUESTDLImportPointers pointers, elf_pointers;
+    REGUESTELF32LINKSYMBOL elf_symbols[5];
+    REGUESTIMPORTTable elf_imports, rejected_imports;
+    size_t failed_symbol=0;
     REGUESTSYMBOL provider_symbols[4];
     size_t provider_count=0;
     REGUESTSYMBOLREQUEST provider_request;
@@ -81,6 +84,43 @@ int main(void) {
 
     assert(re_guest_dl_bridge_init(&bridge,fake_open,fake_symbol,fake_close,
         &fake,0x10000200u)==RE_GUEST_DL_OK);
+
+    memset(elf_symbols,0,sizeof(elf_symbols));
+    {
+        static const char *const libdl_names[4] = {
+            "dlopen","dlsym","dlclose","dlerror"
+        };
+        for(size_t i=0;i<4u;i++) {
+            elf_symbols[i+1u].section_index=0u;
+            elf_symbols[i+1u].binding=RE_GUEST_STB_GLOBAL;
+            elf_symbols[i+1u].type=2u;
+            elf_symbols[i+1u].visibility=RE_GUEST_STV_DEFAULT;
+            strcpy(elf_symbols[i+1u].name,libdl_names[i]);
+        }
+    }
+    assert(re_guest_import_table_init(&elf_imports,0x41000000u)==RE_IMPORT_OK);
+    assert(re_guest_dl_bridge_bind_elf_symbols(&bridge,&elf_imports,
+        elf_symbols,5u,&elf_pointers,&failed_symbol)==RE_GUEST_DL_OK);
+    assert(failed_symbol==5u && elf_imports.count==4u);
+    for(size_t i=0;i<4u;i++) assert(elf_imports.entries[i].symbol_index==i+1u);
+    assert((elf_pointers.dlopen_pointer&1u)&&
+           (elf_pointers.dlsym_pointer&1u)&&
+           (elf_pointers.dlclose_pointer&1u)&&
+           (elf_pointers.dlerror_pointer&1u));
+
+    /* Duplicate undefined names and missing names must fail before binding. */
+    elf_symbols[4]=elf_symbols[2];
+    assert(re_guest_import_table_init(&rejected_imports,0x42000000u)==RE_IMPORT_OK);
+    assert(re_guest_dl_bridge_bind_elf_symbols(&bridge,&rejected_imports,
+        elf_symbols,5u,&elf_pointers,&failed_symbol)==
+        RE_GUEST_DL_E_SYMBOL_INDEX);
+    assert(failed_symbol==4u && rejected_imports.count==0u);
+    assert(re_guest_import_table_init(&rejected_imports,0x42000000u)==RE_IMPORT_OK);
+    assert(re_guest_dl_bridge_bind_elf_symbols(&bridge,&rejected_imports,
+        elf_symbols,4u,&elf_pointers,&failed_symbol)==
+        RE_GUEST_DL_E_SYMBOL_INDEX);
+    assert(failed_symbol==4u && rejected_imports.count==0u);
+
     assert(re_guest_import_table_init(&imports,0x30000000u)==RE_IMPORT_OK);
     assert(re_guest_dl_bridge_bind_imports(&bridge,&imports,&ids,&pointers)==RE_GUEST_DL_OK);
     assert(imports.count==4);

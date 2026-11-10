@@ -1,6 +1,6 @@
 # Project Roadmap
 
-## Active milestone update — Stage 123J (ELF32 undefined-symbol provider triage)
+## Active milestone update — Stage 123K (ELF32 libdl import-index binding)
 
 Stages 122D–122H and 123A–123F have host implementation coverage:
 - Transactional multi-ELF image loading, ELF32 dependency/provider/relocation planning, and bounded constructor execution.
@@ -14,17 +14,17 @@ Host CI passed in run `42877554684`; Android ARM64 NDK build/ELF verification pa
 
 A deeper Thumb audit shows those 22 exports are lazy GL dispatch wrappers, not direct GLES implementations. All share the zero-filled BSS dispatch table at `0x747dc`, have exact name literals and `R_ARM_RELATIVE`-relocated table-base literals, and cache the returned function pointer in their slot after calling the common helper at `0x3d64c`. Helper `0x3d64c` is now proven to call `dlsym` through guest PLT wrapper `0x35a0c`, searching three handles at global structure offsets `+0x34`, `+0x38`, and `+0x3c`. The unlabelled routine at `0x3d818` reads `GLESVersion` (fallback `1`), builds `OGLES`/`OGLES2` keys using `%s_Lib_%d`, and opens them with `dlopen(..., 2)`. Its caller supplies compiled fallback rows: GLES1 `[libGLESv1_CM.so, libhgl.so, null]`, GLES2 `[libGLESv2.so, libEGL.so, null]`. Successful handles are packed into the three global slots in success order and closed/cleared on teardown. The Android override policy/source remains unknown. See [Stage 123H GL wrapper audit](docs/STAGE123H_GL_LAZY_DISPATCH_WRAPPERS.md), [Stage 123G provider coverage](docs/STAGE123G_LIBJIROBIODG_IMPORT_PROVIDER_COVERAGE.md), [Stage 123F external import binding](docs/STAGE123F_TRANSACTIONAL_EXTERNAL_IMPORT_BINDING.md), [Stage 123E thunk execution](docs/STAGE123E_IMPORT_CELL_LOOKUP_AND_THUNK_EXECUTION.md), and [Stage 123D relocation evidence](docs/STAGE123D_INTERNAL_RELOCATION_EVIDENCE.md).
 
-### Active milestone — Stage 123J: resolve original ELF32 system imports
+### Active milestone — Stage 123K: bind libdl handlers from original ELF32 symbol indices
 
 The original `libjirobiodg.so` has 137 symbol-based relocation references across 136 unique undefined names. Stage 123J records candidate families only: 101 libc/POSIX/Bionic, 21 ARM EABI compiler-runtime, 4 libdl, 4 libz, 4 C++ ABI/libstdc++, and 2 liblog. These labels are not verified DSO ownership. Host CI passed in run `42885003645` (312 Python tests plus native regressions), and Android ARM64 build passed in run `42884983999`. See `docs/STAGE123J_ELF32_UNDEFINED_SYMBOL_FAMILIES.md`.
 
-1. Convert the Stage 123I `dlopen`/`dlsym`/`dlclose`/`dlerror` bridge into a virtual `libdl.so` provider for the exact `libjirobiodg.so` undefined symbols. Install it before guest `JNI_OnLoad`, which invokes the GL library initializer.
+1. Stage 123K now derives the four `libdl` import IDs directly from the decoded ELF32 dynamic-symbol table and binds them transactionally. The actual provider callbacks and guest-callable GLES/EGL trampoline registry remain the next integration gate.
 2. Add verified `liblog.so` and `libz.so` providers; preserve guest variadic and zlib structure ABIs.
 3. Implement the 21 ARM EABI compiler-runtime helpers with differential tests against a known ARM EABI implementation; do not assume they belong to `libm.so`.
 4. Audit the 101 libc/POSIX/Bionic candidates for actual use, structure layouts, and API-level availability. Prioritize JNI_OnLoad, file access, threading, and renderer startup.
 5. Verify the complete six-library dependency closure and every relocation before reserving a guest address range and loading the ELF32 provider.
 
-### Stage 123I foundation — guest dynamic-loader bridge primitive
+### Stage 123K implementation — automatic ELF32 libdl import binding\n\n- Added `re_guest_dl_bridge_bind_elf_symbols()` to identify exactly one undefined, externally visible `dlopen`, `dlsym`, `dlclose`, and `dlerror` symbol in the parsed ELF32 dynamic-symbol array.\n- Uses the actual dynamic-symbol indices as import IDs; rejects missing/duplicate names and unsupported symbol types before mutating the import table.\n- Synthetic tests cover successful index extraction and transactional missing/duplicate rejection. Validation is pending in CI. See `docs/STAGE123K_ELF32_DL_IMPORT_BINDING.md`.\n\n### Stage 123I foundation — guest dynamic-loader bridge primitive
 
 - Added callback-driven guest `dlopen`/`dlsym`/`dlclose`/`dlerror` handlers, generation-tagged opaque 32-bit guest handles, and a host-only native-handle table.
 - Added guest-address-only symbol resolution, transactional mapped-handler registration, and retryable `close_all` shutdown cleanup.
