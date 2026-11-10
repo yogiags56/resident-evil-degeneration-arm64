@@ -83,7 +83,7 @@ static int append_number(char *spec, size_t capacity, size_t *used,
                          unsigned value) {
     char digits[16];
     int n = snprintf(digits, sizeof(digits), "%u", value);
-    if (n < 0 || (size_t)n >= sizeof(digits) ||
+    if (n < 0 || (size_t)n >= sizeof(digits) || *used > capacity ||
         (size_t)n > capacity - *used)
         return 0;
     memcpy(spec + *used, digits, (size_t)n);
@@ -395,8 +395,10 @@ REGUESTLOGStatus re_guest_log_provider_bind_elf_symbols(
     if (export_count) *export_count = 0;
     if (failed_symbol_index) *failed_symbol_index = symbol_count;
     if (!provider || !provider->write_callback || !imports || !symbols ||
-        !exports || !export_count || export_capacity < 2u)
+        !exports || !export_count)
         return RE_GUEST_LOG_E_ARGUMENT;
+    if (export_capacity < 2u)
+        return RE_GUEST_LOG_E_CAPACITY;
     if (symbol_count > RE_GUEST_ELF32_LINK_MAX_SYMBOLS)
         return RE_GUEST_LOG_E_CAPACITY;
     if (!find_undefined_symbol(symbols, symbol_count,
