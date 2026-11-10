@@ -75,6 +75,21 @@ static REGUESTCPUStatus arm(REGUESTCPU*c,const REGUESTMEMACCESS*m,uint32_t pc){
  if(!cond(c->cpsr,x>>28))return RE_CPU_OK;
  if((x&0x0ffffff0u)==0x012fff10u){a=rv(c,x&15,pc);c->thumb=a&1;c->r[15]=a&(c->thumb?~1u:~3u);return RE_CPU_OK;}
  if((x&0x0e000000u)==0x0a000000u){int32_t off=(int32_t)(x&0xffffffu);if(off&0x800000)off|=(int32_t)0xff000000;if(x&(1u<<24))c->r[14]=pc+4;c->r[15]=pc+8+(uint32_t)(off*4);return RE_CPU_OK;}
+ /* A32 LDR pc,[Rn,#imm]! is used by the original XE3U import thunks.
+  * Read first; only commit base writeback after a successful aligned load.
+  * This is an ARM-state PC load (the thunk target is an ARM resolver).
+  */
+ if((x&0x0c000000u)==0x04000000u && !(x&(1u<<25)) &&
+    (x&(1u<<24)) && !(x&(1u<<22)) && (x&(1u<<21)) &&
+    (x&(1u<<20)) && ((x>>12)&15u)==15u && ((x>>16)&15u)!=15u) {
+  rn=(x>>16)&15u;a=rv(c,rn,pc);
+  addr=(x&(1u<<23))?a+(x&0xfffu):a-(x&0xfffu);
+  q=read32(m,addr,&r);if(q<0)return RE_CPU_E_ALIGNMENT;
+  if(!q)return RE_CPU_E_MEMORY;
+  c->r[rn]=addr;
+  c->r[15]=r&~3u;
+  return RE_CPU_OK;
+ }
  /* Single data transfer: immediate offset, pre-index, byte/word, no writeback. */
  if((x&0x0c000000u)==0x04000000u && !(x&(1u<<25)) && (x&(1u<<24)) && !(x&(1u<<21))){
   rn=(x>>16)&15;rd=(x>>12)&15;a=rv(c,rn,pc);addr=(x&(1u<<23))?a+(x&0xfff):a-(x&0xfff);
