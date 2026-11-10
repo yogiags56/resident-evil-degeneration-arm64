@@ -92,5 +92,19 @@ A reusable read-only implementation is in `tools/xe3u_relocation_audit.py`; its 
 4. Analyze all 238 type-4 external Thumb cells separately; do not conflate their thunk construction with type-1 internal pointer relocation.
 5. Implement a read-only relocation planner with a complete preflight pass. Only after that passes should a transactional applier be added.
 
+## Candidate-only transactional relocation planner
+
+Added `runtime/guest/re_guest_xe3u_reloc_plan.h/.c`. It accepts the decoded code blob, parsed XE3U header, type-1 patch offsets, and a caller-selected 4 KiB-aligned runtime base. It performs a complete preflight:
+- Validates the original and runtime image address extents without 32-bit overflow.
+- Checks every patch is aligned and fully file-backed.
+- Detects duplicate patch offsets using a caller-owned open-addressed scratch table.
+- Verifies each original pointer (ignoring only its state bit for range classification) targets the original image memory extent, including the memory-only tail.
+- Computes candidate `original_word + (runtime_base - link_time_base)`, preserving bit 0 and checking the new target remains inside the runtime image.
+- Publishes the plan only after every record passes; output remains unchanged on failure.
+
+This is a **planner only**. It does not mutate the decoded image or guest memory, does not bind external imports, and is not wired into the production loader. Runtime base selection and final code/data/BSS mapping policy remain external inputs. Tests cover positive/negative load bias, ARM/Thumb state preservation, BSS targets, duplicates, invalid patch/target bounds, capacity, and alignment.
+
+The read-only Python audit and C planner are registered in CI. Latest source-check run `42873066679` passed, including `Guest XE3U internal relocation planning tests: PASS`, `Guest XE3U header and fixup parser tests: PASS`, and all existing host regressions. This is host validation, not an Android NDK build or device/game boot.
+
 ## Safety boundary
 No bytes were modified. No relocation was applied. No game code was executed. The analysis is a read-only reconstruction from the original binary.
