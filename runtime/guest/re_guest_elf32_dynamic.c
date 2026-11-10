@@ -46,6 +46,8 @@ REGUESTELF32DYNAMICStatus re_guest_elf32_parse_dynamic(
  const REGUESTELF32PROGRAMHEADER *segment=NULL;
  uint32_t needed_offsets[RE_GUEST_ELF32_MAX_NEEDED];
  uint32_t soname_offset=0u,strtab=0u,strsz=0u,strtab_file=0u;
+ uint8_t has_init=0u,has_fini=0u,has_ia=0u,has_iasz=0u,has_fa=0u,has_fasz=0u;
+ uint32_t init=0u,fini=0u,ia=0u,iasz=0u,fa=0u,fasz=0u,file_check=0u;
  uint8_t has_strtab=0u,has_strsz=0u,has_soname=0u,terminated=0u;
  size_t dynamic_count=0u;
  if(failed_entry)*failed_entry=0u;
@@ -82,12 +84,47 @@ REGUESTELF32DYNAMICStatus re_guest_elf32_parse_dynamic(
   } else if(tag==RE_GUEST_ELF32_DT_STRTAB){
    if(has_strtab){if(failed_entry)*failed_entry=i;return RE_GUEST_ELF32_DYNAMIC_E_DUPLICATE_TAG;}
    has_strtab=1u;strtab=value;
+  } else if(tag==RE_GUEST_ELF32_DT_INIT){
+   if(has_init){if(failed_entry)*failed_entry=i;return RE_GUEST_ELF32_DYNAMIC_E_DUPLICATE_TAG;}
+   has_init=1u;init=value;
+  } else if(tag==RE_GUEST_ELF32_DT_FINI){
+   if(has_fini){if(failed_entry)*failed_entry=i;return RE_GUEST_ELF32_DYNAMIC_E_DUPLICATE_TAG;}
+   has_fini=1u;fini=value;
+  } else if(tag==RE_GUEST_ELF32_DT_INIT_ARRAY){
+   if(has_ia){if(failed_entry)*failed_entry=i;return RE_GUEST_ELF32_DYNAMIC_E_DUPLICATE_TAG;}
+   has_ia=1u;ia=value;
+  } else if(tag==RE_GUEST_ELF32_DT_INIT_ARRAYSZ){
+   if(has_iasz){if(failed_entry)*failed_entry=i;return RE_GUEST_ELF32_DYNAMIC_E_DUPLICATE_TAG;}
+   has_iasz=1u;iasz=value;
+  } else if(tag==RE_GUEST_ELF32_DT_FINI_ARRAY){
+   if(has_fa){if(failed_entry)*failed_entry=i;return RE_GUEST_ELF32_DYNAMIC_E_DUPLICATE_TAG;}
+   has_fa=1u;fa=value;
+  } else if(tag==RE_GUEST_ELF32_DT_FINI_ARRAYSZ){
+   if(has_fasz){if(failed_entry)*failed_entry=i;return RE_GUEST_ELF32_DYNAMIC_E_DUPLICATE_TAG;}
+   has_fasz=1u;fasz=value;
   } else if(tag==RE_GUEST_ELF32_DT_STRSZ){
    if(has_strsz){if(failed_entry)*failed_entry=i;return RE_GUEST_ELF32_DYNAMIC_E_DUPLICATE_TAG;}
    has_strsz=1u;strsz=value;
   }
  }
  if(!terminated){if(failed_entry)*failed_entry=dynamic->entry_count;return RE_GUEST_ELF32_DYNAMIC_E_TERMINATOR;}
+ if(has_ia!=has_iasz||has_fa!=has_fasz||
+    (has_iasz&&(iasz%4u)!=0u)||(has_fasz&&(fasz%4u)!=0u))
+  return RE_GUEST_ELF32_DYNAMIC_E_SIZE;
+ if(has_init&&init&&!map_file_backed(image,init,1u,&file_check))
+  return RE_GUEST_ELF32_DYNAMIC_E_RANGE;
+ if(has_fini&&fini&&!map_file_backed(image,fini,1u,&file_check))
+  return RE_GUEST_ELF32_DYNAMIC_E_RANGE;
+ if(has_ia&&iasz&&!map_file_backed(image,ia,iasz,&file_check))
+  return RE_GUEST_ELF32_DYNAMIC_E_RANGE;
+ if(has_fa&&fasz&&!map_file_backed(image,fa,fasz,&file_check))
+  return RE_GUEST_ELF32_DYNAMIC_E_RANGE;
+ dynamic->has_init=has_init;dynamic->init_address=init;
+ dynamic->has_fini=has_fini;dynamic->fini_address=fini;
+ dynamic->has_init_array=has_ia;dynamic->init_array_address=ia;
+ dynamic->has_init_array_size=has_iasz;dynamic->init_array_size=iasz;
+ dynamic->has_fini_array=has_fa;dynamic->fini_array_address=fa;
+ dynamic->has_fini_array_size=has_fasz;dynamic->fini_array_size=fasz;
  if(has_strtab||has_strsz||dynamic->needed_count||has_soname){
   if(!has_strtab||!has_strsz||!strsz||
      !map_file_backed(image,strtab,strsz,&strtab_file)||
