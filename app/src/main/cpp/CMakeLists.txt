@@ -21,6 +21,7 @@ add_library(re_asset_probe SHARED
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_memory.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_map_transaction.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_elf_materialize.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_elf32_image.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_permission_finalize.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_relocation_apply.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_symbol_resolve.c
