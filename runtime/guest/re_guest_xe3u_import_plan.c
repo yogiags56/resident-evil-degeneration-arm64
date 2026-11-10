@@ -39,7 +39,7 @@ REGUESTXE3UIMPORTPLANStatus re_guest_xe3u_prepare_external_import_plan(
     uint32_t unresolved_pc,int allow_unbound,uint32_t *scratch,size_t scratch_cap,
     REGUESTXE3UEXTERNALPATCH *output,size_t output_cap,
     size_t *unbound_count,size_t *failed_index) {
-    uint64_t image_end;
+    uint64_t image_end,original_end;
     size_t unbound=0;
     if(unbound_count)*unbound_count=0;
     if(failed_index)*failed_index=external_count;
@@ -53,8 +53,11 @@ REGUESTXE3UIMPORTPLANStatus re_guest_xe3u_prepare_external_import_plan(
        output_cap<external_count)
         return RE_GUEST_XE3U_IMPORT_PLAN_E_CAPACITY;
     image_end=(uint64_t)runtime_base+header->code_memory_size;
-    if(image_end>0x100000000ULL)return RE_GUEST_XE3U_IMPORT_PLAN_E_RANGE;
-    if(allow_unbound && ((unresolved_pc&3u)!=0u ||
+    original_end=(uint64_t)header->base_address+header->code_memory_size;
+    if(image_end>0x100000000ULL||original_end>0x100000000ULL||
+       header->code_memory_size<0x74u||imports->count>RE_IMPORT_MAX_BINDINGS)
+        return RE_GUEST_XE3U_IMPORT_PLAN_E_RANGE;
+    if(allow_unbound && (unresolved_pc==0u || (unresolved_pc&3u)!=0u ||
        ((uint64_t)unresolved_pc>=runtime_base&&(uint64_t)unresolved_pc<image_end)))
         return RE_GUEST_XE3U_IMPORT_PLAN_E_ARGUMENT;
     for(size_t i=0;i<scratch_cap;i++)scratch[i]=UINT32_MAX;
@@ -142,8 +145,17 @@ REGUESTXE3UIMPORTPLANStatus re_guest_xe3u_apply_external_import_plan(
             return RE_GUEST_XE3U_IMPORT_PLAN_E_RANGE;
         }
         address=runtime_base+plan[i].cell_offset;
-        if(re_guest_memory_read32(bus,address,&value)!=RE_GUEST_MEM_OK||
-           value!=plan[i].original_value) {
+        if((uint64_t)(plan[i].trampoline_value&~1u)>=runtime_base&&
+           (uint64_t)(plan[i].trampoline_value&~1u)<image_end) {
+            if(failed_index)*failed_index=i;
+            return RE_GUEST_XE3U_IMPORT_PLAN_E_RANGE;
+        }
+        REGUESTMEMStatus ms=re_guest_memory_read32(bus,address,&value);
+        if(ms!=RE_GUEST_MEM_OK) {
+            if(failed_index)*failed_index=i;
+            return RE_GUEST_XE3U_IMPORT_PLAN_E_MEMORY;
+        }
+        if(value!=plan[i].original_value) {
             if(failed_index)*failed_index=i;
             return RE_GUEST_XE3U_IMPORT_PLAN_E_STALE;
         }
