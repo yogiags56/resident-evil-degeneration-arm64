@@ -37,7 +37,7 @@ The synthetic runtime test exercises:
 - All eight slots filled, ninth open rejected, failed close-all retained for retry, and successful close-all invalidated all tokens.
 - Failed `dlopen` and error retrieval.
 
-Android ARM64 build workflow run `42883782568` passed for the initial bridge implementation. The new `close_all` addition is undergoing a fresh Android ARM64 build in run `42884437640`.
+Android ARM64 build workflow run `42884437640` passed, including the `close_all` cleanup addition in the ARM64 native target.
 
 ## Explicit non-claims
 
