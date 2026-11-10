@@ -29,3 +29,12 @@ jobs:
       - name: Run host tests
         run: bash ./tools/run_tests.sh
         
+
+      - name: Report tracked source SHA-256 provenance
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git ls-files -z | while IFS= read -r -d '' path; do
+            sha256sum -- "$path"
+          done

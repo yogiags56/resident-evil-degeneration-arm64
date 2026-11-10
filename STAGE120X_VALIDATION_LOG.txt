@@ -1,0 +1,13 @@
+Stage 120X validation record
+============================
+
+Status: PENDING
+Branch: stage-120x-dynamic-symbol-resolution
+
+Required checks:
+- Full Python unittest discovery.
+- Host mock compilation.
+- Native C symbol resolution regression.
+- CI source SHA-256 provenance.
+
+No test pass is claimed until GitHub Actions reports success.

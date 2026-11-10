@@ -32,10 +32,13 @@ class Stage112ArtifactCollectionTests(unittest.TestCase):
         archive.parent.mkdir(parents=True)
         archive.write_bytes(b"archive")
 
-    def run_collector(self, root, output):
+    def run_collector(self, root, output, extra_env=None):
+        env = os.environ.copy()
+        if extra_env:
+            env.update(extra_env)
         return subprocess.run(
             [sys.executable, str(SCRIPT), "--root", str(root), "--output", str(output)],
-            text=True, capture_output=True,
+            text=True, capture_output=True, env=env,
         )
 
     def test_collects_files_and_writes_hash_manifest(self):
@@ -51,6 +54,26 @@ class Stage112ArtifactCollectionTests(unittest.TestCase):
             self.assertFalse(manifest["proprietary_game_assets_included"])
             self.assertEqual(len(manifest["files"]), 4)
             self.assertTrue((output / "SHA256SUMS.txt").is_file())
+
+    def test_pull_request_manifest_uses_event_head_sha_with_shallow_checkout(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "repo"
+            root.mkdir()
+            self.make_tree(root)
+            event = Path(temp) / "event.json"
+            head_sha = "1dbaa7646866c8b0b21acbaf6d98ec2bd7c87cf2"
+            event.write_text(json.dumps({
+                "pull_request": {"head": {"sha": head_sha}}
+            }))
+            output = Path(temp) / "dist"
+            result = self.run_collector(root, output, {
+                "GITHUB_EVENT_NAME": "pull_request",
+                "GITHUB_EVENT_PATH": str(event),
+                "GITHUB_SHA": "925385c26f22149ce910b55d7685a63e6175046f",
+            })
+            self.assertEqual(result.returncode, 0, result.stderr)
+            manifest = json.loads((output / "BUILD_ARTIFACTS.json").read_text())
+            self.assertEqual(manifest["source_commit"], head_sha)
 
     def test_rejects_proprietary_game_assets_in_ci_apk(self):
         with tempfile.TemporaryDirectory() as temp:

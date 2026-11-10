@@ -1,0 +1,43 @@
+#ifndef RE_GUEST_ELF32_DYNAMIC_H
+#define RE_GUEST_ELF32_DYNAMIC_H
+#include "re_guest_elf32_image.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#define RE_GUEST_ELF32_MAX_DYNAMIC_ENTRIES 128u
+#define RE_GUEST_ELF32_MAX_NEEDED 32u
+#define RE_GUEST_ELF32_DYNAMIC_STRING_CAP 256u
+enum {
+ RE_GUEST_ELF32_DT_NULL=0u, RE_GUEST_ELF32_DT_NEEDED=1u,
+ RE_GUEST_ELF32_DT_STRTAB=5u, RE_GUEST_ELF32_DT_STRSZ=10u,
+ RE_GUEST_ELF32_DT_SONAME=14u
+};
+typedef struct { uint32_t tag, value; } REGUESTELF32DYNAMICENTRY;
+typedef struct {
+ uint8_t present, has_soname, has_string_table;
+ uint16_t entry_count, needed_count;
+ uint32_t string_table_virtual_address, string_table_size, string_table_file_offset;
+ char soname[RE_GUEST_ELF32_DYNAMIC_STRING_CAP];
+ char needed[RE_GUEST_ELF32_MAX_NEEDED][RE_GUEST_ELF32_DYNAMIC_STRING_CAP];
+ REGUESTELF32DYNAMICENTRY entries[RE_GUEST_ELF32_MAX_DYNAMIC_ENTRIES];
+} REGUESTELF32DYNAMIC;
+typedef enum {
+ RE_GUEST_ELF32_DYNAMIC_OK=0,
+ RE_GUEST_ELF32_DYNAMIC_E_ARGUMENT=-620,
+ RE_GUEST_ELF32_DYNAMIC_E_MULTIPLE=-621,
+ RE_GUEST_ELF32_DYNAMIC_E_RANGE=-622,
+ RE_GUEST_ELF32_DYNAMIC_E_SIZE=-623,
+ RE_GUEST_ELF32_DYNAMIC_E_CAPACITY=-624,
+ RE_GUEST_ELF32_DYNAMIC_E_TERMINATOR=-625,
+ RE_GUEST_ELF32_DYNAMIC_E_STRING_TABLE=-626,
+ RE_GUEST_ELF32_DYNAMIC_E_STRING=-627,
+ RE_GUEST_ELF32_DYNAMIC_E_DUPLICATE_TAG=-628
+} REGUESTELF32DYNAMICStatus;
+/* Read-only PT_DYNAMIC/DT_NEEDED/DT_SONAME parser using PT_LOAD file-backed mapping. */
+REGUESTELF32DYNAMICStatus re_guest_elf32_parse_dynamic(
+ const uint8_t *bytes,size_t size,const REGUESTELF32IMAGE *image,
+ REGUESTELF32DYNAMIC *dynamic,size_t *failed_entry);
+#ifdef __cplusplus
+}
+#endif
+#endif

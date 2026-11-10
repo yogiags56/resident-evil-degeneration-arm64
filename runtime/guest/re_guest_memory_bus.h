@@ -4,7 +4,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef struct { const REGUESTMEMORY *memory; } REGUESTMEMBUS;
+typedef struct REGUESTMEMBUS { const REGUESTMEMORY *memory; } REGUESTMEMBUS;
 void re_guest_memory_bus_init(REGUESTMEMBUS *bus, const REGUESTMEMORY *memory);
 REGUESTMEMStatus re_guest_memory_fetch8(const REGUESTMEMBUS *bus,uint32_t address,uint8_t *value);
 REGUESTMEMStatus re_guest_memory_fetch16(const REGUESTMEMBUS *bus,uint32_t address,uint16_t *value);

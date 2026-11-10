@@ -19,6 +19,57 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
   -o build/host-tests/test_re_guest_cpu
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_memory.c runtime/guest/re_guest_memory.c runtime/guest/re_guest_memory_view.c \
   -o build/host-tests/test_re_guest_memory
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_map_transaction.c \
+  runtime/guest/re_guest_map_transaction.c runtime/guest/re_guest_memory.c \
+  -o build/host-tests/test_re_guest_map_transaction
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_elf_materialize.c \
+  runtime/guest/re_guest_elf_materialize.c runtime/guest/re_guest_memory.c \
+  -o build/host-tests/test_re_guest_elf_materialize
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_elf32_image.c \
+  runtime/guest/re_guest_elf32_image.c \
+  -o build/host-tests/test_re_guest_elf32_image
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_elf32_dynamic.c \
+  runtime/guest/re_guest_elf32_dynamic.c runtime/guest/re_guest_elf32_image.c \
+  -o build/host-tests/test_re_guest_elf32_dynamic
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_elf32_link.c \
+  runtime/guest/re_guest_elf32_link.c runtime/guest/re_guest_elf32_dynamic.c \
+  runtime/guest/re_guest_elf32_image.c \
+  -o build/host-tests/test_re_guest_elf32_link
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_elf32_reloc_plan.c \
+  runtime/guest/re_guest_elf32_reloc_plan.c runtime/guest/re_guest_symbol_resolve.c \
+  -o build/host-tests/test_re_guest_elf32_reloc_plan
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_elf32_linked_loader.c \
+  runtime/guest/re_guest_elf32_linked_loader.c \
+  runtime/guest/re_guest_elf32_reloc_plan.c runtime/guest/re_guest_elf32_link.c \
+  runtime/guest/re_guest_elf32_loader.c runtime/guest/re_guest_elf32_dynamic.c \
+  runtime/guest/re_guest_elf32_image.c runtime/guest/re_guest_map_transaction.c \
+  runtime/guest/re_guest_elf_materialize.c runtime/guest/re_guest_permission_finalize.c \
+  runtime/guest/re_guest_relocation_apply.c runtime/guest/re_guest_symbol_resolve.c \
+  runtime/guest/re_guest_memory.c \
+  -o build/host-tests/test_re_guest_elf32_linked_loader
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_elf32_loader.c \
+  runtime/guest/re_guest_elf32_loader.c runtime/guest/re_guest_elf32_dynamic.c \
+  runtime/guest/re_guest_elf32_image.c runtime/guest/re_guest_map_transaction.c \
+  runtime/guest/re_guest_elf_materialize.c runtime/guest/re_guest_permission_finalize.c \
+  runtime/guest/re_guest_relocation_apply.c runtime/guest/re_guest_memory.c \
+  -o build/host-tests/test_re_guest_elf32_loader
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_permission_finalize.c \
+  runtime/guest/re_guest_permission_finalize.c runtime/guest/re_guest_memory.c \
+  -o build/host-tests/test_re_guest_permission_finalize
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_relocation_apply.c \
+  runtime/guest/re_guest_relocation_apply.c runtime/guest/re_guest_memory.c \
+  -o build/host-tests/test_re_guest_relocation_apply
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_symbol_resolve.c \
+  runtime/guest/re_guest_symbol_resolve.c \
+  -o build/host-tests/test_re_guest_symbol_resolve
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_elf_pipeline.c \
+  runtime/guest/re_guest_map_transaction.c \
+  runtime/guest/re_guest_elf_materialize.c \
+  runtime/guest/re_guest_permission_finalize.c \
+  runtime/guest/re_guest_relocation_apply.c \
+  runtime/guest/re_guest_symbol_resolve.c \
+  runtime/guest/re_guest_memory.c \
+  -o build/host-tests/test_re_guest_elf_pipeline
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_memory_bus.c runtime/guest/re_guest_memory.c runtime/guest/re_guest_memory_bus.c \
   -o build/host-tests/test_re_guest_memory_bus
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_cpu_bus_adapter.c \
@@ -34,6 +85,31 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
   runtime/guest/re_guest_memory.c runtime/guest/re_guest_memory_bus.c \
   runtime/guest/re_guest_cpu_bus_adapter.c \
   -o build/host-tests/test_re_guest_cpu_checked_step
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_cpu_mapped.c \
+  runtime/guest/re_guest_cpu.c runtime/guest/re_guest_memory.c \
+  runtime/guest/re_guest_memory_bus.c \
+  -o build/host-tests/test_re_guest_cpu_mapped
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_alignment.c \
+  runtime/guest/re_guest_alignment.c runtime/guest/re_guest_memory.c \
+  -o build/host-tests/test_re_guest_alignment
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_cpu_scalar.c \
+  runtime/guest/re_guest_cpu_scalar.c runtime/guest/re_guest_alignment.c \
+  runtime/guest/re_guest_memory.c \
+  -o build/host-tests/test_re_guest_cpu_scalar
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_cpu_arm_scalar.c \
+  runtime/guest/re_guest_cpu.c runtime/guest/re_guest_cpu_arm_scalar.c \
+  runtime/guest/re_guest_cpu_scalar.c \
+  runtime/guest/re_guest_alignment.c runtime/guest/re_guest_memory.c \
+  -o build/host-tests/test_re_guest_cpu_arm_scalar
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_cpu_arm_scalar_differential.c \
+  runtime/guest/re_guest_cpu.c runtime/guest/re_guest_cpu_arm_scalar.c \
+  runtime/guest/re_guest_cpu_scalar.c runtime/guest/re_guest_alignment.c \
+  runtime/guest/re_guest_memory.c \
+  -o build/host-tests/test_re_guest_cpu_arm_scalar_differential
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_cpu_arm_scalar_faults.c \
+  runtime/guest/re_guest_cpu_arm_scalar.c runtime/guest/re_guest_cpu_scalar.c \
+  runtime/guest/re_guest_alignment.c runtime/guest/re_guest_memory.c \
+  -o build/host-tests/test_re_guest_cpu_arm_scalar_faults
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_cpu_memory.c \
   runtime/guest/re_guest_cpu_memory.c runtime/guest/re_guest_memory.c \
   runtime/guest/re_guest_memory_bus.c \

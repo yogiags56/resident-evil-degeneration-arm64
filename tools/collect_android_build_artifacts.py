@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import subprocess
 import sys
 import zipfile
 
@@ -31,6 +32,30 @@ def unique_file(root: Path, pattern: str, description: str) -> Path:
     if len(matches) != 1:
         raise ValueError(f"expected exactly one {description}; found {len(matches)}")
     return matches[0]
+
+
+def source_commit(root: Path) -> str:
+    # pull_request workflows check out a synthetic merge commit. The event
+    # payload is authoritative for the PR head and works with shallow clones.
+    event_path = os.environ.get("GITHUB_EVENT_PATH")
+    if os.environ.get("GITHUB_EVENT_NAME") == "pull_request" and event_path:
+        try:
+            event = json.loads(Path(event_path).read_text(encoding="utf-8"))
+            head_sha = event.get("pull_request", {}).get("head", {}).get("sha")
+            if isinstance(head_sha, str) and head_sha:
+                return head_sha
+        except (OSError, json.JSONDecodeError):
+            pass
+
+    refs = ["HEAD^2", "HEAD"] if os.environ.get("GITHUB_EVENT_NAME") == "pull_request" else ["HEAD"]
+    for ref in refs:
+        result = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--verify", ref],
+            check=False, capture_output=True, text=True,
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+    return os.environ.get("GITHUB_SHA", "unknown")
 
 
 def is_elf64_aarch64(data: bytes) -> bool:
@@ -109,7 +134,7 @@ def main() -> int:
             "project": "Resident Evil: Degeneration Native ARM64 Port",
             "build_kind": "bootstrap-probe-only",
             "game_ready": False,
-            "source_commit": os.environ.get("GITHUB_SHA", "unknown"),
+            "source_commit": source_commit(root),
             "run_id": os.environ.get("GITHUB_RUN_ID", "local"),
             "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT", "1"),
             "abi": "arm64-v8a",
