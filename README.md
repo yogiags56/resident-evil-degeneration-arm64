@@ -88,7 +88,7 @@ python3 tools/s3e_binary_audit.py /path/to/original.apk --json /tmp/s3e-audit.js
 python3 tools/s3e_binary_audit.py /path/to/biohazard.s3e
 ```
 
-It validates the LZMA-alone/XE3U header and fixup bounds, maps imported symbols to external relocation cells, and reports SHA-256 provenance. It does not patch, execute, or redistribute the proprietary game binary. See [Stage 97 evidence](docs/STAGE97_ORIGINAL_BINARY_AND_FILE_API_EVIDENCE.md).
+It validates the LZMA-alone/XE3U header and fixup bounds, emits a complete symbol-index-to-external-cell manifest for all imports, classifies the original ARM stubs versus zero-valued function-pointer cells, and reports SHA-256 provenance. It does not patch, execute, or redistribute the proprietary game binary. See [Stage 97 evidence](docs/STAGE97_ORIGINAL_BINARY_AND_FILE_API_EVIDENCE.md).
 The native C XE3U parser/decode path can also audit a locally supplied compressed S3E asset after running `bash tools/run_tests.sh` on a host with `liblzma` development files:
 
 ```bash
