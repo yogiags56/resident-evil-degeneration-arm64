@@ -24,7 +24,13 @@ The original `libjirobiodg.so` has 137 symbol-based relocation references across
 4. Audit the 101 libc/POSIX/Bionic candidates for actual use, structure layouts, and API-level availability. Prioritize JNI_OnLoad, file access, threading, and renderer startup.
 5. Verify the complete six-library dependency closure and every relocation before reserving a guest address range and loading the ELF32 provider.
 
-### Stage 123K implementation — automatic ELF32 libdl import binding\n\n- Added `re_guest_dl_bridge_bind_elf_symbols()` to identify exactly one undefined, externally visible `dlopen`, `dlsym`, `dlclose`, and `dlerror` symbol in the parsed ELF32 dynamic-symbol array.\n- Uses the actual dynamic-symbol indices as import IDs; rejects missing/duplicate names and unsupported symbol types before mutating the import table.\n- Synthetic tests cover successful index extraction and transactional missing/duplicate rejection. Validation is pending in CI. See `docs/STAGE123K_ELF32_DL_IMPORT_BINDING.md`.\n\n### Stage 123I foundation — guest dynamic-loader bridge primitive
+### Stage 123K implementation — automatic ELF32 libdl import binding
+
+- Added `re_guest_dl_bridge_bind_elf_symbols()` to identify exactly one undefined, externally visible `dlopen`, `dlsym`, `dlclose`, and `dlerror` symbol in the parsed ELF32 dynamic-symbol array.
+- Uses the actual dynamic-symbol indices as import IDs; rejects missing/duplicate names and unsupported symbol types before mutating the import table.
+- Synthetic tests cover successful index extraction and transactional missing/duplicate rejection. Validation is pending in CI. See `docs/STAGE123K_ELF32_DL_IMPORT_BINDING.md`.
+
+### Stage 123I foundation — guest dynamic-loader bridge primitive
 
 - Added callback-driven guest `dlopen`/`dlsym`/`dlclose`/`dlerror` handlers, generation-tagged opaque 32-bit guest handles, and a host-only native-handle table.
 - Added guest-address-only symbol resolution, transactional mapped-handler registration, and retryable `close_all` shutdown cleanup.
