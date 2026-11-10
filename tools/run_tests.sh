@@ -48,6 +48,12 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
   runtime/guest/re_guest_elf32_provider_catalog.c runtime/guest/re_guest_elf32_reloc_plan.c \
   runtime/guest/re_guest_symbol_resolve.c \
   -o build/host-tests/test_re_guest_elf32_cross_module_link
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_elf32_init_exec.c \
+  runtime/guest/re_guest_elf32_init_exec.c runtime/guest/re_guest_runtime.c \
+  runtime/guest/re_guest_imports.c runtime/guest/s3e_aapcs32.c \
+  runtime/guest/re_guest_cpu.c runtime/guest/re_guest_memory.c \
+  runtime/guest/re_guest_memory_bus.c \
+  -o build/host-tests/test_re_guest_elf32_init_exec
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_elf32_init.c \
   runtime/guest/re_guest_elf32_init.c runtime/guest/re_guest_memory.c \
   -o build/host-tests/test_re_guest_elf32_init
