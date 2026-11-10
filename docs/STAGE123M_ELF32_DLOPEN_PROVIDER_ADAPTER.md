@@ -18,12 +18,16 @@ Added:
 The adapter collects each module independently, preserving SONAME boundaries,
 uses the ELF32 collector's load-bias rules (including unrebased SHN_ABS),
 preserves Thumb state bits and even-valued data addresses, and builds
-per-module export slices in caller-owned storage. It initializes a temporary
-dlopen catalog and commits it only after all modules and SONAMEs validate.
+per-module export slices in caller-owned storage. It first stages candidate
+exports in private temporary storage, initializes a temporary dlopen catalog,
+then copies/repoints caller-owned storage only after every module and SONAME
+validates. Failed initialization leaves both the live catalog and its active
+symbol storage unchanged.
 
-The caller owns and must retain the supplied symbol storage and all source
-module symbol/name storage for as long as the catalog may be used. The scratch
-symbol storage may be modified on failure; the live catalog is not.
+The caller owns and must retain the committed symbol storage and all source
+module symbol/name storage for as long as the catalog may be used. Before a
+successful replacement, callers must quiesce old users and close old handles;
+the adapter does not make concurrent catalog replacement safe.
 
 ## Validation
 
