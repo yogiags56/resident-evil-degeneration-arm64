@@ -131,5 +131,6 @@ REGUESTELF32Status re_guest_elf32_parse_image(
         }
     }
     if (!image->load_count) return RE_GUEST_ELF32_E_PROGRAM_HEADERS;
+    if (failed_program_header) *failed_program_header = phnum;
     return RE_GUEST_ELF32_OK;
 }
