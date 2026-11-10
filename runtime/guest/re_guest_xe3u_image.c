@@ -103,6 +103,7 @@ REGUESTXE3UStatus re_guest_xe3u_parse_fixups(
     REGUESTXE3UFIXUPINFO pending;
     size_t pos,end,symbol_count=0,internal_count=0,external_count=0;
     size_t symbol_payload=0,symbol_end=0;
+    int has_internal_section=0;
     if(failed_section)*failed_section=0;
     if(failed_record)*failed_record=0;
     if(!bytes||!header||!info||
@@ -137,7 +138,8 @@ REGUESTXE3UStatus re_guest_xe3u_parse_fixups(
             symbol_payload=payload+2u;symbol_end=section_end;
             symbol_count=count;
         } else if(type==1u) {
-            if(internal_count)return RE_GUEST_XE3U_E_DUPLICATE;
+            if(has_internal_section)return RE_GUEST_XE3U_E_DUPLICATE;
+            has_internal_section=1;
             if(section_end-payload<4u)return RE_GUEST_XE3U_E_FIXUP;
             count=rd32(bytes+payload);
             if((uint64_t)count*4u>section_end-(payload+4u))
@@ -194,9 +196,6 @@ REGUESTXE3UStatus re_guest_xe3u_parse_fixups(
         if(section->type==1u) {
             for(size_t n=0;n<section->count;n++)
                 internal_offsets[pos++]=rd32(bytes+payload+4u+n*4u);
-        } else if(section->type==2u||section->type==3u||section->type==4u) {
-            size_t base=external_count?0u:0u;
-            (void)base;
         }
     }
     pos=0;
