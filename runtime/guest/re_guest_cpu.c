@@ -59,6 +59,12 @@ static void set_nz(REGUESTCPU*c,uint32_t x){c->cpsr=(c->cpsr&~(RE_CPSR_N|RE_CPSR
 static void set_add(REGUESTCPU*c,uint32_t a,uint32_t b,uint32_t r){set_nz(c,r);c->cpsr=(c->cpsr&~(RE_CPSR_C|RE_CPSR_V))|((uint64_t)a+b>0xffffffffu?RE_CPSR_C:0)|((~(a^b)&(a^r)&0x80000000u)?RE_CPSR_V:0);}
 static void set_sub(REGUESTCPU*c,uint32_t a,uint32_t b,uint32_t r){set_nz(c,r);c->cpsr=(c->cpsr&~(RE_CPSR_C|RE_CPSR_V))|(a>=b?RE_CPSR_C:0)|(((a^b)&(a^r)&0x80000000u)?RE_CPSR_V:0);}
 static uint32_t rv(REGUESTCPU*c,unsigned r,uint32_t pc){return r==15?pc+8:c->r[r];}
+static REGUESTCPUStatus load_pc_interwork(REGUESTCPU*c,uint32_t value){
+ if((value&3u)==2u)return RE_CPU_E_ALIGNMENT;
+ c->thumb=(uint8_t)(value&1u);
+ c->r[15]=value&(c->thumb?~1u:~3u);
+ return RE_CPU_OK;
+}
 static uint32_t shift_imm(uint32_t v,unsigned type,unsigned n,uint32_t*carry,uint32_t oldc){
  if(type==0){if(!n)return v;*carry=(v>>(32-n))&1;return v<<n;}
  if(type==1){if(!n){*carry=v>>31;return 0;}*carry=(v>>(n-1))&1;return v>>n;}
@@ -88,8 +94,8 @@ static REGUESTCPUStatus arm(REGUESTCPU*c,const REGUESTMEMACCESS*m,uint32_t pc){
   if(load && rd==15u) {
    q=read32(m,addr,&r);if(q<0)return RE_CPU_E_ALIGNMENT;
    if(!q)return RE_CPU_E_MEMORY;
+   q=load_pc_interwork(c,r);if(q!=RE_CPU_OK)return q;
    c->r[rn]=addr;
-   c->r[15]=r&~3u;
   } else {
    if(rd==15u || (load && rd==rn))return RE_CPU_E_UNIMPLEMENTED;
    if(load) {
@@ -109,7 +115,7 @@ static REGUESTCPUStatus arm(REGUESTCPU*c,const REGUESTMEMACCESS*m,uint32_t pc){
   rn=(x>>16)&15;rd=(x>>12)&15;a=rv(c,rn,pc);addr=(x&(1u<<23))?a+(x&0xfff):a-(x&0xfff);
   if(x&(1u<<20)){if(x&(1u<<22)){uint8_t v;if(!rd8(m,addr,&v))return RE_CPU_E_MEMORY;c->r[rd]=v;}else{q=read32(m,addr,&r);if(q<0)return RE_CPU_E_ALIGNMENT;
  if(!q)return RE_CPU_E_MEMORY;
- c->r[rd]=r;}if(rd==15)c->r[15]&=~3u;}
+ if(rd==15){q=load_pc_interwork(c,r);if(q!=RE_CPU_OK)return q;}else c->r[rd]=r;}}
   else {if(x&(1u<<22)){if(!wr8(m,addr,(uint8_t)c->r[rd]))return RE_CPU_E_MEMORY;}else{q=write32(m,addr,c->r[rd]);if(q<0)return RE_CPU_E_ALIGNMENT;
  if(!q)return RE_CPU_E_MEMORY;}}
   return RE_CPU_OK;
@@ -123,7 +129,7 @@ static REGUESTCPUStatus arm(REGUESTCPU*c,const REGUESTMEMACCESS*m,uint32_t pc){
   for(unsigned i=0;i<16;i++)if(list&(1u<<i)){
    if(load){q=read32(m,addr,&r);if(q<0)return RE_CPU_E_ALIGNMENT;
  if(!q)return RE_CPU_E_MEMORY;
-   if(i==15){c->r[15]=r&~3u;}else c->r[i]=r;}
+   if(i==15){q=load_pc_interwork(c,r);if(q!=RE_CPU_OK)return q;}else c->r[i]=r;}
    else {q=write32(m,addr,i==15?pc+12:c->r[i]);if(q<0)return RE_CPU_E_ALIGNMENT;
  if(!q)return RE_CPU_E_MEMORY;}
    addr+=4;
