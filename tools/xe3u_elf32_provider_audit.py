@@ -95,6 +95,212 @@ def compare_imports(import_manifest: list[dict], exports: dict[str, dict]) -> di
             })
     return {"matched": matches, "unmatched": missing}
 
+def _load_segments(data: bytes) -> list[dict]:
+    if len(data) < 52 or data[:4] != bytes((0x7f, 0x45, 0x4c, 0x46)) or data[4] != 1:
+        raise ProviderAuditError("expected ELF32 input")
+    endian = "<" if data[5] == 1 else ">" if data[5] == 2 else None
+    if endian is None:
+        raise ProviderAuditError("unsupported ELF byte order")
+    fields = struct.unpack_from(endian + "HHIIIIIHHHHHH", data, 16)
+    _, _, _, _, phoff, _, _, ehsize, phentsize, phnum, _, _, _ = fields
+    if ehsize < 52 or phentsize < 32 or phoff + phentsize * phnum > len(data):
+        raise ProviderAuditError("program-header table out of bounds")
+    rows = []
+    for i in range(phnum):
+        off = phoff + i * phentsize
+        typ, file_off, vaddr, _, filesz, memsz, flags, align = struct.unpack_from(
+            endian + "IIIIIIII", data, off)
+        if file_off + filesz > len(data) or filesz > memsz:
+            raise ProviderAuditError(f"invalid program header {i} file/memory range")
+        if typ == 1:
+            rows.append({"offset": file_off, "vaddr": vaddr, "filesz": filesz,
+                         "memsz": memsz, "flags": flags, "align": align})
+    return rows
+
+
+def _vaddr_file_offset(segments: list[dict], address: int, size: int) -> int:
+    matches = []
+    for seg in segments:
+        if address >= seg["vaddr"] and address + size <= seg["vaddr"] + seg["filesz"]:
+            matches.append(seg["offset"] + address - seg["vaddr"])
+    if len(matches) != 1:
+        raise ProviderAuditError(
+            f"virtual range 0x{address:x}+0x{size:x} is not uniquely file-backed")
+    return matches[0]
+
+
+def _memory_segment(segments: list[dict], address: int, size: int, required_flags: int = 0) -> dict | None:
+    matches = [seg for seg in segments
+        if address >= seg["vaddr"] and address + size <= seg["vaddr"] + seg["memsz"]
+        and (seg["flags"] & required_flags) == required_flags]
+    return matches[0] if len(matches) == 1 else None
+
+
+def _thumb_ldr_literal(halfword: int, instruction_address: int) -> tuple[int, int] | None:
+    if halfword & 0xf800 != 0x4800:
+        return None
+    rt = (halfword >> 8) & 7
+    literal = ((instruction_address + 4) & ~3) + ((halfword & 0xff) * 4)
+    return rt, literal
+
+
+def _thumb_ldr_word_imm(halfword: int) -> tuple[int, int, int] | None:
+    if halfword & 0xf800 != 0x6800:
+        return None
+    return halfword & 7, (halfword >> 3) & 7, ((halfword >> 6) & 31) * 4
+
+
+def _thumb_bl_target(pc: int, first: int, second: int) -> int | None:
+    if first & 0xf800 != 0xf000 or second & 0xd000 != 0xd000:
+        return None
+    s = (first >> 10) & 1
+    j1 = (second >> 13) & 1
+    j2 = (second >> 11) & 1
+    i1 = (~(j1 ^ s)) & 1
+    i2 = (~(j2 ^ s)) & 1
+    immediate = ((s << 24) | (i1 << 23) | (i2 << 22) |
+                 ((first & 0x03ff) << 12) | ((second & 0x07ff) << 1))
+    if immediate & (1 << 24):
+        immediate -= 1 << 25
+    return (pc + 4 + immediate) & 0xffffffff
+
+
+def audit_gl_dispatch_wrappers(elf_bytes: bytes, matched_exports: list[dict],
+                               dynamic_relocation_sections: list[dict]) -> dict:
+    segments = _load_segments(elf_bytes)
+    endian = "<" if elf_bytes[5] == 1 else ">"
+    relative_targets = {
+        int(entry["offset"], 16)
+        for section in dynamic_relocation_sections
+        for entry in section["entries"]
+        if entry["type"] == 23
+    }
+    wrappers = []
+    for export in matched_exports:
+        if not export["name"].startswith("gl") or export["elf_type"] != 2:
+            continue
+        if not export["thumb_state"] or not export["elf_size"]:
+            continue
+        start = int(export["elf_value"], 16) & ~1
+        size = export["elf_size"]
+        code_off = _vaddr_file_offset(segments, start, min(size, 2))
+        if _memory_segment(segments, start, min(size, 2), 1) is None:
+            raise ProviderAuditError(f"{export['name']} is not in an executable PT_LOAD")
+        halfwords = [
+            struct.unpack_from(endian + "H", elf_bytes, code_off + i * 2)[0]
+            for i in range(min(size // 2, 32))
+        ]
+        dispatch = None
+        for i, halfword in enumerate(halfwords):
+            literal_load = _thumb_ldr_literal(halfword, start + i * 2)
+            if literal_load is None:
+                continue
+            base_reg, literal_address = literal_load
+            try:
+                literal_off = _vaddr_file_offset(segments, literal_address, 4)
+            except ProviderAuditError:
+                continue
+            table_base = struct.unpack_from(endian + "I", elf_bytes, literal_off)[0]
+            if _memory_segment(segments, table_base, 4, 2) is None:
+                continue
+            for j in range(i + 1, min(len(halfwords), i + 9)):
+                load = _thumb_ldr_word_imm(halfwords[j])
+                if load is None:
+                    continue
+                target_reg, source_reg, slot_offset = load
+                if source_reg != base_reg:
+                    continue
+                slot_address = table_base + slot_offset
+                slot_seg = _memory_segment(segments, slot_address, 4, 2)
+                if slot_seg is None:
+                    continue
+                slot_is_bss = (
+                    slot_address >= slot_seg["vaddr"] + slot_seg["filesz"] and
+                    slot_address + 4 <= slot_seg["vaddr"] + slot_seg["memsz"])
+                dispatch = {
+                    "table_base": table_base,
+                    "table_base_literal_address": literal_address,
+                    "table_base_literal_has_r_arm_relative": literal_address in relative_targets,
+                    "table_register": base_reg,
+                    "function_register": target_reg,
+                    "slot_offset": slot_offset,
+                    "slot_address": slot_address,
+                    "slot_is_zero_fill_bss": slot_is_bss,
+                }
+                break
+            if dispatch is not None:
+                break
+        if dispatch is None:
+            wrappers.append({"name": export["name"], "elf_value": export["elf_value"],
+                             "classification": "unclassified_thumb_function"})
+            continue
+
+        name_literals = []
+        resolver_targets = []
+        for i, halfword in enumerate(halfwords):
+            literal_load = _thumb_ldr_literal(halfword, start + i * 2)
+            if literal_load is not None and literal_load[0] == 0:
+                try:
+                    name_off = _vaddr_file_offset(segments, literal_load[1], 4)
+                    name_ptr = struct.unpack_from(endian + "I", elf_bytes, name_off)[0]
+                    string_off = _vaddr_file_offset(segments, name_ptr, 1)
+                    string_end = elf_bytes.find(bytes((0,)), string_off,
+                        min(len(elf_bytes), string_off + 128))
+                    if string_end >= 0:
+                        candidate = elf_bytes[string_off:string_end].decode("ascii")
+                        if candidate.startswith("gl"):
+                            name_literals.append({"address": f"0x{name_ptr:08x}",
+                                                  "name": candidate})
+                except (ProviderAuditError, UnicodeDecodeError):
+                    pass
+            if i + 1 < len(halfwords):
+                target = _thumb_bl_target(start + i * 2, halfword, halfwords[i + 1])
+                if target is not None:
+                    resolver_targets.append(target)
+
+        wrappers.append({
+            "name": export["name"], "elf_value": export["elf_value"],
+            "classification": "thumb_lazy_dispatch_wrapper",
+            **{key: f"0x{value:08x}" if isinstance(value, int) else value
+               for key, value in dispatch.items()},
+            "function_name_literals": name_literals,
+            "shared_call_targets": [f"0x{x:08x}" for x in resolver_targets],
+            "name_literal_matches_export": any(x["name"] == export["name"]
+                                               for x in name_literals),
+        })
+
+    classified = [x for x in wrappers
+                  if x["classification"] == "thumb_lazy_dispatch_wrapper"]
+    table_bases = sorted({int(x["table_base"], 16) for x in classified})
+    slot_offsets = sorted({int(x["slot_offset"], 16) for x in classified})
+    holes = []
+    if len(table_bases) == 1 and slot_offsets:
+        holes = [f"0x{x:02x}" for x in range(0, max(slot_offsets) + 4, 4)
+                 if x not in slot_offsets]
+    resolver_targets = sorted({target for row in classified
+                               for target in row["shared_call_targets"]})
+    return {
+        "candidate_gl_export_count": len(wrappers),
+        "classified_lazy_dispatch_wrapper_count": len(classified),
+        "all_classified_slots_zero_fill_bss": bool(classified) and all(
+            x["slot_is_zero_fill_bss"] for x in classified),
+        "all_table_base_literals_have_r_arm_relative": bool(classified) and all(
+            x["table_base_literal_has_r_arm_relative"] for x in classified),
+        "all_function_name_literals_match": bool(classified) and all(
+            x["name_literal_matches_export"] for x in classified),
+        "table_bases": [f"0x{x:08x}" for x in table_bases],
+        "slot_offsets": [f"0x{x:02x}" for x in slot_offsets],
+        "unclaimed_slot_offsets": holes,
+        "shared_call_targets": [f"0x{x:08x}" for x in resolver_targets],
+        "wrappers": wrappers,
+        "limits": [
+            "The table slots are in the ELF PT_LOAD zero-fill tail; their initial runtime values are zero after compliant materialization.",
+            "A shared call target is identified from Thumb BL encoding; its full resolver ABI and host callback source are not established here.",
+            "This audit does not execute the provider, apply relocations, or install host GL function pointers.",
+        ],
+    }
+
+
 def build_report(apk_path: Path, s3e_asset: str, elf_asset: str) -> dict:
     try:
         with zipfile.ZipFile(apk_path) as apk:
@@ -175,6 +381,9 @@ def build_report(apk_path: Path, s3e_asset: str, elf_asset: str) -> dict:
             "matched": intersection["matched"],
             "unmatched": intersection["unmatched"],
         },
+        "gl_dispatch_wrapper_audit": audit_gl_dispatch_wrappers(
+            elf_bytes, intersection["matched"],
+            dynamic_report["dynamic_relocation_sections"]),
         "limits": [
             "Exact-name intersection is candidate provider evidence, not proof that a wrapper is callable.",
             "Undefined ELF symbols are not assigned to a specific DT_NEEDED library by this report.",
