@@ -101,6 +101,8 @@ REGUESTDLStatus re_guest_dl_bridge_open(
     }
     rc = bridge->open_callback(path, flags, &native_handle, bridge->user);
     if (rc != 0 || native_handle == (uintptr_t)0) {
+        if (native_handle != (uintptr_t)0)
+            (void)bridge->close_callback(native_handle, bridge->user);
         set_error(bridge, "dlopen: library open failed");
         return RE_GUEST_DL_E_OPEN;
     }
