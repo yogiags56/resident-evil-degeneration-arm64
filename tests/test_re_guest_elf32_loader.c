@@ -72,7 +72,7 @@ static int test_load_and_relocate(void) {
     assert(result.entry_valid && result.entry_point==0x101000u);
     assert(result.load_count==2u && !result.dynamic.present);
     assert(memcmp(code,elf+0x100,4u)==0 && code[4]==0u && code[7]==0u);
-    assert(data[0]==0x10u && data[1]==0u && data[4]==0u);
+    assert(data[0]==0x10u && data[1]==0u && data[2]==0x10u && data[3]==0u && data[4]==0u);
     assert(re_guest_memory_resolve(&memory,0x101000u,4u,
         RE_GUEST_MEM_EXEC,&resolved)==RE_GUEST_MEM_OK);
     assert(re_guest_memory_resolve(&memory,0x102000u,4u,
