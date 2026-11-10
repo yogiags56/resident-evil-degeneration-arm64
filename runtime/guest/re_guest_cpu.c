@@ -176,7 +176,7 @@ static REGUESTCPUStatus thumb(REGUESTCPU*c,const REGUESTMEM*m,uint32_t pc){
  }
  /* Thumb-2 wide B.W and BL immediate branches (T4 encodings). */
  if((x&0xf800u)==0xf000u){
-  uint16_t y; q=read16(m,pc+2,&y); if(q<0)return RE_CPU_E_ALIGNMENT; if(!q)return RE_CPU_E_MEMORY;
+  uint16_t y; q=fetch16(m,pc+2,&y); if(q<0)return RE_CPU_E_ALIGNMENT; if(!q)return RE_CPU_E_MEMORY;
   unsigned sbit=(x>>10)&1u, j1=(y>>13)&1u, j2=(y>>11)&1u;
   unsigned is1=(~(j1^sbit))&1u, is2=(~(j2^sbit))&1u;
   if((y&0xd000u)==0x9000u || (y&0xd000u)==0xd000u){
@@ -189,7 +189,7 @@ static REGUESTCPUStatus thumb(REGUESTCPU*c,const REGUESTMEM*m,uint32_t pc){
  /* Thumb-2 immediate wide loads/stores: F8C/F8D word, F880/F890 byte. */
  if((x&0xfff0u)==0xf8c0u || (x&0xfff0u)==0xf8d0u ||
     (x&0xfff0u)==0xf880u || (x&0xfff0u)==0xf890u){
-  uint16_t y; q=read16(m,pc+2,&y); if(q<0)return RE_CPU_E_ALIGNMENT; if(!q)return RE_CPU_E_MEMORY;
+  uint16_t y; q=fetch16(m,pc+2,&y); if(q<0)return RE_CPU_E_ALIGNMENT; if(!q)return RE_CPU_E_MEMORY;
   unsigned rn=x&15u; rd=(y>>12)&15u; imm=y&0x0fffu;
   addr=(rn==15u?((pc+4u)&~3u):c->r[rn])+imm;
   if((x&0xfff0u)==0xf8d0u){q=read32(m,addr,&r);if(q<0)return RE_CPU_E_ALIGNMENT;if(!q)return RE_CPU_E_MEMORY;if(rd==15u)c->r[15]=r&~1u;else c->r[rd]=r;}
@@ -232,7 +232,7 @@ static REGUESTCPUStatus thumb(REGUESTCPU*c,const REGUESTMEM*m,uint32_t pc){
     (x&0xfff0u)==0xf820u || (x&0xfff0u)==0xf830u ||
     (x&0xfff0u)==0xf840u || (x&0xfff0u)==0xf850u ||
     (x&0xfff0u)==0xf910u || (x&0xfff0u)==0xf930u){
-  uint16_t y; q=read16(m,pc+2,&y); if(q<0)return RE_CPU_E_ALIGNMENT; if(!q)return RE_CPU_E_MEMORY;
+  uint16_t y; q=fetch16(m,pc+2,&y); if(q<0)return RE_CPU_E_ALIGNMENT; if(!q)return RE_CPU_E_MEMORY;
   unsigned rn=x&15u, rm=y&15u, scale=(y>>4)&3u;
   rd=(y>>12)&15u; addr=(rn==15u?((pc+4u)&~3u):c->r[rn])+(c->r[rm]<<scale);
   if((x&0xfff0u)==0xf850u){q=read32(m,addr,&r);if(q<0)return RE_CPU_E_ALIGNMENT;if(!q)return RE_CPU_E_MEMORY;c->r[rd]=r;}
@@ -247,7 +247,7 @@ static REGUESTCPUStatus thumb(REGUESTCPU*c,const REGUESTMEM*m,uint32_t pc){
  }
  /* Thumb-2 MOVW/MOVT (wide immediate construction). */
  if((x&0xfbf0u)==0xf240u || (x&0xfbf0u)==0xf2c0u){
-  uint16_t y; q=read16(m,pc+2,&y); if(q<0)return RE_CPU_E_ALIGNMENT; if(!q)return RE_CPU_E_MEMORY;
+  uint16_t y; q=fetch16(m,pc+2,&y); if(q<0)return RE_CPU_E_ALIGNMENT; if(!q)return RE_CPU_E_MEMORY;
   unsigned imm16=((x&15u)<<12)|(((x>>10)&1u)<<11)|(((y>>12)&7u)<<8)|(y&255u);
   rd=(y>>8)&15u;
   if((x&0xfbf0u)==0xf240u)c->r[rd]=(c->r[rd]&0xffff0000u)|imm16;
@@ -279,7 +279,7 @@ static int thumb_control_flow(const REGUESTMEM*m,uint32_t pc,uint16_t first){
  /* Thumb-2 B.cond, B, BL and BLX immediate. */
  if((first&0xf800u)==0xf000u){
   uint16_t second;
-  if(read16(m,pc+2u,&second)!=1)return 0;
+  if(fetch16(m,pc+2u,&second)!=1)return 0;
   if((second&0xd000u)==0x8000u || (second&0xd000u)==0x9000u ||
      (second&0xd000u)==0xd000u || (second&0xd001u)==0xc000u)return 1;
  }
@@ -295,7 +295,7 @@ REGUESTCPUStatus re_guest_cpu_step(REGUESTCPU*c,const REGUESTMEM*m){
  if(c->halted)return RE_CPU_HALTED;
  uint32_t pc=c->r[15]; REGUESTCPUStatus s;
  if(c->thumb && c->itstate){
-  uint16_t first; int q=read16(m,pc,&first);
+  uint16_t first; int q=fetch16(m,pc,&first);
   if(q<0)return RE_CPU_E_ALIGNMENT;
   if(!q)return RE_CPU_E_MEMORY;
   unsigned width=((first&0xf800u)>=0xe800u)?4u:2u;
