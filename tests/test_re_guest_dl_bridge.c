@@ -118,6 +118,29 @@ int main(void) {
     call_import(&runtime,pointers.dlclose_pointer,0x10000140u,token2,0u);
     assert(runtime.cpu.r[0]==0u && fake.close_calls==2);
 
+    {
+        uint32_t tokens[RE_GUEST_DL_MAX_HANDLES];
+        uint32_t address=0;
+        for(size_t i=0;i<RE_GUEST_DL_MAX_HANDLES;i++)
+            assert(re_guest_dl_bridge_open(&bridge,"libGLESv1_CM.so",2u,
+                &tokens[i])==RE_GUEST_DL_OK);
+        token2=1u;
+        assert(re_guest_dl_bridge_open(&bridge,"libhgl.so",2u,&token2)==
+            RE_GUEST_DL_E_CAPACITY);
+        assert(token2==0u);
+        fake.fail_close=1;
+        assert(re_guest_dl_bridge_close_all(&bridge)==RE_GUEST_DL_E_CLOSE);
+        for(size_t i=0;i<RE_GUEST_DL_MAX_HANDLES;i++)
+            assert(bridge.handles[i].active);
+        fake.fail_close=0;
+        assert(re_guest_dl_bridge_close_all(&bridge)==RE_GUEST_DL_OK);
+        for(size_t i=0;i<RE_GUEST_DL_MAX_HANDLES;i++) {
+            assert(!bridge.handles[i].active);
+            assert(re_guest_dl_bridge_symbol(&bridge,tokens[i],
+                "glTexImage2D",&address)==RE_GUEST_DL_E_HANDLE);
+        }
+    }
+
     fake.fail_open=1;
     call_import(&runtime,pointers.dlopen_pointer,0x10000160u,0x10000100u,2u);
     assert(runtime.cpu.r[0]==0u);
