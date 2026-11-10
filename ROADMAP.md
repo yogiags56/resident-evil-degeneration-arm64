@@ -1,5 +1,34 @@
 # Project Roadmap
 
+## Active milestone update — Stage 123A
+
+Stages 122D–122H and 123A have been implemented on the current working branch:
+- Transactional multi-ELF image loading.
+- Cross-module ELF32 symbol provider catalog and relocation planning.
+- Unified caller-driven ELF32 dependency/load pipeline.
+- DT_INIT/INIT_ARRAY and DT_FINI/FINI_ARRAY metadata parsing.
+- Dependency-ordered constructor sequence planning and bounded AArch32 constructor execution.
+- Root ELF32 entry/runtime handoff.
+
+Synthetic host regressions pass in GitHub Actions run 42867835687 (root handoff, constructor sequence, and bounded constructor execution). This does not represent an Android NDK build or a game boot.
+
+### Critical next milestone — Stage 123B: Native XE3U image loader
+
+Do not feed `biohazard.s3e` into the ELF32 pipeline. The Stage 97 audit proves the main guest executable is an LZMA-alone-compressed XE3U image; `libjirobiodg.so` is a separate ELF32 ARM shared object. Implement a bounded native XE3U parser/loader using observed header and fixup-section boundaries. First parse and validate without mutating guest memory; then implement internal relocations and external Thumb fixups only after their exact semantics are independently verified. Integrate the XE3U code/data image with the guest runtime only after those stages pass.
+
+### Remaining real-game gates
+
+1. Supply the legally usable original APK locally. The repository's `app/src/main/assets/` contains only `.gitkeep`; proprietary game assets are excluded by design.
+2. Decode the S3E LZMA-alone stream with bounded output/memory limits and verify SHA-256 against the recorded Stage 97 provenance.
+3. Parse XE3U header, code/data extents, fixup subsections, symbols, internal relocations, and external Thumb relocations with strict range checks.
+4. Establish code/data/BSS address layout and apply only proven relocation semantics.
+5. Inventory and load the actual ELF32 ARM shared object(s), including `libjirobiodg.so`, through the ELF32 pipeline as appropriate.
+6. Bind the verified S3E imports; unknown imports must fail closed.
+7. Connect archive/VFS/file APIs, runtime services, and ARM32 CPU execution; expand instruction coverage from the real executable's inventory.
+8. Run the Android NDK build, install on an ARM64 device, record loader/constructor/entry telemetry, then progress through menu, rendering, input, audio, and gameplay.
+
+---
+
 ## Historical milestone: Stage 120N — Packed and dynamic relocation metadata parity
 
 GitHub Actions run 42614083636 passed 229 Python tests plus host C/native regressions. See STAGE120N_VALIDATION_LOG.txt.
