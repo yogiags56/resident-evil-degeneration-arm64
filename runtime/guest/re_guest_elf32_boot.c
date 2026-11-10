@@ -14,7 +14,8 @@ REGUESTELF32BOOTStatus re_guest_elf32_start_root_runtime(
     if(info)memset(info,0,sizeof(*info));
     if(!bus||!bus->memory||!imports||!modules||!module_count||
        !pipeline||pipeline->module_count!=module_count||!runtime||!info||
-       pipeline->root_module_index>=module_count||
+       pipeline->root_module_index>=module_count||!pipeline->graph.complete||
+       !pipeline->graph.reachable[pipeline->root_module_index]||
        pipeline->graph.order_count!=pipeline->loaded.module_count||
        (stack_top&7u)||stack_top<256u)
         return RE_GUEST_ELF32_BOOT_E_ARGUMENT;
