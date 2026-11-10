@@ -17,7 +17,6 @@ REGUESTELF32LINKEDLOADStatus re_guest_elf32_load_linked_image(
     REGUESTELF32LOADREQUEST load_request;
     REGUESTELF32LINKEDLOADRESULT pending;
     size_t failed=0,failed_relocation=0;
-    REGUESTELF32LINKEDLOADStatus status;
     if(failed_index)*failed_index=0;
     if(inner_status)*inner_status=0;
     if(result)memset(result,0,sizeof(*result));
