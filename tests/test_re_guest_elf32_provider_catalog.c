@@ -56,7 +56,7 @@ int main(void) {
 
     /* SONAMEs are identifiers, not paths or whitespace-bearing strings. */
     a[0].name[0]='s'; a[0].name[1]='t'; a[0].name[2]='r';
-    a[0].name[3]='o'; a[0].name[4]='n'; a[0].name[5]='g'; a[0].name[6]='\\0';
+    a[0].name[3]='o'; a[0].name[4]='n'; a[0].name[5]='g'; a[0].name[6]='\0';
     modules[0].soname="lib bad.so";
     assert(re_guest_elf32_collect_providers(modules,2,out,8,&count,&fm,&fs)==RE_GUEST_ELF32_PROVIDER_E_NAME);
     assert(fm==0&&count==0&&memcmp(out,before,sizeof(out))==0);
