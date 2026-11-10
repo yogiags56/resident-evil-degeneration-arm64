@@ -140,5 +140,20 @@ This is a **planner only**. It does not mutate the decoded image or guest memory
 
 The read-only Python audit and C planner are registered in CI. Latest source-check run `42873066679` passed, including `Guest XE3U internal relocation planning tests: PASS`, `Guest XE3U header and fixup parser tests: PASS`, and all existing host regressions. This is host validation, not an Android NDK build or device/game boot.
 
+## Native C planner exercised against the original binary
+
+A local native harness compiled the Stage 123D C planner with Clang using `-std=c11 -Wall -Wextra -Werror`, then fed it the exact code blob and all 36,377 type-1 offsets extracted from the re-uploaded original APK. The candidate runtime base `0x50000000` was used only as a validation input; it is not a production base decision.
+
+Result:
+- Planner status: `RE_GUEST_XE3U_RELOC_PLAN_OK`.
+- Planned entries: 36,377 / 36,377; failed index equals count (no failure).
+- Thumb-state entries preserved: 18,638.
+- ARM-state entries preserved: 17,739.
+- Targets in the memory-only/BSS tail accepted after full range validation: 2,826.
+- Example first entry: `0x4A170868 -> 0x50170868`.
+- Example last entry: `0x4A13B018 -> 0x5013B018`.
+
+This exercised the C planner against the real game offsets and words, not a synthetic fixture. The harness emitted a plan only; it did not modify the original code blob, map guest memory, apply relocations, or execute the game. The separate `tools/xe3u_native_audit` CLI still has not been run against the original asset in the repository build environment.
+
 ## Safety boundary
 No bytes were modified. No relocation was applied. No game code was executed. The analysis is a read-only reconstruction from the original binary.
