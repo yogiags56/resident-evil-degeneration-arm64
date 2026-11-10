@@ -16,7 +16,7 @@ REGUESTELF32LINKEDLOADStatus re_guest_elf32_load_linked_image(
     REGUESTELF32LINKINFO link;
     REGUESTELF32LOADREQUEST load_request;
     REGUESTELF32LINKEDLOADRESULT pending;
-    size_t failed=0;
+    size_t failed=0,failed_relocation=0;
     REGUESTELF32LINKEDLOADStatus status;
     if(failed_index)*failed_index=0;
     if(inner_status)*inner_status=0;
@@ -77,9 +77,9 @@ REGUESTELF32LINKEDLOADStatus re_guest_elf32_load_linked_image(
     load_request.relocations=workspace->prepared_relocations;
     load_request.relocation_count=link.relocation_count;
     REGUESTELF32LOADStatus load_status=re_guest_elf32_load_image(
-        memory,&load_request,&pending.load,&failed,NULL);
+        memory,&load_request,&pending.load,&failed,&failed_relocation);
     if(load_status!=RE_GUEST_ELF32_LOAD_OK) {
-        if(failed_index)*failed_index=failed;
+        if(failed_index)*failed_index=(load_status==RE_GUEST_ELF32_LOAD_E_RELOCATION)?failed_relocation:failed;
         if(inner_status)*inner_status=(int)load_status;
         return RE_GUEST_ELF32_LINKED_LOAD_E_LOAD;
     }
