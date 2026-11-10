@@ -31,6 +31,12 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_elf32_dynamic.c \
   runtime/guest/re_guest_elf32_dynamic.c runtime/guest/re_guest_elf32_image.c \
   -o build/host-tests/test_re_guest_elf32_dynamic
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_elf32_loader.c \
+  runtime/guest/re_guest_elf32_loader.c runtime/guest/re_guest_elf32_dynamic.c \
+  runtime/guest/re_guest_elf32_image.c runtime/guest/re_guest_map_transaction.c \
+  runtime/guest/re_guest_elf_materialize.c runtime/guest/re_guest_permission_finalize.c \
+  runtime/guest/re_guest_relocation_apply.c runtime/guest/re_guest_memory.c \
+  -o build/host-tests/test_re_guest_elf32_loader
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_permission_finalize.c \
   runtime/guest/re_guest_permission_finalize.c runtime/guest/re_guest_memory.c \
   -o build/host-tests/test_re_guest_permission_finalize
