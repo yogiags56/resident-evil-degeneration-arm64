@@ -16,4 +16,7 @@ Provide one bounded coordinator that connects the ELF parser, PT_DYNAMIC decoder
 This is a caller-driven single-image linked-load path, not an Android/Bionic dynamic linker. The caller must already have selected and loaded providers and supply their final guest virtual symbol addresses. DT_NEEDED search/loading, namespace/scope semantics, symbol interposition, GNU symbol versions, TLS/COPY/IFUNC, constructors, runtime import trampolines, CPU startup, and game execution remain outside this stage.
 
 ## Validation
-Host tests and Android ARM64 build/ELF verification are triggered for this stage. The stage remains pending until both pipelines pass.
+- Host regression suite, including the end-to-end linked-load test: PASS on commit `2f8c16c24fc103967756635bd789c41166ae649f` (workflow run `42816501886`). The test confirms RX/RW segment mapping, undefined import resolution, REL ABS32 application, BSS zero-fill, final permissions, and failure before mapping for an unresolved strong import.
+- Android ARM64 native build and ELF verification: running on the same commit (workflow run `42816511103`).
+
+Stage 121D remains pending until the Android build finishes successfully.
