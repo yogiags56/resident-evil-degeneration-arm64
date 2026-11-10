@@ -50,6 +50,41 @@ The 238 type-4 records were also inspected as 4-byte little-endian cells in the 
 
 The shared `0x4A000070` value is an observed placeholder-like in-image address, not yet a proven import thunk or callable target. The eight zero cells may represent unresolved/optional imports or another linker convention; no such meaning is assigned yet. Do not apply the internal type-1 add-load-bias rule to type-4 records merely because most cells look like in-image pointers. External symbol binding and ARM/Thumb interworking semantics remain a separate analysis task.
 
+## Mixed ARM/Thumb disassembly and external import thunk proof
+
+The code blob is mixed-state ARM32/Thumb code; it must not be disassembled as one ISA mode. The entry region begins with valid ARM instructions. An ARM `BLX` at code offset `0x1C` targets `0x79A00`, where the target disassembles as valid Thumb instructions. This confirms both instruction states are present in the same XE3U code blob.
+
+All 230 nonzero type-4 external relocation cells are served by a repeated three-instruction **ARM-state** import stub. The stub/cell relation is:
+
+`stub_offset = 0x84 + 3 * ((cell_offset - 0x13B708) / 4)`
+
+For every nonzero cell, the audit verifies:
+1. Instruction 1 is `0xE28FC601` (PC-relative base calculation).
+2. Instruction 2 is one of `0xE28CCA3B` or `0xE28CCA3A` (the two observed address windows).
+3. Instruction 3 matches `LDR pc, [r12, #imm]!` (`0xE5BCFxxx`).
+4. Decoding the ARM PC value and both address immediates yields the exact external relocation cell offset.
+
+Result: **230/230** nonzero type-4 records resolve to the exact cell addressed by their corresponding stub. All 230 cells currently contain the placeholder word `0x4A000070`. The four previously mapped file APIs reproduce the recorded stub addresses exactly: `s3eFileClose 0xC0`, `s3eFileRead 0x30C`, `s3eFileOpen 0xA5C`, and `s3eFileGetChar 0xAB0`.
+
+The other eight type-4 records are zero-valued cells outside this repeated stub table:
+- `glTexParameteri` at `0xC7C4C`, `glTexParameterx` at `0xC7C50`.
+- `s3eMallocBase` at `0x1603B8` and `0x170330`.
+- `s3eReallocBase` at `0x1603BC` and `0x170334`.
+- `s3eFreeBase` at `0x1603C0` and `0x170338`.
+
+Their zero values and symbol names are established; whether these are optional function-pointer variables, special imports, or another linker convention is still unresolved. They must not be populated by guessing.
+
+## Refined internal target classification
+
+The 36,377 internal pointer targets split by the observed image extents:
+- 32,002 targets in the pre-`data_offset` code-side range.
+- 1,549 targets in file-backed initialized data (`data_offset` through `code_file_size`).
+- 2,826 targets in the memory-only tail (`code_file_size` through `code_memory_size`), consistent with pointers into the region that must be zero-filled as BSS during materialization.
+
+Patch sites themselves remain entirely file-backed: 35,446 before `data_offset` and 931 at/after it. This distinction is important: a relocation cell may be file-backed while the pointer it stores targets BSS. The loader must materialize the full memory extent and zero-fill the tail before the relocation transaction.
+
+A reusable read-only implementation is in `tools/xe3u_relocation_audit.py`; its tests are in `tests/test_xe3u_relocation_audit.py`. It reports these facts and verifies stub arithmetic without applying any relocation or import binding.
+
 ## Required next checks
 1. Decode and inspect the instruction/data context around representative patch sites from each region, especially patch sites in the initialized-data tail.
 2. Verify that all post-relocation targets remain within the chosen runtime image mapping and that signed/unsigned overflow is rejected before any writes.
