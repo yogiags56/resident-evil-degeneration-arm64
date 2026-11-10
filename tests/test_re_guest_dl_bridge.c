@@ -65,6 +65,8 @@ int main(void) {
     REGUESTDLImportPointers pointers;
     REGUESTSYMBOL provider_symbols[4];
     size_t provider_count=0;
+    REGUESTSYMBOLREQUEST provider_request;
+    REGUESTSYMBOLRESULT provider_result;
     FakeDL fake={0};
     uint32_t token,token2;
 
@@ -95,6 +97,12 @@ int main(void) {
     assert(provider_symbols[1].value==pointers.dlsym_pointer);
     assert(provider_symbols[2].value==pointers.dlclose_pointer);
     assert(provider_symbols[3].value==pointers.dlerror_pointer);
+    provider_request=(REGUESTSYMBOLREQUEST){
+        "dlsym",NULL,"libdl.so",0u
+    };
+    assert(re_guest_symbol_resolve(&provider_request,provider_symbols,
+        provider_count,&provider_result)==RE_GUEST_SYMBOL_OK);
+    assert(provider_result.value==pointers.dlsym_pointer);
     for(size_t i=0;i<4u;i++) {
         assert(provider_symbols[i].binding==RE_GUEST_STB_GLOBAL);
         assert(provider_symbols[i].visibility==RE_GUEST_STV_DEFAULT);
