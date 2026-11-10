@@ -288,3 +288,32 @@ REGUESTDLStatus re_guest_dl_bridge_bind_imports(
     pointers->dlerror_pointer = values[3];
     return RE_GUEST_DL_OK;
 }
+
+REGUESTDLStatus re_guest_dl_bridge_build_provider_symbols(
+    const char *soname, const REGUESTDLImportPointers *pointers,
+    REGUESTSYMBOL *symbols, size_t capacity, size_t *symbol_count) {
+    static const char *const names[4] = {"dlopen","dlsym","dlclose","dlerror"};
+    REGUESTSYMBOL pending[4];
+    const uint32_t values[4] = {
+        pointers ? pointers->dlopen_pointer : 0,
+        pointers ? pointers->dlsym_pointer : 0,
+        pointers ? pointers->dlclose_pointer : 0,
+        pointers ? pointers->dlerror_pointer : 0
+    };
+    if (symbol_count) *symbol_count = 0;
+    if (!soname || !soname[0] || strlen(soname) >= 128u ||
+        strchr(soname, '/') || strchr(soname, '\\') ||
+        !pointers || (!symbols && capacity) || !symbol_count)
+        return RE_GUEST_DL_E_ARGUMENT;
+    if (capacity < 4u || !symbols) return RE_GUEST_DL_E_CAPACITY;
+    for (size_t i = 0; i < 4u; i++) {
+        if (!values[i]) return RE_GUEST_DL_E_ARGUMENT;
+        pending[i] = (REGUESTSYMBOL){
+            names[i], values[i], RE_GUEST_STB_GLOBAL,
+            RE_GUEST_STV_DEFAULT, 1u, NULL, soname
+        };
+    }
+    memcpy(symbols, pending, sizeof(pending));
+    *symbol_count = 4u;
+    return RE_GUEST_DL_OK;
+}
