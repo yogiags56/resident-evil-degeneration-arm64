@@ -97,7 +97,10 @@ REGUESTELF32LINKStatus re_guest_elf32_parse_link_metadata(
     REGUESTELF32LINKStatus st;
     if(failed_index)*failed_index=0;
     if(!bytes||!image||!dynamic||!info||(!symbols&&symbol_capacity)||
-       (!relocations&&relocation_capacity)) return RE_GUEST_ELF32_LINK_E_ARGUMENT;
+       (!relocations&&relocation_capacity) ||
+       image->program_header_count>RE_GUEST_ELF32_MAX_PROGRAM_HEADERS ||
+       dynamic->entry_count>RE_GUEST_ELF32_MAX_DYNAMIC_ENTRIES)
+        return RE_GUEST_ELF32_LINK_E_ARGUMENT;
     memset(info,0,sizeof(*info));
     if(!dynamic->present) return RE_GUEST_ELF32_LINK_OK;
 #define GET(tag,var,flag) do { if(!tag_value(dynamic,(tag),&(var),&(flag))) return RE_GUEST_ELF32_LINK_E_TAG; } while(0)
