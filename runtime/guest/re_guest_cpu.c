@@ -243,6 +243,45 @@ static REGUESTCPUStatus thumb(REGUESTCPU*c,const REGUESTMEMACCESS*m,uint32_t pc)
   it_set(c,(uint8_t)((cc<<4)|(x&15u)));
   return RE_CPU_OK;
  }
+ /* Thumb PUSH/POP register lists, including LR/PC interworking. */
+ if((x&0xfe00u)==0xb400u) {
+  uint16_t list=(uint16_t)(x&0x00ffu);
+  unsigned include_lr=!!(x&0x0100u),n=include_lr;
+  uint64_t new_sp;
+  for(unsigned i=0;i<8;i++)if(list&(1u<<i))n++;
+  if(!n)return RE_CPU_E_UNIMPLEMENTED;
+  if(c->r[13]<(uint32_t)(n*4u))return RE_CPU_E_MEMORY;
+  new_sp=(uint64_t)c->r[13]-(uint64_t)n*4u;
+  addr=(uint32_t)new_sp;
+  for(unsigned i=0;i<8;i++)if(list&(1u<<i)) {
+   q=write32(m,addr,c->r[i]);if(q<0)return RE_CPU_E_ALIGNMENT;
+   if(!q)return RE_CPU_E_MEMORY;addr+=4u;
+  }
+  if(include_lr){q=write32(m,addr,c->r[14]);if(q<0)return RE_CPU_E_ALIGNMENT;
+   if(!q)return RE_CPU_E_MEMORY;}
+  c->r[13]=(uint32_t)new_sp;
+  return RE_CPU_OK;
+ }
+ if((x&0xfe00u)==0xbc00u) {
+  uint16_t list=(uint16_t)(x&0x00ffu);
+  unsigned include_pc=!!(x&0x0100u),n=include_pc;
+  uint32_t values[8],pc_value=0,sp=c->r[13];
+  for(unsigned i=0;i<8;i++)if(list&(1u<<i))n++;
+  if(!n)return RE_CPU_E_UNIMPLEMENTED;
+  if((uint64_t)sp+(uint64_t)n*4u>0x100000000ULL)return RE_CPU_E_MEMORY;
+  addr=sp;
+  for(unsigned i=0;i<8;i++)if(list&(1u<<i)) {
+   q=read32(m,addr,&values[i]);if(q<0)return RE_CPU_E_ALIGNMENT;
+   if(!q)return RE_CPU_E_MEMORY;addr+=4u;
+  }
+  if(include_pc){q=read32(m,addr,&pc_value);if(q<0)return RE_CPU_E_ALIGNMENT;
+   if(!q)return RE_CPU_E_MEMORY;
+   if((pc_value&3u)==2u)return RE_CPU_E_ALIGNMENT;}
+  for(unsigned i=0;i<8;i++)if(list&(1u<<i))c->r[i]=values[i];
+  c->r[13]=sp+n*4u;
+  if(include_pc){q=load_pc_interwork(c,pc_value);if(q!=RE_CPU_OK)return q;}
+  return RE_CPU_OK;
+ }
  /* Thumb-1 register-offset memory group: STR/STRH/STRB/LDRSB/LDR/LDRH/LDRB/LDRSH. */
  if((x&0xf000u)==0x5000u){
   unsigned code=(x>>9)&7u; rm=(x>>6)&7u; rs=(x>>3)&7u; rd=x&7u;
