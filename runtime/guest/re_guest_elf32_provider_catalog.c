@@ -3,6 +3,11 @@
 #define SHN_UNDEF 0u
 #define SHN_ABS 0xfff1u
 #define STT_TLS 6u
+#define STT_NOTYPE 0u
+#define STT_OBJECT 1u
+#define STT_FUNC 2u
+#define STT_SECTION 3u
+#define STT_FILE 4u
 #define MAX_PROVIDERS 65536u
 static int valid_soname(const char *s) {
     return s&&s[0]&&!strchr(s,'/')&&!strchr(s,'\\')&&
@@ -29,6 +34,11 @@ REGUESTELF32PROVIDERStatus re_guest_elf32_collect_providers(
         for(size_t j=0;j<m->symbol_count;j++) {
             const REGUESTELF32LINKSYMBOL *s=&m->symbols[j];
             uint64_t value;
+            if (!memchr(s->name, '\\0', sizeof(s->name))) {
+                if (failed_module) *failed_module = i;
+                if (failed_symbol) *failed_symbol = j;
+                return RE_GUEST_ELF32_PROVIDER_E_SYMBOL;
+            }
             if(s->binding>RE_GUEST_STB_WEAK||s->visibility>RE_GUEST_STV_PROTECTED) {
                 if(failed_module)*failed_module=i;
                 if(failed_symbol)*failed_symbol=j;
@@ -36,7 +46,9 @@ REGUESTELF32PROVIDERStatus re_guest_elf32_collect_providers(
             }
             if(s->section_index==SHN_UNDEF||s->binding==RE_GUEST_STB_LOCAL||
                (s->visibility!=RE_GUEST_STV_DEFAULT&&s->visibility!=RE_GUEST_STV_PROTECTED)||
-               s->type==STT_TLS||!s->name[0])continue;
+               s->type==STT_TLS||s->type==STT_SECTION||s->type==STT_FILE||
+               (s->type!=STT_NOTYPE&&s->type!=STT_OBJECT&&s->type!=STT_FUNC)||
+               !s->name[0])continue;
             if(s->binding!=RE_GUEST_STB_GLOBAL&&s->binding!=RE_GUEST_STB_WEAK)continue;
             value=s->value;
             if(s->section_index!=SHN_ABS)value+=m->load_bias;
@@ -57,7 +69,9 @@ REGUESTELF32PROVIDERStatus re_guest_elf32_collect_providers(
             uint64_t value;
             if(s->section_index==SHN_UNDEF||s->binding==RE_GUEST_STB_LOCAL||
                (s->visibility!=RE_GUEST_STV_DEFAULT&&s->visibility!=RE_GUEST_STV_PROTECTED)||
-               s->type==STT_TLS||!s->name[0]||
+               s->type==STT_TLS||s->type==STT_SECTION||s->type==STT_FILE||
+               (s->type!=STT_NOTYPE&&s->type!=STT_OBJECT&&s->type!=STT_FUNC)||
+               !s->name[0]||
                (s->binding!=RE_GUEST_STB_GLOBAL&&s->binding!=RE_GUEST_STB_WEAK))continue;
             value=s->value;
             if(s->section_index!=SHN_ABS)value+=m->load_bias;
