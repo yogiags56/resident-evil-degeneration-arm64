@@ -16,7 +16,7 @@ A deeper Thumb audit shows those 22 exports are lazy GL dispatch wrappers, not d
 
 ### Active milestone — Stage 123J: resolve original ELF32 system imports
 
-The original `libjirobiodg.so` has 137 symbol-based relocation references across 136 unique undefined names. Stage 123J records candidate families only: 101 libc/POSIX/Bionic, 21 ARM EABI compiler-runtime, 4 libdl, 4 libz, 4 C++ ABI/libstdc++, and 2 liblog. These labels are not verified DSO ownership. See `docs/STAGE123J_ELF32_UNDEFINED_SYMBOL_FAMILIES.md`.
+The original `libjirobiodg.so` has 137 symbol-based relocation references across 136 unique undefined names. Stage 123J records candidate families only: 101 libc/POSIX/Bionic, 21 ARM EABI compiler-runtime, 4 libdl, 4 libz, 4 C++ ABI/libstdc++, and 2 liblog. These labels are not verified DSO ownership. Host CI passed in run `42885003645` (312 Python tests plus native regressions), and Android ARM64 build passed in run `42884983999`. See `docs/STAGE123J_ELF32_UNDEFINED_SYMBOL_FAMILIES.md`.
 
 1. Convert the Stage 123I `dlopen`/`dlsym`/`dlclose`/`dlerror` bridge into a virtual `libdl.so` provider for the exact `libjirobiodg.so` undefined symbols. Install it before guest `JNI_OnLoad`, which invokes the GL library initializer.
 2. Add verified `liblog.so` and `libz.so` providers; preserve guest variadic and zlib structure ABIs.
