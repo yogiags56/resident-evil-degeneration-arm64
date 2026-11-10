@@ -56,7 +56,7 @@ int main(void){
  re_guest_memory_init(&memory);
  assert(re_guest_elf32_load_pipeline(&memory,modules,2,"game.so",
    provider_scratch,8,&result,&failed_module,&failed_index,&inner)==RE_GUEST_ELF32_PIPELINE_OK);
- assert(result.module_count==2&&result.provider_count==1);
+ assert(result.module_count==2&&result.provider_count==1&&result.root_module_index==0);
  assert(result.graph.order_count==2&&result.graph.order[0]==1&&result.graph.order[1]==0);
  assert(result.loaded.module_count==2&&re_guest_memory_region_count(&memory)==4);
  assert(root_data[0]==0x04&&root_data[1]==0x20&&root_data[2]==0x20&&root_data[3]==0x00);
