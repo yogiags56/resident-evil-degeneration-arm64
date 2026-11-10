@@ -109,7 +109,7 @@ The initialization call chain is also identified: `JNI_OnLoad` contains a direct
 - Do not bind the 22 export addresses directly as final host GLES function implementations.
 - A viable bridge likely needs to initialize the provider's resolver callback fields so the helper can obtain ARM32-callable Thumb function pointers for GLES entry points. The precise callback contract must be recovered first.
 - On ARM64 Android, do not pass host 64-bit function pointers into 32-bit guest slots. Guest pointers must refer to 32-bit guest trampolines or guest-callable provider code.
-- The six DT_NEEDED libraries and 137 relocation-referenced undefined names remain a separate dependency/bridge task. No ARM32 system library may be handed to the ARM64 process linker.
+- The six DT_NEEDED libraries and 137 symbol-based relocation references across 136 unique undefined names remain a separate dependency/bridge task. No ARM32 system library may be handed to the ARM64 process linker.
 
 ## Next work
 
