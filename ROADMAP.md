@@ -1,20 +1,21 @@
 # Project Roadmap
 
-## Active milestone update — Stage 123A
+## Active milestone update — Stage 123B
 
-Stages 122D–122H and 123A have been implemented on the current working branch:
+Stages 122D–122H, 123A, and the initial 123B native XE3U metadata parser have been implemented on the current working branch:
 - Transactional multi-ELF image loading.
 - Cross-module ELF32 symbol provider catalog and relocation planning.
 - Unified caller-driven ELF32 dependency/load pipeline.
 - DT_INIT/INIT_ARRAY and DT_FINI/FINI_ARRAY metadata parsing.
 - Dependency-ordered constructor sequence planning and bounded AArch32 constructor execution.
 - Root ELF32 entry/runtime handoff.
+- Native XE3U header and fixup-section parser (metadata only; no relocation application).
 
-Synthetic host regressions pass in GitHub Actions run 42867835687 (root handoff, constructor sequence, and bounded constructor execution). This does not represent an Android NDK build or a game boot.
+Synthetic host regressions pass in GitHub Actions run 42868637357 (XE3U parser), as well as run 42867835687 (root handoff, constructor sequence, and bounded constructor execution). This does not represent an Android NDK build or a game boot.
 
-### Critical next milestone — Stage 123B: Native XE3U image loader
+### Critical next milestone — Stage 123C: XE3U relocation semantics and image layout
 
-Do not feed `biohazard.s3e` into the ELF32 pipeline. The Stage 97 audit proves the main guest executable is an LZMA-alone-compressed XE3U image; `libjirobiodg.so` is a separate ELF32 ARM shared object. Implement a bounded native XE3U parser/loader using observed header and fixup-section boundaries. First parse and validate without mutating guest memory; then implement internal relocations and external Thumb fixups only after their exact semantics are independently verified. Integrate the XE3U code/data image with the guest runtime only after those stages pass.
+Do not feed `biohazard.s3e` into the ELF32 pipeline. The Stage 97 audit proves the main guest executable is an LZMA-alone-compressed XE3U image; `libjirobiodg.so` is a separate ELF32 ARM shared object. Stage 123B now parses the bounded header and fixup metadata. Next, decode the locally supplied S3E image with bounded LZMA, compare all observed header/subsection counts and SHA-256 values against Stage 97, then establish code/data/BSS layout and independently verify internal relocation and external Thumb-fixup semantics before implementing any writes. Integrate the XE3U code/data image with the guest runtime only after those stages pass.
 
 ### Remaining real-game gates
 
