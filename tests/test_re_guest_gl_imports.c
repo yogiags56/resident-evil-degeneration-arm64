@@ -37,6 +37,18 @@ int main(void) {
     assert(re_guest_runtime_step(&rt)==RE_RUNTIME_OK);
     assert(mock.calls_x==1 && mock.v==0x00010000);
     assert(rt.cpu.r[15]==0x50000120u && rt.dispatched_imports==2);
-    puts("Verified GL import adapter tests: PASS (12 assertions)");
+    /* Mapped registration supplies handlers to the XE3U planner without
+     * patching any guest image slot itself. */
+    {
+        REGUESTIMPORTTable mapped_table;uint32_t mpi=0,mpx=0;
+        assert(re_guest_import_table_init(&mapped_table,0x52000000u)==RE_IMPORT_OK);
+        assert(re_guest_gl_register_verified_mapped(&mapped_table,&backend,&mpi,&mpx)==RE_IMPORT_OK);
+        assert(mapped_table.count==2&&mpi!=mpx&&(mpi&1u)&&(mpx&1u));
+        assert(mapped_table.entries[0].mapped_handler!=NULL);
+        assert(mapped_table.entries[0].handler==NULL);
+        assert(mapped_table.entries[1].mapped_handler!=NULL);
+        assert(mapped_table.entries[1].handler==NULL);
+    }
+    puts("Verified GL import adapter tests: PASS (mapped registration included)");
     return 0;
 }
