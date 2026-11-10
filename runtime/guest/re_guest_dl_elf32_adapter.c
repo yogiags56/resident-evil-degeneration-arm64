@@ -1,10 +1,13 @@
 #include "re_guest_dl_elf32_adapter.h"
+
+#include <stdlib.h>
 #include <string.h>
 
 /*
- * symbol_storage is caller-owned scratch and must outlive catalog handles.
- * It may be modified on failure; catalog is committed only after all modules
- * and SONAMEs validate.
+ * symbol_storage is caller-owned committed storage and must outlive catalog
+ * handles. All candidate exports are first built in private temporary storage.
+ * A failed initialization never changes the live catalog or symbol_storage.
+ * Reinitialization after success requires callers to quiesce/close old handles.
  */
 REGUESTDLProviderStatus re_guest_dl_provider_catalog_init_from_elf32(
     REGUESTDLProviderCatalog *catalog,
@@ -17,6 +20,9 @@ REGUESTDLProviderStatus re_guest_dl_provider_catalog_init_from_elf32(
     size_t *failed_symbol) {
     REGUESTDLProviderSource sources[RE_GUEST_DL_PROVIDER_MAX];
     REGUESTDLProviderCatalog pending;
+    size_t offsets[RE_GUEST_DL_PROVIDER_MAX] = {0};
+    size_t counts[RE_GUEST_DL_PROVIDER_MAX] = {0};
+    REGUESTSYMBOL *temporary;
     size_t used = 0;
 
     if (symbol_count) *symbol_count = 0;
@@ -28,6 +34,13 @@ REGUESTDLProviderStatus re_guest_dl_provider_catalog_init_from_elf32(
         return RE_GUEST_DL_PROVIDER_E_CAPACITY;
     if (!symbol_storage && symbol_capacity)
         return RE_GUEST_DL_PROVIDER_E_ARGUMENT;
+    if (symbol_capacity > SIZE_MAX / sizeof(*temporary))
+        return RE_GUEST_DL_PROVIDER_E_CAPACITY;
+
+    temporary = (REGUESTSYMBOL *)malloc(
+        symbol_capacity ? symbol_capacity * sizeof(*temporary)
+                        : sizeof(*temporary));
+    if (!temporary) return RE_GUEST_DL_PROVIDER_E_MEMORY;
 
     memset(sources, 0, sizeof(sources));
     for (size_t i = 0; i < module_count; ++i) {
@@ -35,19 +48,22 @@ REGUESTDLProviderStatus re_guest_dl_provider_catalog_init_from_elf32(
         size_t local_module = 0;
         size_t local_symbol = 0;
         REGUESTELF32PROVIDERMODULE one = modules[i];
-        REGUESTELF32PROVIDERStatus status =
-            re_guest_elf32_collect_providers(
-                &one, 1u,
-                symbol_storage ? symbol_storage + used : NULL,
-                symbol_capacity - used,
-                &collected, &local_module, &local_symbol);
+        REGUESTELF32PROVIDERStatus status;
+
+        offsets[i] = used;
+        status = re_guest_elf32_collect_providers(
+            &one, 1u, temporary + used, symbol_capacity - used,
+            &collected, &local_module, &local_symbol);
         if (status != RE_GUEST_ELF32_PROVIDER_OK) {
             if (failed_module) *failed_module = i;
             if (failed_symbol) *failed_symbol = local_symbol;
+            free(temporary);
             return RE_GUEST_DL_PROVIDER_E_ELF32;
         }
+
+        counts[i] = collected;
         sources[i].soname = modules[i].soname;
-        sources[i].symbols = collected ? symbol_storage + used : NULL;
+        sources[i].symbols = collected ? temporary + used : NULL;
         sources[i].symbol_count = collected;
         used += collected;
     }
@@ -59,13 +75,27 @@ REGUESTDLProviderStatus re_guest_dl_provider_catalog_init_from_elf32(
                 &pending, sources, module_count, &failed_source);
         if (status != RE_GUEST_DL_PROVIDER_OK) {
             if (failed_module) *failed_module = failed_source;
+            free(temporary);
             return status;
         }
+    }
+
+    if (used) {
+        if (!symbol_storage) {
+            free(temporary);
+            return RE_GUEST_DL_PROVIDER_E_CAPACITY;
+        }
+        memcpy(symbol_storage, temporary, used * sizeof(*temporary));
+    }
+    for (size_t i = 0; i < module_count; ++i) {
+        pending.entries[i].symbols =
+            counts[i] ? symbol_storage + offsets[i] : NULL;
     }
 
     *catalog = pending;
     *symbol_count = used;
     if (failed_module) *failed_module = module_count;
     if (failed_symbol) *failed_symbol = 0;
+    free(temporary);
     return RE_GUEST_DL_PROVIDER_OK;
 }
