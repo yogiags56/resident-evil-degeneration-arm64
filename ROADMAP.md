@@ -143,3 +143,14 @@ Added a deterministic graph builder over caller-supplied adapter inventories. It
 4. Activate only individually verified guest imports.
 5. Expand guest CPU instruction coverage and runtime diagnostics based on observed execution.
 6. Establish graphics/audio/input lifecycle.
+
+
+### Stage 123L — guest DSO provider catalog
+
+- Added a bounded registry for caller-supplied guest DSO export inventories.
+- Exact SONAME-only open; no host filesystem search or host `dlopen`.
+- Provider-scoped `dlsym` through the existing strong/weak resolver.
+- Host-private reference-counted handles; guest results remain 32-bit addresses.
+- Added standalone host regression and Android CMake integration.
+- Android DSO loading, verified GLES/EGL ARM32 trampolines, and actual game boot remain future work.
+- CI validation is pending.
