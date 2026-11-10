@@ -74,6 +74,23 @@ The other eight type-4 records are zero-valued cells outside this repeated stub 
 
 Their zero values and symbol names are established; whether these are optional function-pointer variables, special imports, or another linker convention is still unresolved. They must not be populated by guessing.
 
+## Six zero-valued allocator imports are data slots, not ARM code stubs
+
+The six zero cells for `s3eMallocBase`, `s3eReallocBase`, and `s3eFreeBase` form two three-word function-pointer tables:
+- Base allocator table at `0x1603B8`, `0x1603BC`, `0x1603C0`.
+- Active allocator table at `0x170330`, `0x170334`, `0x170338`.
+
+The ARM disassembly around `0x931F8–0x932E4` provides direct evidence:
+- At `0x93214`, code selects the base table at `0x1603B8` when no replacement table is supplied, then copies three words to the active table at `0x170330`.
+- At `0x93244`, an indirect call loads active-table slot 0.
+- At `0x93264`, an indirect call loads active-table slot +8.
+- At `0x93284`, an indirect call loads active-table slot +4.
+- At `0x932A8–0x932D0`, code copies the base table into a temporary structure, calls helper `0x660`, and copies the resulting three words into the active table.
+
+The slot order is consistent with the symbol sequence malloc, realloc, free. This resolves the six zero-valued records as imported allocator function-pointer data cells; they are not entries in the repeated three-instruction ARM thunk table. Their actual host function addresses still need to be bound by the runtime, and no guessed values are installed.
+
+The two remaining zero cells (`glTexParameteri` at `0xC7C4C` and `glTexParameterx` at `0xC7C50`) are adjacent data cells near a GL error-checking string/table. Their exact ownership and access path remain unresolved; they are deliberately not classified as ordinary ARM import stubs.
+
 ## Refined internal target classification
 
 The 36,377 internal pointer targets split by the observed image extents:
