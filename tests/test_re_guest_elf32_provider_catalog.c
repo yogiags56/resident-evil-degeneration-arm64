@@ -33,12 +33,13 @@ int main(void) {
     b[1].visibility=RE_GUEST_STV_DEFAULT;b[1].section_index=1;b[1].value=0x90;
     memset(out,0xa5,sizeof(out));
     assert(re_guest_elf32_collect_providers(modules,2,out,8,&count,&fm,&fs)==RE_GUEST_ELF32_PROVIDER_OK);
-    assert(count==5&&fm==2);
+    assert(count==6&&fm==2);
     assert(!strcmp(out[0].name,"strong")&&out[0].value==0x100100);
     assert(!strcmp(out[1].name,"weak")&&out[1].value==0x100200);
     assert(!strcmp(out[2].name,"absolute")&&out[2].value==0x300);
     assert(!strcmp(out[3].name,"weak")&&out[3].value==0x100700);
     assert(!strcmp(out[4].name,"second")&&out[4].value==0x200080);
+    assert(!strcmp(out[5].name,"weak")&&out[5].value==0x200090);
     assert(!strcmp(out[0].version_library,"libfirst.so"));
     memcpy(before,out,sizeof(out));
     assert(re_guest_elf32_collect_providers(modules,2,out,4,&count,&fm,&fs)==RE_GUEST_ELF32_PROVIDER_E_CAPACITY);
