@@ -1,4 +1,5 @@
 #include "re_guest_elf32_pipeline.h"
+#include "re_guest_elf32_reloc_plan.h"
 #include <string.h>
 
 static REGUESTELF32PIPELINEStatus fail(
