@@ -88,7 +88,7 @@ REGUESTELF32DYNAMICStatus re_guest_elf32_parse_dynamic(
   }
  }
  if(!terminated){if(failed_entry)*failed_entry=dynamic->entry_count;return RE_GUEST_ELF32_DYNAMIC_E_TERMINATOR;}
- if(dynamic->needed_count||has_soname){
+ if(has_strtab||has_strsz||dynamic->needed_count||has_soname){
   if(!has_strtab||!has_strsz||!strsz||
      !map_file_backed(image,strtab,strsz,&strtab_file)||
      (uint64_t)strtab_file+strsz>size)
@@ -108,8 +108,6 @@ REGUESTELF32DYNAMICStatus re_guest_elf32_parse_dynamic(
    if(status!=RE_GUEST_ELF32_DYNAMIC_OK)return status;
    dynamic->has_soname=1u;
   }
- } else if(has_strtab!=has_strsz) {
-  return RE_GUEST_ELF32_DYNAMIC_E_STRING_TABLE;
  }
  return RE_GUEST_ELF32_DYNAMIC_OK;
 }
