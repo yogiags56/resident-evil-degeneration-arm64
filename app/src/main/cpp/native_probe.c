@@ -13,6 +13,7 @@
 #include "re_guest_relocation_apply.h"
 #include "re_guest_symbol_resolve.h"
 #include "re_guest_elf32_image.h"
+#include "re_guest_elf32_dynamic.h"
 
 #define REPORT_CAP 2048
 
@@ -55,6 +56,52 @@ static int probe_elf32_program_header_parser(char *report, size_t cap) {
     }
     append(report,cap,"FAIL: ELF32 ARM program-header parser");
     return 1;
+}
+
+static void probe_put_u32le(uint8_t *p, uint32_t value) {
+    p[0]=(uint8_t)value; p[1]=(uint8_t)(value>>8);
+    p[2]=(uint8_t)(value>>16); p[3]=(uint8_t)(value>>24);
+}
+
+static int probe_elf32_dynamic_parser(char *report, size_t cap) {
+    uint8_t elf[256] = {0};
+    REGUESTELF32IMAGE image;
+    REGUESTELF32DYNAMIC dynamic;
+    size_t failed = 0u;
+    elf[0]=0x7fu; elf[1]='E'; elf[2]='L'; elf[3]='F';
+    elf[4]=1u; elf[5]=1u; elf[6]=1u;
+    elf[16]=(uint8_t)RE_GUEST_ELF32_ET_EXEC;
+    elf[18]=(uint8_t)RE_GUEST_ELF32_EM_ARM;
+    elf[20]=1u; elf[24]=0x00u; elf[25]=0x10u;
+    elf[28]=52u; elf[40]=52u; elf[42]=32u; elf[44]=2u;
+    probe_put_u32le(elf+52,RE_GUEST_ELF32_PT_LOAD);
+    probe_put_u32le(elf+60,0x1000u); probe_put_u32le(elf+64,0x1000u);
+    probe_put_u32le(elf+68,sizeof(elf)); probe_put_u32le(elf+72,sizeof(elf));
+    probe_put_u32le(elf+76,RE_GUEST_ELF32_PF_R|RE_GUEST_ELF32_PF_X);
+    probe_put_u32le(elf+80,0x1000u);
+    probe_put_u32le(elf+84,RE_GUEST_ELF32_PT_DYNAMIC);
+    probe_put_u32le(elf+88,160u); probe_put_u32le(elf+92,0x10a0u);
+    probe_put_u32le(elf+100,48u); probe_put_u32le(elf+104,48u);
+    probe_put_u32le(elf+108,RE_GUEST_ELF32_PF_R); probe_put_u32le(elf+112,4u);
+    probe_put_u32le(elf+160,RE_GUEST_ELF32_DT_STRTAB); probe_put_u32le(elf+164,0x10d0u);
+    probe_put_u32le(elf+168,RE_GUEST_ELF32_DT_STRSZ); probe_put_u32le(elf+172,32u);
+    probe_put_u32le(elf+176,RE_GUEST_ELF32_DT_NEEDED); probe_put_u32le(elf+180,1u);
+    probe_put_u32le(elf+184,RE_GUEST_ELF32_DT_NEEDED); probe_put_u32le(elf+188,9u);
+    probe_put_u32le(elf+192,RE_GUEST_ELF32_DT_SONAME); probe_put_u32le(elf+196,17u);
+    probe_put_u32le(elf+200,RE_GUEST_ELF32_DT_NULL);
+    (void)memcpy(elf+208,"\\0libc.so\\0libm.so\\0libroot.so\\0",28u);
+    if (re_guest_elf32_parse_image(elf,sizeof(elf),&image,&failed)!=RE_GUEST_ELF32_OK ||
+        re_guest_elf32_parse_dynamic(elf,sizeof(elf),&image,&dynamic,&failed)!=
+            RE_GUEST_ELF32_DYNAMIC_OK ||
+        !dynamic.present || !dynamic.has_soname || dynamic.needed_count!=2u ||
+        strcmp(dynamic.needed[0],"libc.so")!=0 ||
+        strcmp(dynamic.needed[1],"libm.so")!=0 ||
+        strcmp(dynamic.soname,"libroot.so")!=0) {
+        append(report,cap,"FAIL: ELF32 PT_DYNAMIC dependency parser");
+        return 1;
+    }
+    append(report,cap,"PASS: ELF32 PT_DYNAMIC/DT_NEEDED/DT_SONAME parser");
+    return 0;
 }
 
 JNIEXPORT jstring JNICALL
@@ -126,6 +173,8 @@ Java_org_example_redstage_MainActivity_nativeProbe(JNIEnv *env, jobject self,
     }
 
     failures += probe_elf32_program_header_parser(report, sizeof(report));
+
+    failures += probe_elf32_dynamic_parser(report, sizeof(report));
 
     /*
      * Exercise the Stage 120 guest ELF primitives as one bounded transaction.
