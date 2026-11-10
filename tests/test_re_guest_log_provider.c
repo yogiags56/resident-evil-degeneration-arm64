@@ -119,15 +119,17 @@ int main(void) {
                                  0x10000000u, 1);
 
     /* printf arguments begin at core word 3: r3, then stack words. */
-    put_u32(bytes, 0x800u, 0x10000100u); /* guest %s pointer */
+    put_u32(bytes, 0x800u, 0x10000240u); /* guest %s pointer */
     put_u32(bytes, 0x804u, 0x89abcdefu); /* guest %08x */
-    call_import(&runtime, exports[0].value, 0x10000020u,
-                4u, 0x10000100u, 0x10000180u, 42u);
+    runtime.cpu.r[3] = 42u;
     /* r3 is word 3: %d. Remaining words are at guest SP. */
     runtime.cpu.r[13] = 0x10000800u;
     runtime.cpu.r[15] = exports[0].value & ~1u;
     runtime.cpu.thumb = 1u;
     runtime.cpu.r[14] = 0x10000020u | 1u;
+    runtime.cpu.r[0] = 4u;
+    runtime.cpu.r[1] = 0x10000100u;
+    runtime.cpu.r[2] = 0x10000180u;
     assert(re_guest_runtime_step(&runtime) == RE_RUNTIME_OK);
     assert(mock.calls == 1 && mock.priority == 4);
     assert(strcmp(mock.tag, "Degeneration") == 0);
