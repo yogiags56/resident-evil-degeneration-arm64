@@ -13,7 +13,7 @@ typedef struct {
     size_t count;
     REGUESTELF32MODULEGRAPH *graph;
     uint8_t state[RE_GUEST_ELF32_MAX_MODULES];
-    uint8_t edge_seen[RE_GUEST_ELF32_MAX_MODULES][RE_GUESTELF32_MAX_MODULES];
+    uint8_t edge_seen[RE_GUEST_ELF32_MAX_MODULES][RE_GUEST_ELF32_MAX_MODULES];
 } WALK;
 static void visit(WALK *w,size_t index) {
     w->state[index]=1u;
