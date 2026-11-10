@@ -47,6 +47,19 @@ int main(void) {
     a[0].value=0xfffffff0u;
     assert(re_guest_elf32_collect_providers(modules,2,out,8,&count,&fm,&fs)==RE_GUEST_ELF32_PROVIDER_E_RANGE);
     assert(fm==0&&fs==0&&count==0&&memcmp(out,before,sizeof(out))==0);
+
+    /* Unterminated ELF symbol names must fail before publishing pointers. */
+    a[0].value=0x100u;
+    memset(a[0].name, 'X', sizeof(a[0].name));
+    assert(re_guest_elf32_collect_providers(modules,2,out,8,&count,&fm,&fs)==RE_GUEST_ELF32_PROVIDER_E_SYMBOL);
+    assert(fm==0&&fs==0&&count==0&&memcmp(out,before,sizeof(out))==0);
+
+    /* SONAMEs are identifiers, not paths or whitespace-bearing strings. */
+    a[0].name[0]='s'; a[0].name[1]='t'; a[0].name[2]='r';
+    a[0].name[3]='o'; a[0].name[4]='n'; a[0].name[5]='g'; a[0].name[6]='\\0';
+    modules[0].soname="lib bad.so";
+    assert(re_guest_elf32_collect_providers(modules,2,out,8,&count,&fm,&fs)==RE_GUEST_ELF32_PROVIDER_E_NAME);
+    assert(fm==0&&count==0&&memcmp(out,before,sizeof(out))==0);
     puts("Guest ELF32 provider catalog tests: PASS");
     return 0;
 }
