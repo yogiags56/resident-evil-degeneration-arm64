@@ -1,0 +1,14 @@
+Stage 121A validation record
+============================
+
+Status: PENDING
+Branch: stage-120z-dependency-graph-resolution
+
+Required checks:
+- Full Python unittest discovery.
+- Host mock compilation.
+- Native C regression suite including test_re_guest_elf32_loader.
+- Tracked source SHA-256 provenance.
+- Android ARM64 native build and ELF verification.
+
+No pass is claimed until GitHub Actions reports success.
