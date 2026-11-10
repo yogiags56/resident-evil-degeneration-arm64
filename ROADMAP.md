@@ -28,7 +28,8 @@ The original `libjirobiodg.so` has 137 symbol-based relocation references across
 
 - Added callback-driven guest `dlopen`/`dlsym`/`dlclose`/`dlerror` handlers, generation-tagged opaque 32-bit guest handles, and a host-only native-handle table.
 - Added guest-address-only symbol resolution, transactional mapped-handler registration, and retryable `close_all` shutdown cleanup.
-- Host tests passed in run `42884464704`; Android ARM64 build including cleanup passed in run `42884437640`.
+- Added `re_guest_dl_bridge_build_provider_symbols()` to export the four mapped trampolines as `REGUESTSYMBOL` entries for virtual `libdl.so`, directly usable by the single-image ELF32 linked loader's external provider list.
+- Host tests passed in run `42885707892`, including provider-symbol resolution; Android ARM64 build including the provider-export addition is running in run `42885707759` (the preceding bridge/cleanup build passed in `42884437640`).
 - This is a tested bridge primitive, not yet wired to the actual `libjirobiodg.so` dynamic import indices or real host GLES providers. See `docs/STAGE123I_GUEST_DL_BRIDGE.md`.
 
 ### Remaining real-game gates
