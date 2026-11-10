@@ -1,50 +1,34 @@
 # Project Roadmap
 
-## Active milestone update — Stage 123E (import-cell identity and ARM thunk execution)
+## Active milestone update — Stage 123G (original ELF32 import-provider coverage)
 
-Stages 122D–122H and 123A–123E have host implementation coverage:
+Stages 122D–122H and 123A–123F have host implementation coverage:
 - Transactional multi-ELF image loading, ELF32 dependency/provider/relocation planning, and bounded constructor execution.
 - Native XE3U header/fixup parser and bounded LZMA-alone decode adapter.
-- Read-only audit of all 36,377 internal relocation entries; candidate-only C planner preflights and plans all 36,377 original records without writing.
-- Verification of all 230 nonzero external type-4 ARM import stubs and read-only guest-`r12` cell-to-symbol lookup.
-- ARM CPU support for the pre-indexed writeback word transfers used by the original import stub and shared helper.
-- Synthetic end-to-end execution of the three-instruction import stub at `0x84` through shared helper `0x70`, resolver slot `0x13B704`, and a test resolver return path.
+- Read-only audit of all 36,377 internal relocation entries and a candidate-only C planner.
+- Verification of all 230 nonzero external ARM import stubs, identity lookup from guest `r12`, and transactional symbol-specific Thumb import planning/apply for all 238 type-4 cells.
+- ARM CPU support for original import-stub writeback, ARM/Thumb PC interworking, and Thumb PUSH/POP.
+- End-to-end synthetic execution from the original ARM import stub through the existing Thumb import dispatcher, plus rollback/stale-memory tests for external patch application.
 
-The re-uploaded original APK and key assets match Stage 97 SHA-256 hashes exactly. A native C harness planned all 36,377 original internal relocations at a test-only runtime base and a second native harness mapped 230/238 external records to verified stubs (the eight remaining cells correctly fail the stub check). Host CI passed in run `42875447333`. Android ARM64 NDK build and ELF verification passed in run `42875193411`. See [Stage 123C original asset validation](docs/STAGE123C_ORIGINAL_APK_REVALIDATION.md), [Stage 123D relocation evidence](docs/STAGE123D_INTERNAL_RELOCATION_EVIDENCE.md), and [Stage 123E import lookup/thunk execution](docs/STAGE123E_IMPORT_CELL_LOOKUP_AND_THUNK_EXECUTION.md).
+Host CI passed in run `42877554684`; Android ARM64 NDK build/ELF verification passed in run `42877209331`. The original APK and key assets match Stage 97 hashes exactly.
 
-This remains an engineering prototype: the actual S3E resolver pointer at `0x13B704` is zero in the original image, its initialization path and AAPCS32 contract are not yet known, and the original game has not booted.
+A symbol-table comparison found 22 of 227 XE3U imports as defined Thumb exports in the original ELF32 ARM `libjirobiodg.so`. See [Stage 123G provider coverage](docs/STAGE123G_LIBJIROBIODG_IMPORT_PROVIDER_COVERAGE.md), [Stage 123F external import binding](docs/STAGE123F_TRANSACTIONAL_EXTERNAL_IMPORT_BINDING.md), [Stage 123E thunk execution](docs/STAGE123E_IMPORT_CELL_LOOKUP_AND_THUNK_EXECUTION.md), and [Stage 123D relocation evidence](docs/STAGE123D_INTERNAL_RELOCATION_EVIDENCE.md).
 
-### Critical next milestone — Stage 123F: shared resolver initialization and import dispatch
+### Critical next milestone — Stage 123H: load original ELF32 provider and bridge dependencies
 
-1. Identify who initializes XE3U slot `0x13B704` and what function ABI it expects.
-2. Trace the S3E runtime's import-cell resolver path and establish how `r12` cell addresses become symbol-index/function mappings.
-3. Define the guest-side resolver entry and return contract, including LR/SP preservation and stack switching, without assigning guessed addresses.
-4. Classify the two zero-valued GL cells and define explicit bindings for the six allocator data cells.
-5. Build a complete import manifest for all 227 symbols; keep unknown APIs disabled and fail closed.
-6. Only after resolver semantics are proven, connect verified ARM64-side handlers through the guest AAPCS32 dispatcher.
+1. Run the existing ELF32 auditor and loader pipeline against the exact original `libjirobiodg.so`; verify program headers, dynamic symbols, relocations, ARM attributes, and constructor metadata.
+2. Build a guest ELF32 provider catalog from the loaded module and resolve the 22 matching XE3U imports to actual guest addresses, preserving Thumb state.
+3. Audit the six `DT_NEEDED` libraries (`libc.so`, `libm.so`, `liblog.so`, `libstdc++.so`, `libz.so`, `libdl.so`) and identify the exact imported symbols needed by the shared object.
+4. Bridge only verified system APIs to ARM64 handlers; do not load ARM32 system libraries through the ARM64 process linker.
+5. Keep the remaining 205 XE3U imports fail-closed until matched to a verified guest provider or host handler.
 
 ### Remaining real-game gates
 
-1. Run `tools/xe3u_native_audit` against the re-uploaded original S3E in the local repository build environment.
-2. Complete Stage 123F shared resolver initialization, AAPCS32 call/return contract, and the 227-symbol import manifest.
-3. Classify and bind the six allocator data slots and two remaining GL cells; no guessed addresses.
-4. Finalize runtime image base, map the complete code/initialized-data/BSS memory extent, and apply the preflighted internal relocation plan transactionally.
-5. Determine which runtime pieces from the separate ELF32 ARM `libjirobiodg.so` must be represented or reimplemented on ARM64; do not treat it as the XE3U main executable.
-6. Connect archive/VFS/file APIs, runtime services, and ARM32 CPU execution; expand instruction coverage from the real executable's inventory.
-7. Run Android NDK build, install on an ARM64 device, record loader/constructor/entry telemetry, then progress through menu, rendering, input, audio, and gameplay.
-
----
-
-
-
-1. Run `tools/xe3u_native_audit` against the re-uploaded original S3E in the local build environment and compare its output with docs/STAGE123C_ORIGINAL_APK_REVALIDATION.md.
-2. Validate representative internal pointer cells in code and initialized data against ARM/Thumb disassembly; establish exact data_offset and BSS interpretation.
-3. Classify all 238 external Thumb relocation cells and determine exact thunk construction/branch semantics; unknown imports must remain unresolved.
-4. Implement a read-only relocation report and a transactional planner; do not write guest memory until every record is validated.
-5. Only after complete preflight, implement the proven add-load-bias operation while preserving pointer bit 0 and rejecting overflow/out-of-image results.
-6. Inventory and load the actual ELF32 ARM shared object(s), including `libjirobiodg.so`, through the ELF32 pipeline as appropriate.
-7. Bind verified S3E imports; unknown imports must fail closed. Connect archive/VFS/file APIs, runtime services, and ARM32 CPU execution.
-8. Run the Android NDK build, install on an ARM64 device, record loader/constructor/entry telemetry, then progress through menu, rendering, input, audio, and gameplay.
+1. Complete Stage 123H actual ELF32 provider loading and dependency bridging.
+2. Build the production 227-symbol import manifest; resolve file APIs through the audited VFS bridge, allocator cells through explicit allocator callbacks, and GL cells through verified providers.
+3. Implement internal relocation application from the candidate plan and zero-fill the memory-only tail; verify the `data_offset` split and code/data/BSS permissions.
+4. Connect LZMA decode, XE3U header/fixup parse, image mapping, internal relocation apply, external import plan/apply, and runtime entry into one rollback-safe loader.
+5. Run Android NDK build, install on an ARM64 device, record loader/constructor/entry telemetry, then progress through menu, rendering, input, audio, and gameplay.
 
 ---
 
