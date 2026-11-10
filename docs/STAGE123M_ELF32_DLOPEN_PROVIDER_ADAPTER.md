@@ -30,7 +30,8 @@ symbol storage may be modified on failure; the live catalog is not.
 The host regression verifies two distinct ELF32 modules become two providers,
 ordinary symbols are rebased but SHN_ABS is not, Thumb/data pointer values are
 preserved, dlsym is scoped to the opened provider, and insufficient storage
-or duplicate SONAMEs do not replace the live catalog.
+or duplicate SONAMEs do not replace the live catalog or mutate the active
+symbol storage.
 
 ## Limitations
 
