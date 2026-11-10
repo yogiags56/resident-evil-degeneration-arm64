@@ -21,27 +21,27 @@ static int rd8(const REGUESTMEMACCESS*m,uint32_t a,uint8_t*v){
 }
 static int wr8(const REGUESTMEMACCESS*m,uint32_t a,uint8_t v){
  size_t o;if(m&&m->bus)return map_bus_status(m,re_guest_memory_write8(m->bus,a,v));
- if(!range(m,a,1,&o))return 0;m->bytes[o]=v;return 1;
+ if(!range(m,a,1,&o))return 0;m->legacy->bytes[o]=v;return 1;
 }
 static int read16(const REGUESTMEMACCESS*m,uint32_t a,uint16_t*v){
  size_t o;if(a&1)return -1;
  if(m&&m->bus)return map_bus_status(m,re_guest_memory_read16(m->bus,a,v));
- if(!range(m,a,2,&o))return 0;*v=(uint16_t)(m->bytes[o]|((uint16_t)m->legacy->bytes[o+1]<<8));return 1;
+ if(!range(m,a,2,&o))return 0;*v=(uint16_t)(m->legacy->bytes[o]|((uint16_t)m->legacy->bytes[o+1]<<8));return 1;
 }
 static int write16(const REGUESTMEMACCESS*m,uint32_t a,uint16_t v){
  size_t o;if(a&1)return -1;
  if(m&&m->bus)return map_bus_status(m,re_guest_memory_write16(m->bus,a,v));
- if(!range(m,a,2,&o))return 0;m->bytes[o]=(uint8_t)v;m->bytes[o+1]=(uint8_t)(v>>8);return 1;
+ if(!range(m,a,2,&o))return 0;m->legacy->bytes[o]=(uint8_t)v;m->legacy->bytes[o+1]=(uint8_t)(v>>8);return 1;
 }
 static int read32(const REGUESTMEMACCESS*m,uint32_t a,uint32_t*v){
  size_t o;if(a&3)return -1;
  if(m&&m->bus)return map_bus_status(m,re_guest_memory_read32(m->bus,a,v));
- if(!range(m,a,4,&o))return 0;*v=(uint32_t)m->bytes[o]|((uint32_t)m->bytes[o+1]<<8)|((uint32_t)m->legacy->bytes[o+2]<<16)|((uint32_t)m->legacy->bytes[o+3]<<24);return 1;
+ if(!range(m,a,4,&o))return 0;*v=(uint32_t)m->legacy->bytes[o]|((uint32_t)m->legacy->bytes[o+1]<<8)|((uint32_t)m->legacy->bytes[o+2]<<16)|((uint32_t)m->legacy->bytes[o+3]<<24);return 1;
 }
 static int write32(const REGUESTMEMACCESS*m,uint32_t a,uint32_t v){
  size_t o;if(a&3)return -1;
  if(m&&m->bus)return map_bus_status(m,re_guest_memory_write32(m->bus,a,v));
- if(!range(m,a,4,&o))return 0;m->bytes[o]=(uint8_t)v;m->bytes[o+1]=(uint8_t)(v>>8);m->bytes[o+2]=(uint8_t)(v>>16);m->bytes[o+3]=(uint8_t)(v>>24);return 1;
+ if(!range(m,a,4,&o))return 0;m->legacy->bytes[o]=(uint8_t)v;m->legacy->bytes[o+1]=(uint8_t)(v>>8);m->legacy->bytes[o+2]=(uint8_t)(v>>16);m->legacy->bytes[o+3]=(uint8_t)(v>>24);return 1;
 }
 static int fetch16(const REGUESTMEMACCESS*m,uint32_t a,uint16_t*v){
  if(a&1u)return -1;
