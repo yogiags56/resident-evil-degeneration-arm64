@@ -35,8 +35,18 @@ def unique_file(root: Path, pattern: str, description: str) -> Path:
 
 
 def source_commit(root: Path) -> str:
-    # pull_request workflows check out a synthetic merge commit by default.
-    # Its second parent is the actual PR head; attest that source revision.
+    # pull_request workflows check out a synthetic merge commit. The event
+    # payload is authoritative for the PR head and works with shallow clones.
+    event_path = os.environ.get("GITHUB_EVENT_PATH")
+    if os.environ.get("GITHUB_EVENT_NAME") == "pull_request" and event_path:
+        try:
+            event = json.loads(Path(event_path).read_text(encoding="utf-8"))
+            head_sha = event.get("pull_request", {}).get("head", {}).get("sha")
+            if isinstance(head_sha, str) and head_sha:
+                return head_sha
+        except (OSError, json.JSONDecodeError):
+            pass
+
     refs = ["HEAD^2", "HEAD"] if os.environ.get("GITHUB_EVENT_NAME") == "pull_request" else ["HEAD"]
     for ref in refs:
         result = subprocess.run(
