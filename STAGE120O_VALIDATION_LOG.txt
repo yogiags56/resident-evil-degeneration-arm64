@@ -1,0 +1,25 @@
+Stage 120O validation record
+============================
+
+GitHub Actions workflow: Source checks
+Run ID: 42615891583
+Validated code commit: ecc2a88ab07503e959bc1efe90da0c32d01c29ce
+Result: success
+
+Observed:
+- 244 Python tests passed (7.173 seconds).
+- All four legal REL group flag combinations passed.
+- All twelve legal RELA group flag combinations passed.
+- Invalid REL/RELA group flag combinations rejected.
+- Grouped and ungrouped offset and r_info fields validated.
+- Grouped and per-relocation addend deltas validated.
+- Addend reset and accumulation across multiple groups validated.
+- Signed 32-bit SLEB128 fifth-byte boundaries and continuation overflow validated.
+- Zero relocation count, negative/excessive counts, excessive group size, unknown flags, truncated fields, and every truncated prefix of a valid APS2 stream validated.
+- Existing host C mock compilation and native C regression checks passed.
+
+Reference source:
+https://android.googlesource.com/platform/bionic/+/ac62e8285630592b1bf060711fa13e654c36db20/linker/linker_reloc_iterators.h
+
+Scope:
+Read-only ELF32 EM_ARM APS2 parser. No relocation is applied, no target bytes are dereferenced or changed, and no provider is inferred. No Android device execution or original game boot is claimed.

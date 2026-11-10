@@ -1,0 +1,26 @@
+Stage 120M validation record
+============================
+
+GitHub Actions workflow: Source checks
+Run ID: 42605382359
+Validated code commit: c33347f018224ea4717e4eac56342868e073c8d7
+Result: success
+
+Observed:
+- 218 Python tests passed (18.876 seconds).
+- Real GNU readelf/LLVM llvm-readelf invocation test passed when an independent tool was available.
+- Offset/type comparison fixture tests passed.
+- Unsupported external relocation types remain reported, not guessed.
+- Missing-tool behavior returns an explicit skip.
+- COPY width resolves only from positive st_size, a defined symbol, nonzero symbol index, and explicit symbol-table namespace.
+- COPY width remains unknown for undefined, unnamespaced, zero-sized, missing-sized, or symbol-index-zero records.
+- Symbol-size provenance was verified through SHT_SYMTAB normalization.
+- Host C mock compilation and native host C regression executables passed.
+
+Scope limitations:
+- Independent readelf comparison covers section-backed ELF32 EM_ARM SHT_REL/SHT_RELA.
+- APS2 symbol-size provenance remains unresolved and is scheduled for Stage 120N.
+- No Android device build, physical-device execution, original game boot, or gameplay is claimed.
+
+Normative reference:
+https://github.com/ARM-software/abi-aa/blob/main/aaelf32/aaelf32.rst
