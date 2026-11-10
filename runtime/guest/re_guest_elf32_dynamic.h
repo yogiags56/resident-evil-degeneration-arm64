@@ -10,13 +10,20 @@ extern "C" {
 enum {
  RE_GUEST_ELF32_DT_NULL=0u, RE_GUEST_ELF32_DT_NEEDED=1u,
  RE_GUEST_ELF32_DT_STRTAB=5u, RE_GUEST_ELF32_DT_STRSZ=10u,
- RE_GUEST_ELF32_DT_SONAME=14u
+ RE_GUEST_ELF32_DT_SONAME=14u,
+ RE_GUEST_ELF32_DT_INIT=12u, RE_GUEST_ELF32_DT_FINI=13u,
+ RE_GUEST_ELF32_DT_INIT_ARRAY=25u, RE_GUEST_ELF32_DT_FINI_ARRAY=26u,
+ RE_GUEST_ELF32_DT_INIT_ARRAYSZ=27u, RE_GUEST_ELF32_DT_FINI_ARRAYSZ=28u
 };
 typedef struct { uint32_t tag, value; } REGUESTELF32DYNAMICENTRY;
 typedef struct {
  uint8_t present, has_soname, has_string_table;
  uint16_t entry_count, needed_count;
  uint32_t string_table_virtual_address, string_table_size, string_table_file_offset;
+ uint32_t init_address, fini_address, init_array_address, init_array_size;
+ uint32_t fini_array_address, fini_array_size;
+ uint8_t has_init, has_fini, has_init_array, has_init_array_size;
+ uint8_t has_fini_array, has_fini_array_size;
  char soname[RE_GUEST_ELF32_DYNAMIC_STRING_CAP];
  char needed[RE_GUEST_ELF32_MAX_NEEDED][RE_GUEST_ELF32_DYNAMIC_STRING_CAP];
  REGUESTELF32DYNAMICENTRY entries[RE_GUEST_ELF32_MAX_DYNAMIC_ENTRIES];
