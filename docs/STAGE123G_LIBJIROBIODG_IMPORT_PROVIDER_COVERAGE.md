@@ -52,6 +52,8 @@ Therefore the 22 exact symbol matches are **candidate guest providers**, not yet
 
 The library imports `dlopen`, `dlsym`, `dlclose`, and `dlerror`, which is consistent with dynamic provider initialization; no assumption is made about which library or function each lookup resolves to.
 
+The repository already has verified host GLES handlers for `glTexParameteri` (symbol index 0) and `glTexParameterx` (symbol index 1). Stage 123G adds `re_guest_gl_register_verified_mapped`, which registers these handlers for the mapped runtime without patching individual slots; the Stage 123F external import planner can then patch all four corresponding cells (two data cells and two ARM stubs) transactionally. This does not yet bind the other 20 GL exports, nor does it prove the original library's lazy function-pointer table is initialized.
+
 ## ELF dependency boundary
 
 The shared object declares these DT_NEEDED libraries:
