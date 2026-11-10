@@ -17,7 +17,7 @@ A deeper Thumb audit shows those 22 exports are lazy GL dispatch wrappers, not d
 ### Active milestone — Stage 123H: load original ELF32 provider and bridge dependencies
 
 1. Complete the read-only audit of the original `libjirobiodg.so` program headers, dynamic symbols, relocations, ARM attributes, and JNI lifecycle; current evidence is recorded in `docs/STAGE123H_GL_LAZY_DISPATCH_WRAPPERS.md`.
-2. Finish tracing the `GLESVersion` source and all branches of routine `0x3d820`; establish exact `OGLES`/`OGLES2` ordinal-to-handle-slot mapping. Preserve the observed three-handle `dlsym` search order and `dlclose` teardown semantics.
+2. Recover the Android config defaults/source for `GLESVersion` and `OGLES*_Lib_N`; do not reuse the WinMobile-only DLL examples in `s3e.icf`. Preserve the observed successful-handle packing order, three-handle `dlsym` search order, and `dlclose` teardown semantics.
 3. Trace `JNI_OnLoad` and the Java/native startup path to determine whether it initializes the callback state or only registers JNI methods.
 4. Build a read-only relocation/provider plan for the original ELF32 module. Select no load bias until its `0x8000` PT_LOAD alignment and guest address-space reservation are accounted for.
 5. Audit the six `DT_NEEDED` libraries (`libc.so`, `libm.so`, `liblog.so`, `libstdc++.so`, `libz.so`, `libdl.so`) and map all 137 relocation-referenced undefined names to verified providers or explicit guest bridges.
