@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include "re_guest_cpu.h"
 #include "s3e_aapcs32.h"
+#include "re_guest_memory_bus.h"
+
+#define RE_IMPORT_MAPPED_STACK_BYTES 256u
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,10 +36,17 @@ typedef REGUESTIMPORTStatus (*REGUESTIMPORTHandler)(
     void *user,
     REGUESTIMPORTResult *result);
 
+typedef REGUESTIMPORTStatus (*REGUESTIMPORTMappedHandler)(
+    const S3EAAPCS32Frame *frame,
+    const REGUESTMEMBUS *guest_bus,
+    void *user,
+    REGUESTIMPORTResult *result);
+
 typedef struct {
     uint32_t symbol_index;
     uint32_t trampoline_address; /* Address without Thumb state bit. */
     REGUESTIMPORTHandler handler;
+    REGUESTIMPORTMappedHandler mapped_handler;
     void *user;
 } REGUESTIMPORTBinding;
 
@@ -53,6 +63,12 @@ REGUESTIMPORTStatus re_guest_import_table_init(REGUESTIMPORTTable *table,
                                                 uint32_t trampoline_base);
 
 /* Register a handler for a symbol index. Duplicate symbols are rejected. */
+REGUESTIMPORTStatus re_guest_import_bind_mapped(REGUESTIMPORTTable *table,
+                                          uint32_t symbol_index,
+                                          REGUESTIMPORTMappedHandler handler,
+                                          void *user,
+                                          uint32_t *thumb_pointer);
+
 REGUESTIMPORTStatus re_guest_import_bind(REGUESTIMPORTTable *table,
                                           uint32_t symbol_index,
                                           REGUESTIMPORTHandler handler,
@@ -73,6 +89,13 @@ REGUESTIMPORTStatus re_guest_import_patch_slot(const REGUESTIMPORTTable *table,
  */
 int re_guest_import_is_trampoline_pc(const REGUESTIMPORTTable *table,
                                      uint32_t pc, int thumb_state);
+
+REGUESTIMPORTStatus re_guest_import_patch_slot_mapped(
+    const REGUESTIMPORTTable *table, uint32_t symbol_index,
+    REGUESTMEMBUS *guest_bus, uint32_t slot_address);
+
+REGUESTIMPORTStatus re_guest_import_dispatch_mapped(
+    REGUESTIMPORTTable *table, REGUESTCPU *cpu, const REGUESTMEMBUS *guest_bus);
 
 REGUESTIMPORTStatus re_guest_import_dispatch(REGUESTIMPORTTable *table,
                                               REGUESTCPU *cpu,
