@@ -63,6 +63,8 @@ int main(void) {
     REGUESTDLBridge bridge;
     REGUESTDLImportIDs ids={0xD100u,0xD101u,0xD102u,0xD103u};
     REGUESTDLImportPointers pointers;
+    REGUESTSYMBOL provider_symbols[4];
+    size_t provider_count=0;
     FakeDL fake={0};
     uint32_t token,token2;
 
@@ -82,6 +84,26 @@ int main(void) {
     assert(imports.count==4);
     assert((pointers.dlopen_pointer&1u)&&(pointers.dlsym_pointer&1u)&&
            (pointers.dlclose_pointer&1u)&&(pointers.dlerror_pointer&1u));
+    assert(re_guest_dl_bridge_build_provider_symbols("libdl.so",&pointers,
+        provider_symbols,4u,&provider_count)==RE_GUEST_DL_OK);
+    assert(provider_count==4u);
+    assert(strcmp(provider_symbols[0].name,"dlopen")==0);
+    assert(strcmp(provider_symbols[1].name,"dlsym")==0);
+    assert(strcmp(provider_symbols[2].name,"dlclose")==0);
+    assert(strcmp(provider_symbols[3].name,"dlerror")==0);
+    assert(provider_symbols[0].value==pointers.dlopen_pointer);
+    assert(provider_symbols[1].value==pointers.dlsym_pointer);
+    assert(provider_symbols[2].value==pointers.dlclose_pointer);
+    assert(provider_symbols[3].value==pointers.dlerror_pointer);
+    for(size_t i=0;i<4u;i++) {
+        assert(provider_symbols[i].binding==RE_GUEST_STB_GLOBAL);
+        assert(provider_symbols[i].visibility==RE_GUEST_STV_DEFAULT);
+        assert(provider_symbols[i].defined==1u);
+        assert(strcmp(provider_symbols[i].version_library,"libdl.so")==0);
+    }
+    assert(re_guest_dl_bridge_build_provider_symbols("libdl.so",&pointers,
+        provider_symbols,3u,&provider_count)==RE_GUEST_DL_E_CAPACITY);
+    assert(provider_count==0u);
 
     re_guest_runtime_init_mapped(&runtime,&bus,&imports,0x40000000u,
         0x10000000u,1);
