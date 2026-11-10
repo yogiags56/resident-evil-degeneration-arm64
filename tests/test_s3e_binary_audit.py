@@ -15,7 +15,7 @@ def synthetic_image():
     sym_section = struct.pack("<IIH", 0, 8 + 2 + len(symbols), 2) + symbols
     # Two external relocation cells: 0x12345678 -> symbol 0, 0x00000abc -> symbol 1.
     ext = struct.pack("<II", 4, 8 + 4 + 12) + struct.pack(
-        "<IHHHHHH", 2, 0x1234, 0x5678, 0, 0x0000, 0x0ABC, 1
+        "<IHHHHHH", 2, 0, 0x0004, 0, 0, 0x0008, 1
     )
     fixups = sym_section + ext
     code_offset = 0x48 + len(fixups)
@@ -40,11 +40,11 @@ class S3EBinaryAuditTests(unittest.TestCase):
         self.assertEqual(result["fixups"]["symbol_count"], 2)
         self.assertEqual(
             result["target_import_relocation_offsets"]["s3eFileOpen"],
-            ["0x12345678"],
+            ["0x4"],
         )
         self.assertEqual(
             result["target_import_relocation_offsets"]["s3eFileRead"],
-            ["0xabc"],
+            ["0x8"],
         )
         self.assertEqual(
             result["target_import_symbol_indices"]["s3eFileOpen"], [0]
@@ -56,6 +56,12 @@ class S3EBinaryAuditTests(unittest.TestCase):
             result["target_import_relocation_counts_by_type"]["s3eFileRead"],
             {"4": 1},
         )
+        self.assertEqual(result["external_relocation_cell_summary"], {"other": 2})
+        self.assertEqual(len(result["import_manifest"]), 2)
+        self.assertEqual(result["import_manifest"][0]["symbol_index"], 0)
+        self.assertEqual(result["import_manifest"][0]["name"], "s3eFileOpen")
+        self.assertEqual(result["import_manifest"][0]["cells"][0]["offset"], "0x4")
+        self.assertEqual(result["import_manifest"][1]["cells"][0]["cell_kind"], "other")
 
     def test_lzma_alone_decompression(self):
         import lzma
