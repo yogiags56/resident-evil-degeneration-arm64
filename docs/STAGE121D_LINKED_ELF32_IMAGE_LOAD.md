@@ -17,6 +17,8 @@ This is a caller-driven single-image linked-load path, not an Android/Bionic dyn
 
 ## Validation
 - Host regression suite, including the end-to-end linked-load test: PASS on commit `2f8c16c24fc103967756635bd789c41166ae649f` (workflow run `42816501886`). The test confirms RX/RW segment mapping, undefined import resolution, REL ABS32 application, BSS zero-fill, final permissions, and failure before mapping for an unresolved strong import.
-- Android ARM64 native build and ELF verification: running on the same commit (workflow run `42816511103`).
+- Android ARM64 native build and ELF verification: PASS on commit `2f8c16c24fc103967756635bd789c41166ae649f` (workflow run `42816511103`).
+- The unstripped output is ELF64 AArch64 and exports `re_guest_elf32_load_linked_image`, `re_guest_elf32_parse_link_metadata`, and `re_guest_elf32_prepare_relocations`.
+- Build artifact uploaded as `resident-evil-degeneration-arm64-stage118-runtime-foundation`, artifact ID `13764412010`.
 
-Stage 121D remains pending until the Android build finishes successfully.
+Stage 121D validation is complete. The end-to-end path is proven on synthetic ELF fixtures only; the original game executable has not been linked or booted.
