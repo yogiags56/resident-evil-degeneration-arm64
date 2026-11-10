@@ -10,7 +10,7 @@ int main(void) {
  const size_t code_size=0x13b70cu;
  uint8_t *code=(uint8_t *)calloc(code_size,1);
  REGUESTXE3UHEADER h={0};
- REGUESTXE3USYMBOL symbols[1]={{{"sampleApi"}}};
+ REGUESTXE3USYMBOL symbols[1]={{"sampleApi"}};
  REGUESTXE3UEXTERNALRELOCATION ext[2]={{0x13b708u,0,4u},{0,0,0}};
  REGUESTXE3UIMPORTCELL result,before;
  size_t failed=99;
