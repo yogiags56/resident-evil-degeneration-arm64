@@ -57,7 +57,7 @@ REGUESTELF32INITEXECStatus re_guest_elf32_execute_init_sequence(
         state->active=0u;
         if(!state->completed) {
             pending.failed_call=i;
-            pending.fault_pc=runtime.fault_pc;
+            pending.fault_pc=runtime.fault_valid?runtime.fault_pc:runtime.cpu.r[15];
             pending.runtime_status=rs;
             pending.cpu_status=runtime.last_cpu_status;
             pending.import_status=runtime.last_import_status;
