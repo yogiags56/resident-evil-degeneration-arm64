@@ -161,6 +161,24 @@ REGUESTDLStatus re_guest_dl_bridge_close(
     return RE_GUEST_DL_OK;
 }
 
+REGUESTDLStatus re_guest_dl_bridge_close_all(REGUESTDLBridge *bridge) {
+    int failed = 0;
+    if (!bridge || !bridge->close_callback) return RE_GUEST_DL_E_ARGUMENT;
+    for (size_t i = 0; i < RE_GUEST_DL_MAX_HANDLES; i++) {
+        REGUESTDLHandleSlot *slot = &bridge->handles[i];
+        if (!slot->active) continue;
+        if (bridge->close_callback(slot->native_handle, bridge->user) != 0) {
+            set_error(bridge, "dlclose: bridge shutdown close failed");
+            failed = 1;
+            continue;
+        }
+        slot->native_handle = (uintptr_t)0;
+        slot->token = 0;
+        slot->active = 0u;
+    }
+    return failed ? RE_GUEST_DL_E_CLOSE : RE_GUEST_DL_OK;
+}
+
 static REGUESTIMPORTStatus dlopen_handler(
     const S3EAAPCS32Frame *frame, const REGUESTMEMBUS *bus, void *user,
     REGUESTIMPORTResult *result) {
