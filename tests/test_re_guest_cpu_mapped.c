@@ -31,7 +31,7 @@ int main(void) {
  /* Data memory cannot be executed; code memory cannot be written. */
  re_guest_cpu_reset(&cpu,0x2000,0);
  assert(re_guest_cpu_step_mapped(&cpu,&bus)==RE_CPU_E_PERMISSION);
- assert(re_guest_memory_bus_write32(&bus,0x1000,0)==RE_GUEST_MEM_E_PERMISSION);
+ assert(re_guest_memory_write32(&bus,0x1000,0)==RE_GUEST_MEM_E_PERMISSION);
  /* A missing region is a guest memory fault, not host pointer access. */
  re_guest_cpu_reset(&cpu,0x3000,0);
  assert(re_guest_cpu_step_mapped(&cpu,&bus)==RE_CPU_E_MEMORY);
