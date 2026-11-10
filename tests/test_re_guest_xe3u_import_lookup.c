@@ -36,7 +36,7 @@ int main(void) {
  assert(re_guest_xe3u_lookup_import_cell(code,code_size,&h,symbols,1,
    ext,2,0x50000000u,0x50000000u+0x13b708u,&result,&failed)==
    RE_GUEST_XE3U_IMPORT_LOOKUP_E_DUPLICATE);
- ext[1]=(REGUESTXE3UEXTERNALRELOCATION){0x13b708u,0,3u};
+ ext[0]=(REGUESTXE3UEXTERNALRELOCATION){0x13b708u,0,3u};
  assert(re_guest_xe3u_lookup_import_cell(code,code_size,&h,symbols,1,
    ext,1,0x50000000u,0x50000000u+0x13b708u,&result,&failed)==
    RE_GUEST_XE3U_IMPORT_LOOKUP_E_UNSUPPORTED);
