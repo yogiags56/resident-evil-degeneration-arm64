@@ -5,7 +5,7 @@
 static int valid_soname(const char *name) {
     if (!name || !name[0] || strlen(name) >= RE_GUEST_DL_PATH_CAP ||
         strcmp(name, ".") == 0 || strcmp(name, "..") == 0 ||
-        strchr(name, '/') || strchr(name, '\\\\'))
+        strchr(name, '/') || strchr(name, '\\'))
         return 0;
     for (const unsigned char *p = (const unsigned char *)name; *p; ++p) {
         if (*p < 0x21u || *p > 0x7eu) return 0;
