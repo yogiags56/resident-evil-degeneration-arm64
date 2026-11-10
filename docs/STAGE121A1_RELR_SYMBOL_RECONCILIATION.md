@@ -126,3 +126,10 @@ This confirms these exact files agree at the inspected tips; it does not prove t
 ## 5. Validation boundary
 
 This document records patch and file-content review. No merge was performed. No combined Stage 120 test run has been claimed. No original game boot or gameplay validation is claimed.
+
+
+## 6. Additional implementation detail: provenance is not yet wired into table reports
+
+A follow-up source inspection found that the reconciliation variant's `collect_relr_tables()` still calls the compatibility `decode_relr()` wrapper and stores only the formatted target-address list. The new `decode_relr_records()` API therefore exists, but its per-target provenance is not currently propagated into the PT_DYNAMIC or APS2 report objects.
+
+**Integration requirement:** when the merged tree adopts record provenance, extend the table report with a stable optional field (for example, `target_records`) while preserving the existing `targets` array for compatibility. Add tests that prove direct/bitmap entry index and bitmap-bit provenance survive through both the standalone dynamic audit and APS2 audit. Until those changes exist, describe provenance as an available decoder API, not as already present in the final audit JSON.
