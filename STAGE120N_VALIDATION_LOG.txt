@@ -1,0 +1,32 @@
+Stage 120N validation record
+============================
+
+GitHub Actions workflow: Source checks
+Run ID: 42614083636
+Validated code commit: 401baac2e30d65de5e797ac13004265579636a2a
+Result: success
+
+Observed:
+- 229 Python tests passed (5.965 seconds).
+- APS2 r_info is tested as an absolute ELF32 field value, not a cumulative delta.
+- GROUPED_BY_INFO reuses one r_info value for the entire group.
+- GROUPED_BY_ADDEND applies one addend delta per group.
+- HAS_ADDEND without GROUPED_BY_ADDEND consumes per-relocation addend deltas.
+- RELA groups without HAS_ADDEND reset addend to zero.
+- Signed SLEB128 r_info values preserve the ELF32 unsigned bit pattern.
+- Initial APS2 offsets with the high bit set are decoded as unsigned ELF32 addresses.
+- Dynamic REL and APS2 records share matching bounded symbol size, definition state, section index, version, and DT_SYMTAB namespace.
+- APS2 COPY width resolves only for a defined symbol with positive st_size and a proven namespace.
+- Undefined or unresolved COPY symbol sizes remain unknown.
+- Host C mock compilation and native C regression executables passed.
+
+Scope limitations:
+- This stage validates metadata and decoder conformance only.
+- No provider compatibility is inferred and no relocation is applied.
+- No Android device execution or original game boot is claimed.
+
+Authoritative implementation references:
+- Android Bionic linker iterator:
+  https://android.googlesource.com/platform/bionic/+/refs/heads/main/linker/linker_reloc_iterators.h
+- LLVM APS2 format specification:
+  https://reviews.llvm.org/D39152
