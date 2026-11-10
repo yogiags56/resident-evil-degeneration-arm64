@@ -112,6 +112,7 @@ int main(void) {
     re_guest_memory_bus_init(&bus, &memory);
     put_string(bytes, 0x100u, "Degeneration");
     put_string(bytes, 0x180u, "id=%d name=%s code=%08x %%");
+    put_string(bytes, 0x1c0u, "first line\\nsecond line");
     put_string(bytes, 0x240u, "hello from guest");
 
     re_guest_runtime_init_mapped(&runtime, &bus, &imports, 0x40000000u,
@@ -134,10 +135,16 @@ int main(void) {
     assert(strcmp(mock.tag, "Degeneration") == 0);
     assert(strcmp(mock.message, "id=42 name=hello from guest code=89abcdef %") == 0);
 
+    /* Android log messages may contain newlines and other control bytes. */
+    call_import(&runtime, exports[0].value, 0x10000030u,
+                4u, 0x10000100u, 0x100001c0u, 0u);
+    assert(mock.calls == 2 && mock.priority == 4);
+    assert(strcmp(mock.message, "first line\\nsecond line") == 0);
+
     /* Fixed-width __android_log_write uses r0/r1/r2 only. */
     call_import(&runtime, exports[1].value, 0x10000040u,
                 5u, 0x10000100u, 0x10000240u, 0u);
-    assert(mock.calls == 2 && mock.priority == 5);
+    assert(mock.calls == 3 && mock.priority == 5);
     assert(strcmp(mock.message, "hello from guest") == 0);
 
     puts("Guest liblog provider tests: PASS");
