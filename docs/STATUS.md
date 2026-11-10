@@ -1,5 +1,13 @@
 # Current Status
 
+**Current implementation milestone: Stage 123A — generic ELF32 root-runtime handoff.** Host CI passed for the latest boot-handoff integration in run 42867835687 (commit `749de137a8918d32df56e8de8b0004cf75099539`). Constructor parsing/sequence planning, bounded synthetic constructor execution, and root ELF runtime handoff all have passing host regressions. The Stage 122F unified multi-module ELF32 pipeline also passed its host regression after fixing a DT_NEEDED pointer-table segmentation fault.
+
+**Important target-format correction:** the game's main executable `assets/biohazard.s3e` is an LZMA-alone-compressed XE3U image, not ELF. The Stage 97 evidence identifies `libjirobiodg.so` as a separate ELF32 ARM shared object. Stages 122D–123A build generic ELF32 shared-module infrastructure; they do not load or boot the main XE3U game image. The next loader milestone must implement the observed XE3U container and fixup semantics, then connect it to the guest ARM32 runtime and verified S3E imports.
+
+**Assets and device validation:** the repository intentionally excludes the original APK and proprietary game assets. `app/src/main/assets/` currently contains only `.gitkeep`; the original APK must be supplied locally and staged with `tools/stage_android_assets.py`. Recent Stage 122–123 source changes have host CI coverage but still need a fresh Android NDK build and physical-device validation. Original game boot/gameplay has not been achieved.
+
+---
+
 **Current source milestone: Stage 120Z — DT_NEEDED dependency graph resolution implemented. Host source checks passed in GitHub Actions run 42805208188; Android ARM64 native build and ELF verification passed in run 42805208140. The artifact is the native asset/JNI probe; physical-device execution and original game boot/gameplay remain unverified.** Stage 117 integrated a partial ARM32/Thumb guest CPU, AAPCS32 dispatcher, runtime coordinator, and ABI support into the Android ARM64 native target. A prior Android ARM64 workflow passed on commit `b090f90`; this is not validation of the current branch.
 
 Stage 118 adds guest runtime stop diagnostics. Stages 119A–119L introduced guest memory management, checked bus, CPU adapters, checked instruction fetch, CPU data facade, isolated transfer helper, and fault regressions. Stage 119M documented ARMv7-A/R alignment. Stage 119N added memory attributes and strict-by-default SCTLR.A policy; host CI passed on commit `529a7ee`.
