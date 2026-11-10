@@ -1,12 +1,14 @@
 # Resident Evil: Degeneration — Native ARM64 Port Research
 
-[![Stage](https://img.shields.io/badge/stage-120Z-blue)](#project-status)
+[![Stage](https://img.shields.io/badge/stage-121B-blue)](#project-status)
 [![Platform](https://img.shields.io/badge/platform-Android%20ARM64-green)](#build-the-android-probe)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
 An engineering research project to run the original ARM32 Android game runtime on **native Android ARM64**, without an ARM32 emulator. The repository consolidates the verified guest CPU/import/runtime/GL source through Stage73, the file/JNI/AssetManager modules through Stage99, a verified Python DTRZ archive parser/extractor plus a native C DTRZ metadata parser, read-only VFS, optional bounded liblzma LZMA-alone decoding, and a DTRZ-backed guest file-adapter backend, alongside analysis tools, reproducible tests, and an Android asset-probe harness. It is a clean current-source baseline, not an archive of every intermediate experiment from Stages 1–89.
 
 > **Status:** research/prototype. The original game has **not** been booted or made playable by this repository. The Android ARM64 native probe has been built and ELF-verified in GitHub Actions; execution on a physical device is still unverified.
+
+> **Current runtime work (Stage 121B):** a bounded read-only ELF32 ARM dynamic metadata decoder now inventories SysV-hash-bounded dynamic symbols plus REL/RELA and PLT relocation records. Host regression tests and the Android ARM64 native build/ELF verification pass. This is still not a complete Android dynamic linker and does not mean the game boots. See [Stage 121B report](docs/STAGE121B_ELF32_LINK_METADATA.md).
 
 
 ## Android toolchain diagnostics (Stage 105)
