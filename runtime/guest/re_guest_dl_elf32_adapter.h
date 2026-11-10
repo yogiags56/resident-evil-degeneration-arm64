@@ -5,6 +5,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/* Candidate exports are staged privately. On any failure neither the live
+ * catalog nor symbol_storage changes. Reinitialization after success requires
+ * old users/handles to be quiesced before storage is replaced. */
 REGUESTDLProviderStatus re_guest_dl_provider_catalog_init_from_elf32(
     REGUESTDLProviderCatalog *catalog,
     const REGUESTELF32PROVIDERMODULE *modules,
