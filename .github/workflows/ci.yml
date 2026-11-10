@@ -27,7 +27,23 @@ jobs:
           sudo apt-get install -y clang liblzma-dev pkg-config
 
       - name: Run host tests
-        run: bash ./tools/run_tests.sh
+        shell: bash
+        run: |
+          mkdir -p build/host-tests
+          set +e
+          bash ./tools/run_tests.sh > build/host-tests/ci-host-tests.log 2>&1
+          status=$?
+          cat build/host-tests/ci-host-tests.log
+          exit "$status"
+
+      - name: Upload host test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: host-test-diagnostics
+          path: build/host-tests/ci-host-tests.log
+          if-no-files-found: warn
+          retention-days: 7
         
 
       - name: Report tracked source SHA-256 provenance
