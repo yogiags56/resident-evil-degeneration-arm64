@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 static void put32(uint8_t*p,uint32_t v){p[0]=(uint8_t)v;p[1]=(uint8_t)(v>>8);p[2]=(uint8_t)(v>>16);p[3]=(uint8_t)(v>>24);}
-static REGUESTIMPORTStatus handler(const S3EAAPCS32Frame*f,const REGUESTMEM*m,void*u,REGUESTIMPORTResult*r){
- (void)m;(void)u;r->r0=f->r[0]+1u;r->r1=0;return RE_IMPORT_OK;
+static REGUESTIMPORTStatus handler(const S3EAAPCS32Frame*f,const REGUESTMEMBUS*bus,void*u,REGUESTIMPORTResult*r){
+ (void)bus;(void)u;r->r0=f->r[0]+1u;r->r1=0;return RE_IMPORT_OK;
 }
 static void init_image(uint8_t*code,size_t size,uint32_t base,REGUESTXE3UHEADER*h){
  memset(h,0,sizeof(*h));h->base_address=base;h->code_file_size=(uint32_t)size;
@@ -22,7 +22,7 @@ int main(void){
  REGUESTXE3UEXTERNALPATCH plan[2],before[2];
  assert(code);init_image(code,size,base,&h);
  assert(re_guest_import_table_init(&imports,0x60000000u)==RE_IMPORT_OK);
- assert(re_guest_import_bind(&imports,5u,handler,NULL,&ptr)==RE_IMPORT_OK);
+ assert(re_guest_import_bind_mapped(&imports,5u,handler,NULL,&ptr)==RE_IMPORT_OK);
  assert(re_guest_xe3u_prepare_external_import_plan(code,size,&h,7,ext,2,
    &imports,base,0x61000000u,1,scratch,4,plan,2,&unbound,&failed)==RE_GUEST_XE3U_IMPORT_PLAN_OK);
  assert(unbound==1&&failed==2);
