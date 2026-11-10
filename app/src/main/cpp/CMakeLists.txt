@@ -74,7 +74,8 @@ if(RE_ENABLE_LIBLZMA)
         IMPORTED_LOCATION "${LIBLZMA_LIBRARY}"
         INTERFACE_INCLUDE_DIRECTORIES "${LIBLZMA_INCLUDE_DIR}")
     target_sources(re_asset_probe PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/archive/re_dtrz_lzma.c)
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/archive/re_dtrz_lzma.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_xe3u_decode.c)
     target_link_libraries(re_asset_probe LibLZMA::LibLZMA)
     target_compile_definitions(re_asset_probe PRIVATE RE_HAVE_LIBLZMA=1)
 endif()
