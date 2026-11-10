@@ -386,6 +386,7 @@ def audit(data):
       "relocation_count":sum(x["entry_count"] for x in tables),
       "relr_tables":relr_tables,
       "relr_relocation_count":sum(x["relocation_count"] for x in relr_tables),
+      "android_relr_count_hint":tags.get(DT_ANDROID_RELRCOUNT),
       "cross_format_target_overlaps":cross_format_overlaps,
       "evidence_limits":["Only ELF32 EM_ARM dynamic REL/RELA tables described by PT_DYNAMIC are supported.",
       "Symbol names require bounded SysV DT_HASH or DT_GNU_HASH metadata and safe DT_SYMTAB/DT_STRTAB ranges.",
