@@ -119,7 +119,7 @@ def audit_image(image: bytes, source: str = "<memory>") -> dict:
             count = u16(image, payload)
             cursor = payload + 2
             for _ in range(count):
-                nul = image.find(b"\\0", cursor, section_end)
+                nul = image.find(b"\0", cursor, section_end)
                 if nul < 0:
                     raise AuditError("unterminated API symbol")
                 try:
