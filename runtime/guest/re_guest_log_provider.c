@@ -210,7 +210,8 @@ static int format_guest_message(const S3EAAPCS32Frame *frame,
         conversion = *p++;
         if (strchr("diuoxXcsp", conversion) ||
             strchr("fFeEgGaA", conversion)) {
-            if (length == LOG_LEN_CAP_L) return 0;
+            if (length == LOG_LEN_CAP_L || length == LOG_LEN_Z ||
+                length == LOG_LEN_T || length == LOG_LEN_J) return 0;
         } else {
             return 0; /* Reject %n, positional args, and unknown extensions. */
         }
@@ -262,7 +263,7 @@ static int format_guest_message(const S3EAAPCS32Frame *frame,
                 return 0;
         } else if (strchr("diuoxX", conversion)) {
             int is_signed = (conversion == 'd' || conversion == 'i');
-            if (length == LOG_LEN_LL || length == LOG_LEN_J) {
+            if (length == LOG_LEN_LL) {
                 if (!get_u64_even(frame, &word_index, &wide)) return 0;
                 if (is_signed) {
                     long long value = (long long)(int64_t)wide;
@@ -284,14 +285,6 @@ static int format_guest_message(const S3EAAPCS32Frame *frame,
                                                  &used, spec, v)) return 0;
                             break;
                         }
-                        case LOG_LEN_Z:
-                        case LOG_LEN_T: {
-                            ptrdiff_t v = (ptrdiff_t)value;
-                            if (!append_snprintf(output, output_capacity,
-                                                 &used, spec, v)) return 0;
-                            break;
-                        }
-                        case LOG_LEN_J: return 0;
                         default:
                             if (!append_snprintf(output, output_capacity,
                                                  &used, spec, (int)value))
@@ -301,18 +294,6 @@ static int format_guest_message(const S3EAAPCS32Frame *frame,
                     switch (length) {
                         case LOG_LEN_L: {
                             unsigned long v = (unsigned long)word;
-                            if (!append_snprintf(output, output_capacity,
-                                                 &used, spec, v)) return 0;
-                            break;
-                        }
-                        case LOG_LEN_Z: {
-                            size_t v = (size_t)word;
-                            if (!append_snprintf(output, output_capacity,
-                                                 &used, spec, v)) return 0;
-                            break;
-                        }
-                        case LOG_LEN_T: {
-                            uintptr_t v = (uintptr_t)word;
                             if (!append_snprintf(output, output_capacity,
                                                  &used, spec, v)) return 0;
                             break;
