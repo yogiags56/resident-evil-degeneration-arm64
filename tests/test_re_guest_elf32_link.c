@@ -15,15 +15,15 @@ static void fixture(uint8_t*b){
  p32(b+24,0x1000);p32(b+28,52);p16(b+40,52);p16(b+42,32);p16(b+44,2);
  ph(b+52,RE_GUEST_ELF32_PT_LOAD,0,0x1000,768,768,RE_GUEST_ELF32_PF_R|RE_GUEST_ELF32_PF_X,0x1000);
  ph(b+84,RE_GUEST_ELF32_PT_DYNAMIC,0x100,0x1100,72,72,RE_GUEST_ELF32_PF_R,4);
- dyn(b+140,4,0x1200); /* DT_HASH */
- dyn(b+148,5,0x1180); /* DT_STRTAB */
- dyn(b+150,10,16);    /* DT_STRSZ */
- dyn(b+158,6,0x11c0); /* DT_SYMTAB */
- dyn(b+160,11,16);    /* DT_SYMENT */
- dyn(b+168,17,0x1220);/* DT_REL */
- dyn(b+170,18,8);     /* DT_RELSZ */
- dyn(b+178,19,8);     /* DT_RELENT */
- dyn(b+180,0,0);
+ dyn(b+0x100,4,0x1200); /* DT_HASH */
+ dyn(b+0x108,5,0x1180); /* DT_STRTAB */
+ dyn(b+0x110,10,16);    /* DT_STRSZ */
+ dyn(b+0x118,6,0x11c0); /* DT_SYMTAB */
+ dyn(b+0x120,11,16);    /* DT_SYMENT */
+ dyn(b+0x128,17,0x1220);/* DT_REL */
+ dyn(b+0x130,18,8);     /* DT_RELSZ */
+ dyn(b+0x138,19,8);     /* DT_RELENT */
+ dyn(b+0x140,0,0);
  memcpy(b+0x180,"\0foo\0bar\0",9);
  /* Two named symbols after the mandatory null symbol. */
  p32(b+0x1c0+16,1);p32(b+0x1c0+20,0x1000);p32(b+0x1c0+24,4);
