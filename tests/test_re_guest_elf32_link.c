@@ -47,7 +47,7 @@ int main(void){
  assert(info.has_rel&&info.relocation_count==1&&rels[0].offset==0x1300);
  assert(rels[0].symbol_index==1&&rels[0].type==2&&!rels[0].has_addend);
  assert(re_guest_elf32_parse_link_metadata(b,sizeof b,&im,&d,&info,syms,2,rels,4,&failed)==RE_GUEST_ELF32_LINK_E_CAPACITY);
- fixture(b);p32(b+0x48+4,0xfffffff0u);
+ fixture(b);p32(b+0x11c,0xfffffff0u);
  assert(re_guest_elf32_parse_image(b,sizeof b,&im,&failed)==RE_GUEST_ELF32_OK);
  assert(re_guest_elf32_parse_dynamic(b,sizeof b,&im,&d,&failed)==RE_GUEST_ELF32_DYNAMIC_OK);
  assert(re_guest_elf32_parse_link_metadata(b,sizeof b,&im,&d,&info,syms,4,rels,4,&failed)==RE_GUEST_ELF32_LINK_E_RANGE);
