@@ -1,6 +1,7 @@
 #include "re_guest_log_provider.h"
 
 #include <inttypes.h>
+#include <errno.h>
 #include <limits.h>
 #include <stddef.h>
 #include <stdarg.h>
@@ -27,8 +28,6 @@ static int read_guest_string(const REGUESTMEMBUS *bus, uint32_t address,
             out[i] = '\0';
             return 1;
         }
-        if (byte < 0x20u && byte != '\t') return 0;
-        if (byte == 0x7fu) return 0;
         out[i] = (char)byte;
     }
     out[capacity - 1u] = '\0';
@@ -322,7 +321,7 @@ static REGUESTIMPORTStatus log_write_handler(
         return RE_IMPORT_E_HANDLER;
     if (!read_guest_string(bus, frame->r[1], tag, sizeof(tag)) ||
         !read_guest_string(bus, frame->r[2], message, sizeof(message))) {
-        result->r0 = (uint32_t)-22;
+        result->r0 = (uint32_t)-EINVAL;
         result->r1 = 0;
         return RE_IMPORT_OK;
     }
