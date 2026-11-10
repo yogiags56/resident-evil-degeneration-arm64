@@ -125,8 +125,9 @@ REGUESTELF32Status re_guest_elf32_parse_image(
             prior_end = (uint64_t)prior->virtual_address + prior->memory_size;
             if ((uint64_t)h->virtual_address < prior_end &&
                 (uint64_t)prior->virtual_address < memory_end) {
-                if (failed_program_header) *failed_program_header = i;
-                return RE_GUEST_ELF32_E_OVERLAP;
+                /* Preserve the layout; the loader must choose an explicit
+                 * overlap/page-permission policy before mapping it. */
+                image->load_overlap_count++;
             }
         }
     }
