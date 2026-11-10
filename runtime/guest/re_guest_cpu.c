@@ -328,10 +328,13 @@ REGUESTCPUStatus re_guest_cpu_run(REGUESTCPU*c,const REGUESTMEM*m,uint64_t limit
  if(done)*done=n;return RE_CPU_OK;
 }
 REGUESTCPUStatus re_guest_cpu_step_mapped(REGUESTCPU *cpu, REGUESTMEMBUS *bus) {
- REGUESTMEMACCESS access;int fault=RE_GUEST_MEM_OK;REGUESTCPUStatus status;
+ REGUESTMEMACCESS access;REGUESTCPU before;int fault=RE_GUEST_MEM_OK;
+ REGUESTCPUStatus status;
  if(!cpu||!bus||!bus->memory)return RE_CPU_E_ARGUMENT;
+ before=*cpu;
  access.legacy=NULL;access.bus=bus;access.bus_fault=&fault;
  status=cpu_step_access(cpu,&access);
+ if(status!=RE_CPU_OK)*cpu=before;
  if(fault==RE_GUEST_MEM_E_PERMISSION)return RE_CPU_E_PERMISSION;
  return status;
 }
