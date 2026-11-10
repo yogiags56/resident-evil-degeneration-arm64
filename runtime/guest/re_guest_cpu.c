@@ -1,16 +1,56 @@
 #include "re_guest_cpu.h"
+#include "re_guest_memory_bus.h"
 
+static int map_bus_status(const REGUESTMEM *m, REGUESTMEMStatus s) {
+ if(m && m->bus_fault)*m->bus_fault=(int)s;
+ if(s==RE_GUEST_MEM_OK)return 1;
+ if(s==RE_GUEST_MEM_E_PERMISSION)return -2;
+ if(s==RE_GUEST_MEM_E_RANGE)return -1;
+ return 0;
+}
 static int range(const REGUESTMEM*m,uint32_t a,size_t n,size_t*o){
  if(!m||!m->bytes||a<m->guest_base)return 0;
  *o=(size_t)(a-m->guest_base);
  return (uint64_t)*o+n<=m->size;
 }
-static int rd8(const REGUESTMEM*m,uint32_t a,uint8_t*v){size_t o;if(!range(m,a,1,&o))return 0;*v=m->bytes[o];return 1;}
-static int wr8(const REGUESTMEM*m,uint32_t a,uint8_t v){size_t o;if(!range(m,a,1,&o))return 0;m->bytes[o]=v;return 1;}
-static int read16(const REGUESTMEM*m,uint32_t a,uint16_t*v){size_t o;if(a&1)return -1;if(!range(m,a,2,&o))return 0;*v=(uint16_t)(m->bytes[o]|((uint16_t)m->bytes[o+1]<<8));return 1;}
-static int write16(const REGUESTMEM*m,uint32_t a,uint16_t v){size_t o;if(a&1)return -1;if(!range(m,a,2,&o))return 0;m->bytes[o]=(uint8_t)v;m->bytes[o+1]=(uint8_t)(v>>8);return 1;}
-static int read32(const REGUESTMEM*m,uint32_t a,uint32_t*v){size_t o;if(a&3)return -1;if(!range(m,a,4,&o))return 0;*v=(uint32_t)m->bytes[o]|((uint32_t)m->bytes[o+1]<<8)|((uint32_t)m->bytes[o+2]<<16)|((uint32_t)m->bytes[o+3]<<24);return 1;}
-static int write32(const REGUESTMEM*m,uint32_t a,uint32_t v){size_t o;if(a&3)return -1;if(!range(m,a,4,&o))return 0;m->bytes[o]=(uint8_t)v;m->bytes[o+1]=(uint8_t)(v>>8);m->bytes[o+2]=(uint8_t)(v>>16);m->bytes[o+3]=(uint8_t)(v>>24);return 1;}
+static int rd8(const REGUESTMEM*m,uint32_t a,uint8_t*v){
+ size_t o;if(m&&m->bus)return map_bus_status(m,re_guest_memory_read8(m->bus,a,v));
+ if(!range(m,a,1,&o))return 0;*v=m->bytes[o];return 1;
+}
+static int wr8(const REGUESTMEM*m,uint32_t a,uint8_t v){
+ size_t o;if(m&&m->bus)return map_bus_status(m,re_guest_memory_write8(m->bus,a,v));
+ if(!range(m,a,1,&o))return 0;m->bytes[o]=v;return 1;
+}
+static int read16(const REGUESTMEM*m,uint32_t a,uint16_t*v){
+ size_t o;if(a&1)return -1;
+ if(m&&m->bus)return map_bus_status(m,re_guest_memory_read16(m->bus,a,v));
+ if(!range(m,a,2,&o))return 0;*v=(uint16_t)(m->bytes[o]|((uint16_t)m->bytes[o+1]<<8));return 1;
+}
+static int write16(const REGUESTMEM*m,uint32_t a,uint16_t v){
+ size_t o;if(a&1)return -1;
+ if(m&&m->bus)return map_bus_status(m,re_guest_memory_write16(m->bus,a,v));
+ if(!range(m,a,2,&o))return 0;m->bytes[o]=(uint8_t)v;m->bytes[o+1]=(uint8_t)(v>>8);return 1;
+}
+static int read32(const REGUESTMEM*m,uint32_t a,uint32_t*v){
+ size_t o;if(a&3)return -1;
+ if(m&&m->bus)return map_bus_status(m,re_guest_memory_read32(m->bus,a,v));
+ if(!range(m,a,4,&o))return 0;*v=(uint32_t)m->bytes[o]|((uint32_t)m->bytes[o+1]<<8)|((uint32_t)m->bytes[o+2]<<16)|((uint32_t)m->bytes[o+3]<<24);return 1;
+}
+static int write32(const REGUESTMEM*m,uint32_t a,uint32_t v){
+ size_t o;if(a&3)return -1;
+ if(m&&m->bus)return map_bus_status(m,re_guest_memory_write32(m->bus,a,v));
+ if(!range(m,a,4,&o))return 0;m->bytes[o]=(uint8_t)v;m->bytes[o+1]=(uint8_t)(v>>8);m->bytes[o+2]=(uint8_t)(v>>16);m->bytes[o+3]=(uint8_t)(v>>24);return 1;
+}
+static int fetch16(const REGUESTMEM*m,uint32_t a,uint16_t*v){
+ if(a&1u)return -1;
+ if(m&&m->bus)return map_bus_status(m,re_guest_memory_fetch16(m->bus,a,v));
+ return read16(m,a,v);
+}
+static int fetch32(const REGUESTMEM*m,uint32_t a,uint32_t*v){
+ if(a&3u)return -1;
+ if(m&&m->bus)return map_bus_status(m,re_guest_memory_fetch32(m->bus,a,v));
+ return read32(m,a,v);
+}
 static uint32_t ror(uint32_t x,unsigned n){n&=31;return n?(x>>n)|(x<<(32-n)):x;}
 static int cond(uint32_t f,unsigned c){int n=!!(f&RE_CPSR_N),z=!!(f&RE_CPSR_Z),v=!!(f&RE_CPSR_V),cy=!!(f&RE_CPSR_C);switch(c){case 0:return z;case 1:return !z;case 2:return cy;case 3:return !cy;case 4:return n;case 5:return !n;case 6:return v;case 7:return !v;case 8:return cy&&!z;case 9:return !cy||z;case 10:return n==v;case 11:return n!=v;case 12:return !z&&n==v;case 13:return z||n!=v;case 14:return 1;default:return 0;}}
 static void set_nz(REGUESTCPU*c,uint32_t x){c->cpsr=(c->cpsr&~(RE_CPSR_N|RE_CPSR_Z))|(x&RE_CPSR_N)|(x?0:RE_CPSR_Z);}
@@ -24,7 +64,7 @@ static uint32_t shift_imm(uint32_t v,unsigned type,unsigned n,uint32_t*carry,uin
  if(!n){*carry=v&1;return (oldc<<31)|(v>>1);}*carry=(v>>(n-1))&1;return ror(v,n);
 }
 static REGUESTCPUStatus arm(REGUESTCPU*c,const REGUESTMEM*m,uint32_t pc){
- uint32_t x,a,b,r,addr,carry=(c->cpsr&RE_CPSR_C)!=0;unsigned op,rn,rd,rm,rs,sh,rot,count;int q=read32(m,pc,&x);
+ uint32_t x,a,b,r,addr,carry=(c->cpsr&RE_CPSR_C)!=0;unsigned op,rn,rd,rm,rs,sh,rot,count;int q=fetch32(m,pc,&x);
  if(q<0)return RE_CPU_E_ALIGNMENT;
  if(!q)return RE_CPU_E_MEMORY;
  c->r[15]=pc+4;
@@ -105,13 +145,13 @@ static void it_advance(REGUESTCPU*c){
 }
 
 static REGUESTCPUStatus thumb(REGUESTCPU*c,const REGUESTMEM*m,uint32_t pc){
- uint16_t x;uint32_t a,b,r,addr;unsigned rd,rs,rm,imm,op;int q=read16(m,pc,&x);
+ uint16_t x;uint32_t a,b,r,addr;unsigned rd,rs,rm,imm,op;int q=fetch16(m,pc,&x);
  if(q<0)return RE_CPU_E_ALIGNMENT;
  if(!q)return RE_CPU_E_MEMORY;
  c->r[15]=pc+2;
  /* Thumb-2 conditional wide B.cond (T3). */
  if((x&0xf800u)==0xf000u){
-  uint16_t y; q=read16(m,pc+2,&y); if(q<0)return RE_CPU_E_ALIGNMENT; if(!q)return RE_CPU_E_MEMORY;
+  uint16_t y; q=fetch16(m,pc+2,&y); if(q<0)return RE_CPU_E_ALIGNMENT; if(!q)return RE_CPU_E_MEMORY;
   if((y&0xd000u)==0x8000u){
    unsigned cc=(x>>6)&15u;
    if(cc>=14u)return RE_CPU_E_UNIMPLEMENTED;
@@ -246,7 +286,7 @@ static int thumb_control_flow(const REGUESTMEM*m,uint32_t pc,uint16_t first){
  /* Wide load into PC is a control-flow transfer. */
  if((first&0xfff0u)==0xf8d0u || (first&0xfff0u)==0xf850u){
   uint16_t second;
-  if(read16(m,pc+2u,&second)==1 && ((second>>12)&15u)==15u)return 1;
+  if(fetch16(m,pc+2u,&second)==1 && ((second>>12)&15u)==15u)return 1;
  }
  return 0;
 }
