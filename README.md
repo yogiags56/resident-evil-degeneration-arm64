@@ -1,14 +1,18 @@
 # Resident Evil: Degeneration — Native ARM64 Port Research
 
-[![Stage](https://img.shields.io/badge/stage-121D-blue)](#project-status)
+[![Stage](https://img.shields.io/badge/stage-123A-blue)](#project-status)
 [![Platform](https://img.shields.io/badge/platform-Android%20ARM64-green)](#build-the-android-probe)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
 An engineering research project to run the original ARM32 Android game runtime on **native Android ARM64**, without an ARM32 emulator. The repository consolidates the verified guest CPU/import/runtime/GL source through Stage73, the file/JNI/AssetManager modules through Stage99, a verified Python DTRZ archive parser/extractor plus a native C DTRZ metadata parser, read-only VFS, optional bounded liblzma LZMA-alone decoding, and a DTRZ-backed guest file-adapter backend, alongside analysis tools, reproducible tests, and an Android asset-probe harness. It is a clean current-source baseline, not an archive of every intermediate experiment from Stages 1–89.
 
-> **Status:** research/prototype. The original game has **not** been booted or made playable by this repository. The Android ARM64 native probe has been built and ELF-verified in GitHub Actions; execution on a physical device is still unverified.
+> **Status:** research/prototype. The original game has **not** been booted or made playable by this repository. The latest source/host checks pass, but the recent Stage 122–123 additions have not yet received a fresh Android NDK build or physical-device validation.
 
-> **Current runtime work (Stage 121D):** the ELF32 ARM metadata decoder and relocation planner are now connected to a caller-driven single-image linked-load coordinator. A synthetic end-to-end test verifies segment mapping, import resolution, REL ABS32 relocation, BSS zero-fill, final RX/RW permissions, and failure before mapping when a strong import is unresolved. Host tests and Android ARM64 native build/ELF verification pass; the unstripped AArch64 library exports the parser, relocation planner, and linked-loader entry points. This is not yet a complete Android dynamic linker and does not mean the original game boots. See [Stage 121B report](docs/STAGE121B_ELF32_LINK_METADATA.md), [Stage 121C report](docs/STAGE121C_ELF32_RELOCATION_PLANNING.md), and [Stage 121D report](docs/STAGE121D_LINKED_ELF32_IMAGE_LOAD.md).
+> **Current runtime work (Stages 122D–123A):** the repository now has a caller-driven multi-ELF32 dependency/provider/relocation/load pipeline, bounded DT_INIT/INIT_ARRAY planning and execution, and a root-ELF runtime handoff. Synthetic host regressions cover these components. This is a generic ELF32 shared-module path, not the main game's XE3U executable loader.
+
+> **Critical format boundary:** the actual guest executable `assets/biohazard.s3e` is an LZMA-alone-compressed **XE3U** image, not an ELF file. The Stage 97 audit identified `libjirobiodg.so` as a separate ELF32 ARM shared object. The new ELF32 pipeline may serve that shared-library path; it must not be fed `biohazard.s3e`. The native XE3U image loader, internal fixup application, external S3E import binding, and integration with the ARM32 runtime remain required before attempting the real game entry point.
+
+> **Asset availability:** proprietary game assets are intentionally excluded from Git. `app/src/main/assets/` contains only `.gitkeep` in the repository. A legally usable original APK must be supplied locally and staged with `tools/stage_android_assets.py`; the source ZIP in the repository is not the original game APK. See [Stage 97 evidence](docs/STAGE97_ORIGINAL_BINARY_AND_FILE_API_EVIDENCE.md) and [Stage 101 asset packaging](docs/STAGE101_ANDROID_ASSET_PACKAGING_AND_BUILD_READINESS.md).
 
 
 ## Android toolchain diagnostics (Stage 105)
