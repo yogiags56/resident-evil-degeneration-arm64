@@ -45,6 +45,21 @@ int main(void){
  memset(mem,0,sizeof(mem));put32(mem,0xe5bcf004);put32(mem+0x40,0x50000062);
  re_guest_cpu_reset(&c,0x50000000,0);c.r[12]=0x5000003c;
  assert(re_guest_cpu_step(&c,&m)==RE_CPU_E_ALIGNMENT&&c.r[12]==0x5000003c);
+ /* Thumb PUSH/POP register-list stack behavior and POP-PC interworking. */
+ memset(mem,0,sizeof(mem));put16(mem,0xb570);put16(mem+2,0xbd70);
+ re_guest_cpu_reset(&c,0x50000000,1);c.r[13]=0x50000070;
+ c.r[4]=0x44;c.r[5]=0x55;c.r[6]=0x66;c.r[14]=0x50000061;
+ assert(re_guest_cpu_step(&c,&m)==RE_CPU_OK&&c.r[13]==0x50000060);
+ assert(get32(mem+0x60)==0x44&&get32(mem+0x64)==0x55);
+ assert(get32(mem+0x68)==0x66&&get32(mem+0x6c)==0x50000061);
+ assert(re_guest_cpu_step(&c,&m)==RE_CPU_OK);
+ assert(c.r[4]==0x44&&c.r[5]==0x55&&c.r[6]==0x66);
+ assert(c.r[13]==0x50000070&&c.thumb&&c.r[15]==0x50000060);
+ /* POP preflights all reads before committing registers or SP. */
+ memset(mem,0,sizeof(mem));put16(mem,0xbd01);put32(mem+0x7c,0x12345678);
+ re_guest_cpu_reset(&c,0x50000000,1);c.r[13]=0x5000007c;c.r[0]=0xa5a5a5a5;
+ assert(re_guest_cpu_step(&c,&m)==RE_CPU_E_MEMORY);
+ assert(c.r[13]==0x5000007c&&c.r[0]==0xa5a5a5a5);
  /* End-to-end synthetic execution of the exact three-instruction ARM import
   * stub and shared 0x70 resolver prologue found in the original XE3U image.
   */
