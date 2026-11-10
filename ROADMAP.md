@@ -1,6 +1,6 @@
 # Project Roadmap
 
-## Active milestone update — Stage 123G (original ELF32 import-provider coverage)
+## Active milestone update — Stage 123H (original ELF32 provider and GL dispatch audit)
 
 Stages 122D–122H and 123A–123F have host implementation coverage:
 - Transactional multi-ELF image loading, ELF32 dependency/provider/relocation planning, and bounded constructor execution.
@@ -12,15 +12,17 @@ Stages 122D–122H and 123A–123F have host implementation coverage:
 
 Host CI passed in run `42877554684`; Android ARM64 NDK build/ELF verification passed in run `42877209331`. The original APK and key assets match Stage 97 hashes exactly.
 
-A symbol-table comparison found 22 of 227 XE3U imports as defined Thumb exports in the original ELF32 ARM `libjirobiodg.so`. See [Stage 123G provider coverage](docs/STAGE123G_LIBJIROBIODG_IMPORT_PROVIDER_COVERAGE.md), [Stage 123F external import binding](docs/STAGE123F_TRANSACTIONAL_EXTERNAL_IMPORT_BINDING.md), [Stage 123E thunk execution](docs/STAGE123E_IMPORT_CELL_LOOKUP_AND_THUNK_EXECUTION.md), and [Stage 123D relocation evidence](docs/STAGE123D_INTERNAL_RELOCATION_EVIDENCE.md).
+A deeper Thumb audit shows those 22 exports are lazy GL dispatch wrappers, not direct GLES implementations. All share the zero-filled BSS dispatch table at `0x747dc`, have exact name literals and `R_ARM_RELATIVE`-relocated table-base literals, and cache the returned function pointer in their slot after calling the common helper at `0x3d64c`. The helper's callback state at `0x737f0` is not yet reconstructed. See [Stage 123H GL wrapper audit](docs/STAGE123H_GL_LAZY_DISPATCH_WRAPPERS.md), [Stage 123G provider coverage](docs/STAGE123G_LIBJIROBIODG_IMPORT_PROVIDER_COVERAGE.md), [Stage 123F external import binding](docs/STAGE123F_TRANSACTIONAL_EXTERNAL_IMPORT_BINDING.md), [Stage 123E thunk execution](docs/STAGE123E_IMPORT_CELL_LOOKUP_AND_THUNK_EXECUTION.md), and [Stage 123D relocation evidence](docs/STAGE123D_INTERNAL_RELOCATION_EVIDENCE.md).
 
-### Critical next milestone — Stage 123H: load original ELF32 provider and bridge dependencies
+### Active milestone — Stage 123H: load original ELF32 provider and bridge dependencies
 
-1. Run the existing ELF32 auditor and loader pipeline against the exact original `libjirobiodg.so`; verify program headers, dynamic symbols, relocations, ARM attributes, and constructor metadata.
-2. Disassemble the 22 matching exports and reconstruct their shared function-pointer table plus `s3eFibreExit_asm` initialization/stack behavior before treating them as callable providers; then build the guest ELF32 provider catalog and resolve only verified exports to guest addresses, preserving Thumb state.
-3. Audit the six `DT_NEEDED` libraries (`libc.so`, `libm.so`, `liblog.so`, `libstdc++.so`, `libz.so`, `libdl.so`) and identify the exact imported symbols needed by the shared object.
-4. Bridge only verified system APIs to ARM64 handlers; do not load ARM32 system libraries through the ARM64 process linker.
-5. Keep the remaining 205 XE3U imports fail-closed until matched to a verified guest provider or host handler.
+1. Complete the read-only audit of the original `libjirobiodg.so` program headers, dynamic symbols, relocations, ARM attributes, and JNI lifecycle; current evidence is recorded in `docs/STAGE123H_GL_LAZY_DISPATCH_WRAPPERS.md`.
+2. Reconstruct the callback structure at `0x737f0` and helper `0x3d64c`: identify initialization site, callback prototypes, locking, lifetime, and how a symbol-name string becomes an ARM32-callable Thumb function pointer.
+3. Trace `JNI_OnLoad` and the Java/native startup path to determine whether it initializes the callback state or only registers JNI methods.
+4. Build a read-only relocation/provider plan for the original ELF32 module. Select no load bias until its `0x8000` PT_LOAD alignment and guest address-space reservation are accounted for.
+5. Audit the six `DT_NEEDED` libraries (`libc.so`, `libm.so`, `liblog.so`, `libstdc++.so`, `libz.so`, `libdl.so`) and map all 137 relocation-referenced undefined names to verified providers or explicit guest bridges.
+6. Bridge only verified system APIs to ARM64 handlers; never load ARM32 system libraries through the ARM64 process linker.
+7. Keep the remaining XE3U imports fail-closed until matched to a verified guest provider or host handler.
 
 ### Remaining real-game gates
 
