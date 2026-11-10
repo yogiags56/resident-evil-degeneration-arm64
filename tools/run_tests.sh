@@ -206,6 +206,12 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_dl_provider_catalog.c \
   runtime/guest/re_guest_dl_provider_catalog.c runtime/guest/re_guest_symbol_resolve.c \
   -o build/host-tests/test_re_guest_dl_provider_catalog
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_dl_elf32_adapter.c \
+  runtime/guest/re_guest_dl_elf32_adapter.c \
+  runtime/guest/re_guest_dl_provider_catalog.c \
+  runtime/guest/re_guest_elf32_provider_catalog.c \
+  runtime/guest/re_guest_symbol_resolve.c \
+  -o build/host-tests/test_re_guest_dl_elf32_adapter
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_gl_imports.c \
   runtime/guest/re_guest_gl_imports.c runtime/guest/re_guest_runtime.c \
   runtime/guest/re_guest_imports.c runtime/guest/s3e_aapcs32.c runtime/guest/re_guest_cpu.c \
