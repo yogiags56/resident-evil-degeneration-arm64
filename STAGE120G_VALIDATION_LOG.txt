@@ -1,0 +1,25 @@
+Stage 120G validation record
+============================
+
+GitHub Actions workflow: Source checks
+Run ID: 42599401095
+Validated commit: c16c10f8518a768a9fe87573e192eeb2a0f4b943
+Result: success
+
+Observed:
+- python3 -m unittest discover -s tests -v
+- 157 Python tests passed (7.639 seconds)
+- GNU-hash-only dynamic symbol resolution test passed.
+- GNU/SysV nchain agreement cross-check passed.
+- Big-endian GNU-hash-only resolution passed.
+- Unterminated chain and bucket-before-symoffset malformed fixtures were rejected.
+- GNU-derived symbol count exceeding SysV nchain was rejected.
+- GNU bloom filter, chain hash, bloom-size, and bloom-shift negative tests passed.
+- bash ./tools/compile_host_mock.sh completed successfully.
+- Native host C regression executables completed successfully.
+
+Not tested:
+- Android ARM64 NDK build or APK installation in this run.
+- Physical-device execution.
+- Original game boot or gameplay.
+- Proprietary original ELF/APK analysis.

@@ -1,59 +1,102 @@
 # Current Status
 
-**Current source milestone: Stage 118 implementation committed; CI pending.** Stage 117 integrated the partial ARM32/Thumb guest CPU, AAPCS32 dispatcher, runtime coordinator, and ABI support into the Android ARM64 native target. The Android ARM64 workflow passed on commit `b090f90`: SDK/NDK provisioning, ARM64 liblzma compilation, APK assembly, ELF verification, artifact collection, and upload. Source Checks passed on the same commit.
+**Current source milestone: Stage 119S — guest ARM architecture-profile evidence audit added on branch `stage-119s-guest-arm-profile-audit`; CI pending. Stage 119R host CI and Android ARM64 build passed on commit `080203b` (runs 42585064638 and 42585064404). Stage 119Q host CI passed on commit `c4325e6` (run 42584673737).** Stage 117 integrated a partial ARM32/Thumb guest CPU, AAPCS32 dispatcher, runtime coordinator, and ABI support into the Android ARM64 native target. A prior Android ARM64 workflow passed on commit `b090f90`; this is not validation of the current branch.
 
-Stage 118 adds guest runtime stop diagnostics: fault PC, ARM/Thumb state, CPU status, import status, and stop reason. Tests cover unresolved imports, import-dispatch failure due to invalid guest stack alignment, and guest instruction fetch outside mapped memory. The Stage 118 report documents the forward roadmap and outstanding research. Its CI validation is pending.
+Stage 118 adds guest runtime stop diagnostics. Stages 119A–119L introduced guest memory management, checked bus, CPU adapters, checked instruction fetch, CPU data facade, isolated transfer helper, and fault regressions. Stage 119M documented ARMv7-A/R alignment. Stage 119N added memory attributes and strict-by-default SCTLR.A policy; host CI passed on commit `529a7ee`.
 
-**Still blocked / unverified:** full ARM/Thumb instruction coverage; XE3U loader and relocation engine; guest address-space map; production file-import activation and exact partial-read/error behavior; complete S3E import table; renderer/audio/input; physical-device execution; original game boot/gameplay. The original APK and game executable are not distributed in the repository.
+**Stage 119O:** added an isolated byte/halfword/word scalar helper using explicit little-endian byte assembly, memory-type checks, and alignment policy. The first host run exposed an incorrect test expectation for an unaligned address while SCTLR.A was clear; the test was corrected. The corrected Stage 119O revision `be24c13` passed host CI (run 42553706025). An Android ARM64 build also passed on the earlier implementation revision, but this does not replace validation of the current Stage 119P branch.
 
-See [Stage 118 report](STAGE118_RUNTIME_DIAGNOSTICS_AND_ROADMAP.md).
+**Stage 119P:** added an isolated A32 scalar instruction helper supporting AL condition, immediate offsets, pre-index/no-writeback, non-PC base/destination registers, LDR/STR byte/word, LDRH/STRH, LDRSB, and LDRSH. Signed loads sign-extend. Added regression tests and Android CMake/host runner registration. This helper is not called by `re_guest_cpu_step`; production CPU behavior is unchanged. Stage 119P host CI and Android ARM64 build passed on commit `52d8271` (runs 42584651928 and 42584651926).
 
+**Still blocked / unverified:** guest SCTLR system-register emulation and reset-value evidence; exact guest address-space/MMU mapping and page semantics; full ARM/Thumb instruction coverage; comprehensive differential testing of new scalar instruction helper; XE3U loader and relocation engine; production file-import activation and exact partial-read/error behavior; complete S3E import table; renderer/audio/input; physical-device execution; original game boot/gameplay. The original APK and game executable are not distributed in the repository.
 
-## Stage 119 update
-
-Initial guest memory manager committed. The new region table maps bounded 32-bit guest ranges onto caller-owned host buffers, rejects overlaps and 32-bit address-space overflow, and enforces read/write/execute permissions on resolution. Tests cover map/resolve/permission/bounds/overlap/unmap. The module is included in Android CMake and host test runner. It is not yet connected to the CPU interpreter; the current CPU still uses its legacy contiguous `REGUESTMEM` interface. A safe adapter and memory-access migration remain required before XE3U loading.
-
-
-## Stage 119C update
-
-Stage 119C hardens guest address arithmetic and adds a bounded single-region compatibility view for the legacy CPU memory structure. Tests cover the 4 GiB boundary, SIZE_MAX-sized requests, invalid permissions, region capacity, and adapter permission checks. The adapter is compiled in host tests and Android CMake. **It is not a multi-region memory bus and does not yet connect the region manager to CPU execution.** Full CPU access migration and XE3U loader fixtures remain Stage 119 exit criteria. See [Stage 119C report](STAGE119C_MEMORY_HARDENING.md).
+See [Stage 119P report](STAGE119P_A32_SCALAR_TRANSFER_INTEGRATION.md), [Stage 119O report](STAGE119O_CHECKED_SCALAR_TRANSFER.md), [Stage 119N report](STAGE119N_MEMORY_ATTRIBUTES_ALIGNMENT_POLICY.md), and [roadmap](../ROADMAP.md).
 
 
-## Stage 119E update
+## Stage 119M update
 
-Added the checked multi-region guest memory bus in `runtime/guest/re_guest_memory_bus.h/.c`. It exposes separate instruction-fetch (EXEC), data-read (READ), and data-write (WRITE) accessors for 8/16/32-bit little-endian values, delegates complete-range and permission validation to the region manager, clears read outputs on failure, and rejects misaligned 16/32-bit accesses. A synthetic test maps executable code, read-only data, and writable data with unmapped gaps and boundary cases. The bus is compiled into Android CMake and the host test runner. **The CPU interpreter is not yet migrated to this bus**; its legacy contiguous memory interface remains active. See [Stage 119E report](STAGE119E_CHECKED_MEMORY_BUS.md).
-
-
-## Stage 119F update
-
-Added an ABI-preserving CPU-facing adapter over the checked memory bus in `runtime/guest/re_guest_cpu_bus_adapter.h/.c`. The adapter has distinct EXEC fetch, READ data, and WRITE data calls and is covered by a host regression test. It is compiled into Android CMake and registered in the host test runner. This does **not** change the CPU interpreter: `re_guest_cpu_step` still uses the legacy contiguous `REGUESTMEM` path. Stage 119F is therefore an adapter milestone, not completion of CPU memory migration. See [Stage 119F report](STAGE119F_CPU_BUS_ADAPTER.md).
+Added ARMv7-A/R alignment research covering instruction-specific alignment behavior, SCTLR.A, memory-type restrictions, and multi-access fault caveats.
 
 
-## Stage 119G update
+## Stage 119N update
 
-Extended the CPU bus adapter with a checked instruction-fetch helper. ARM fetch uses one 32-bit EXEC access; Thumb fetch uses a 16-bit EXEC access and independently checks the second halfword for Thumb-2 32-bit prefixes. Tests cover permission denial including a Thumb-2 instruction split across adjacent regions with different permissions. The helper is registered in the host test runner. The production interpreter is **not yet migrated** and continues to fetch from legacy contiguous memory. See [Stage 119G report](STAGE119G_CHECKED_INSTRUCTION_FETCH.md).
-
-
-## Stage 119H update
-
-Added opt-in `re_guest_cpu_step_checked`. It fetches ARM/Thumb instructions through the checked EXEC memory bus, validates Thumb-2 second-halfword access, verifies instruction bytes match the legacy contiguous decoder view, then invokes the existing CPU step. Permission and mismatch failures return before CPU state advances. Added and registered `tests/test_re_guest_cpu_checked_step.c`. The legacy CPU entry point and public memory/CPU structure layouts remain unchanged. This is a transitional dual-view gate: instruction/data accesses inside the decoder still use contiguous legacy memory. See [Stage 119H report](STAGE119H_CHECKED_CPU_STEP.md).
+Added UNKNOWN, NORMAL, DEVICE, and STRONGLY_ORDERED guest memory attributes, a source-compatible legacy map API defaulting to UNKNOWN, bounded memory-type queries, and strict-by-default SCTLR.A policy. Host regression tests passed on commit `529a7ee`.
 
 
-## Stage 119I update
+## Stage 119O update
 
-Expanded `tests/test_re_guest_cpu_checked_step.c` with ARM MOV, Thumb-2 MOVW, IT EQ true/false execution, and Thumb-2 second-halfword EXEC-permission denial. Existing Thumb-1, fetch parity, and permission-denial checks remain. The test remains opt-in and does not switch production runtime to the checked path. See [Stage 119I report](STAGE119I_CHECKED_CPU_REGRESSION.md).
-
-
-## Stage 119J update
-
-Added CPU-facing data-memory facade `re_guest_cpu_memory.h/.c` for checked byte/halfword/word reads and writes through the guest memory bus, with CPU error-status mapping. Added `tests/test_re_guest_cpu_memory.c`, registered it in the host test runner, and added the implementation to Android CMake. This does **not** migrate interpreter load/store opcodes yet; the legacy decoder still uses contiguous memory. Strict bus alignment behavior remains provisional pending ARMv7 alignment research. See [Stage 119J report](STAGE119J_CPU_DATA_MEMORY_FACADE.md).
+Added checked scalar data transfers for byte, halfword, and word widths using explicit little-endian byte assembly. The helper consults memory attributes and alignment policy, checks full range and permissions before access, and preserves outputs/backing bytes on failure. The corrected Stage 119O revision `be24c13` passed host CI. The helper remains opt-in and is not connected to the production interpreter.
 
 
-## Stage 119K update
+## Stage 119P update
 
-Added an isolated A32 immediate load/store helper (`re_guest_cpu_transfer.h/.c`) using the Stage 119J CPU memory facade. Initial supported forms are AL-condition LDR/STR word and LDRB/STRB, immediate offset, pre-index, no writeback, with PC operands rejected. Added `tests/test_re_guest_cpu_transfer.c`, registered it in `tools/run_tests.sh`, and included the helper in Android CMake. The test now includes seven differential cases against the legacy interpreter. CI caught and helped correct test-fixture issues; the latest differential test run is pending. The helper is not wired into the production CPU interpreter; legacy decoder behavior remains unchanged. See [Stage 119K report](STAGE119K_A32_LOAD_STORE_HELPER.md).
+Added isolated A32 scalar instruction decoding for ordinary immediate pre-indexed/no-writeback byte/word LDR/STR plus LDRH/STRH/LDRSB/LDRSH. Signed loads sign-extend. The helper routes accesses through Stage 119O, preserves destination registers on failed loads, and fails closed for unsupported forms. Host tests and Android CMake registration added. Current branch CI pending.
 
 
-## Stage 119L update
+## Stage 119Q update
 
-Extended `tests/test_re_guest_cpu_transfer.c` with write-permission rejection, unmapped-load destination preservation, and unmapped-store memory-preservation cases. These supplement the seven Stage 119K differential cases. CI is pending for the latest source revision. The helper remains isolated and is not connected to the production CPU interpreter.
+Added a deterministic independent byte-array reference model covering 512 A32 scalar transfer cases across word/byte/halfword and signed loads. The test compares all CPU registers and the complete memory region after every operation. It is registered in the host test runner. Host CI passed on commit `c4325e6` (run 42584673737), including all 75 Python checks, native C syntax checks, Stage 119P integration tests, and all 512 differential cases. Android ARM64 build passed on commit `9cb5aee` (run 42584826800). The model is not an external hardware oracle and the helper remains isolated from production CPU dispatch.
+
+
+## Stage 119R update
+
+Added directed A32 scalar permission, cross-region, address-wrap/underflow, and unsupported-encoding tests. The tests verify no partial backing-memory mutation and preservation of destination registers on failed loads. Host CI passed on code commit `46a8d8a` (run 42584904344): 75 Python checks, native C syntax checks, Stage 119P integration tests, 512 differential cases, and directed fault/decoder tests all passed.
+
+
+## Stage 119S update
+
+Audited what the repository proves about the guest ARM profile. Confirmed ARM32/Thumb guest code and AAPCS32 argument convention; exact architecture revision/profile, optional extensions, guest endianness control, privilege/MMU model, and SCTLR reset/write behavior remain unproven. The ARMv7-A/R alignment reference is conditional research, not evidence of the target's exact profile. No guessed system-control state is added.
+
+
+## Stage 119T update
+
+Added a read-only ELF32/ELF64 metadata auditor and synthetic tests for ELF class, byte order, machine, section bounds, and selected AEABI ARM attributes. The original guest executable is not in the repository, so no game-specific metadata is claimed. Host source checks and Android ARM64 native build passed on commit ffd61f9 (runs 42586297642 and 42586297664). This does not establish game boot or playability.
+
+## Stage 119U update
+
+Expanded public AEABI attribute parsing to file, section, and symbol scopes; implemented Tag_compatibility (ULEB128 flag plus vendor string) and argument-free Tag_nodefaults; retained private vendor payloads as opaque data. Added a readelf/llvm-readobj evidence-capture utility recording tool version and source SHA-256 without executing the input. CI pending.
+
+
+## Stage 119V update
+
+Added tools/guest_arm_instruction_inventory.py, an optional Capstone-based ARM/Thumb instruction inventory for ELF32 EM_ARM executable sections. Mode is explicit; mixed-mode mapping symbols are not yet parsed. Reports decoded/undecoded byte coverage, mnemonic counts, sample instructions, Capstone version, and source SHA-256. Added mocked decoder tests. CI pending. The original game executable is not present; no game-specific instruction inventory is claimed.
+
+
+## Stage 119W update
+
+Added mapping-symbol-aware ARM/Thumb inventory. ELF32 local $a/$t/$d symbols (including suffixed forms) split executable sections into ARM code, Thumb code, data, and unknown ranges. ET_REL offsets and ET_EXEC/ET_DYN virtual addresses are handled separately. Unknown prefixes are not guessed; sections without mapping symbols require explicit fallback mode. CI pending. No original game executable is present.
+
+
+## Stage 119X update
+
+Added tools/guest_arm_relocation_audit.py for read-only ELF32 EM_ARM SHT_REL/SHT_RELA analysis. It resolves symbol names through linked conventional symbol/string tables, validates relocation table links, target sections, symbol indices and offsets, and preserves unknown relocation types. REL addends are not inferred; RELA signed addends are recorded. CI pending. No original game executable is available.
+
+
+## Stage 119Y update
+
+Added tools/guest_arm_relocation_crosscheck.py to correlate ELF32 ARM relocation sites with local mapping-symbol ranges. Reports ARM/Thumb/data/unknown/non-executable site classes, flags CALL/JUMP sites outside mapped code, and distinguishes undefined/external, absolute, and ordinary section-defined symbols. No relocations are applied and no S3E import identity is inferred. CI pending; no original game executable is available.
+
+
+## Stage 119Z update
+
+Added tools/guest_arm_function_inventory.py to inventory ELF32 ARM STT_FUNC symbols, classify function extents against mapping-symbol ranges, record Thumb state bits, and join CALL/JUMP relocation references by exact symbol-table and symbol indices. Relocation reports now expose symbol-table section identity. Synthetic tests cover mixed-mode extents, data, zero-size, out-of-section, undefined, and malformed links. CI pending; original game executable not available.
+
+
+## Stage 120A update
+
+Added tools/guest_arm_dynamic_import_inventory.py and synthetic tests for ELF32 EM_ARM dynamic symbol tables, named undefined symbols, DT_NEEDED dependencies, SHT_DYNAMIC tags, and dynamic REL/RELA correlation. Unknown tags are preserved. PT_DYNAMIC-only files, Android APS2, RELR, and symbol version decoding are deferred. No game binary was analyzed; CI pending.
+
+
+## Stage 120B update
+
+Added tools/guest_arm_plt_got_audit.py to identify section-backed R_ARM_JUMP_SLOT records and correlate them with dynamic symbol identity. PLT tag values are preserved when available; absent values remain null. Synthetic tests cover symbol correlation and unknown/empty PLT inventories. No PLT instruction decoding, GOT resolution, or relocation application is claimed. CI pending.
+
+
+## Stage 120C update
+
+Added tools/guest_arm_pt_dynamic_audit.py for ELF32 EM_ARM program-header parsing without requiring section headers, PT_LOAD file-backed virtual address mapping, and PT_DYNAMIC/DT_NEEDED decoding. Synthetic tests cover stripped-style inputs, BSS/file bounds, missing DT_NULL, invalid segment sizes, and both endian modes. CI pending; no original game executable was analyzed.
+
+
+## Stage 120D update
+
+Added tools/guest_arm_dynamic_relocation_segment_audit.py to parse ELF32 EM_ARM DT_REL, DT_RELA, and DT_JMPREL through PT_DYNAMIC/PT_LOAD without section headers. Symbol names are correlated only when SysV DT_HASH safely bounds the dynamic symbol table; otherwise identity remains unresolved. Tests and CI pending. No relocation is applied.
