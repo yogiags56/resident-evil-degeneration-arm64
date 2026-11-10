@@ -1,6 +1,6 @@
 # Resident Evil: Degeneration — Native ARM64 Port Research
 
-[![Stage](https://img.shields.io/badge/stage-120R-blue)](#project-status)
+[![Stage](https://img.shields.io/badge/stage-120Z-blue)](#project-status)
 [![Platform](https://img.shields.io/badge/platform-Android%20ARM64-green)](#build-the-android-probe)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
