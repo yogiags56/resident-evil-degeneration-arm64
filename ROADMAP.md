@@ -1,5 +1,9 @@
 # Project Roadmap
 
+## Active milestone update — Stage 123O (original ELF32 DSO dependency evidence)
+
+A fresh readelf inspection of the uploaded APK's `lib/armeabi/libjirobiodg.so` is recorded with both APK/ELF SHA-256 provenance and a machine-readable manifest. It confirms six direct DT_NEEDED entries, 4,057 dynamic relocations (3,920 RELATIVE, 135 JUMP_SLOT, 2 ABS32), and 137 symbol-backed references across 136 unique undefined names. Runtime GLES fallback SONAMEs are recorded separately from DT_NEEDED. This is static evidence only; no provider ABI compatibility or game boot is claimed. See `docs/STAGE123O_ORIGINAL_DSO_DEPENDENCY_EVIDENCE.md` and `reports/STAGE123O_LIBJIROBIODG_PROVIDER_MANIFEST.json`.
+
 ## Active milestone update — Stage 123N (guest dl bridge/provider catalog wiring)
 
 Stage 123N adds a small initializer that installs the Stage 123L exact-SONAME provider catalog callbacks into the Stage 123I guest libdl bridge. A host regression exercises opaque guest handles, per-provider symbol scope, Thumb/data address preservation, reference-counted opens/closes, stale-token rejection, and missing-provider behavior. The new source is registered in the host test runner and Android native target. CI validation is pending; this does not yet load Android system DSOs or supply GLES/EGL ARM32 trampolines. See docs/STAGE123N_GUEST_DL_BRIDGE_PROVIDER_WIRING.md.
