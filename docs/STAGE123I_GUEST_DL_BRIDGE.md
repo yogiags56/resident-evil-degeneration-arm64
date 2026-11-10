@@ -35,13 +35,13 @@ The synthetic runtime test exercises:
 - `dlclose`, stale-token rejection, and generation change after reopening.
 - Failed `dlopen` and error retrieval.
 
-Android ARM64 build workflow run `42883782568` was still running when this document was written; update this section after it completes.
+Android ARM64 build workflow run `42883782568` passed, including compilation of `re_guest_dl_bridge.c` into the ARM64 native target.
 
 ## Explicit non-claims
 
 This is a bridge primitive, not yet the production backend for the original provider:
 - The callbacks in the test are synthetic; no host `dlopen` or `dlsym` is called.
-- The bridge is not yet bound to `libjirobiodg.so`'s actual dynamic relocation symbol indices.
+- The bridge is not yet bound to `libjirobiodg.so`'s actual dynamic relocation symbol indices. Stage 123H traced `JNI_OnLoad` at `0x34056` to the GL initializer at `0x3d3b0`; therefore the real callback/provider registry must be installed before guest `JNI_OnLoad` is invoked.
 - No `OGLES`/ `OGLES2` library family is mapped to host GLES/EGL yet.
 - `libhgl.so` behavior is unresolved.
 - The six `DT_NEEDED` dependencies and 137 relocation-referenced undefined symbols remain to be satisfied.
