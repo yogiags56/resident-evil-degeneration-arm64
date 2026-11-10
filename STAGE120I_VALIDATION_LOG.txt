@@ -1,0 +1,23 @@
+Stage 120I validation record
+============================
+
+GitHub Actions workflow: Source checks
+Run ID: 42600655563
+Validated commit: a053c922421577ac9a0ef9f1544f55f3ff607f1b
+Result: success
+
+Observed:
+- python3 -m unittest discover -s tests -v
+- 177 Python tests passed (7.761 seconds)
+- Direct, bitmap, and subsequent direct RELR decoding passed.
+- Big-endian RELR decoding passed.
+- Malformed tags, entry sizes, alignment, bitmap ordering, empty bitmap, cursor overflow, and file-backed bounds were rejected.
+- Unified relocation reconciliation preserved RELR relative-only semantics without symbol index or addend.
+- bash ./tools/compile_host_mock.sh completed successfully.
+- Native host C regression executables completed successfully.
+
+Not tested:
+- Android ARM64 NDK build or APK installation in this run.
+- Physical-device execution.
+- Original game boot or gameplay.
+- Proprietary original ELF/APK analysis.

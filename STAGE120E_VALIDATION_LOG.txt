@@ -1,0 +1,21 @@
+Stage 120E validation record
+============================
+
+GitHub Actions workflow: Source checks
+Successful run: 42597476084
+Commit: 81a648059e3def1beb65f772c91475ac949aaa4c
+Result: success
+
+Observed commands/results from the workflow:
+- bash ./tools/run_tests.sh
+- Python unittest discovery: 141 tests passed (7.073 seconds)
+- Host C mock compilation and native regression executables completed successfully.
+- Stage 120E APS2 tests passed, including grouped REL/RELA, cumulative RELA addends, ungrouped cumulative r_info deltas, malformed group checks, and PT_LOAD bounds.
+
+A later documentation-only README/ROADMAP update was pushed at commit 367b15da67d9241e6fcef51d6bffa7e379dc86a0. Its Source checks workflow was queued/in progress when this log was updated. The successful 81a6480 run validates the parser and test changes.
+
+Not tested by this workflow:
+- Android ARM64 build or device installation.
+- Physical-device execution.
+- Original game boot or gameplay.
+- Any proprietary original ELF/APK input.
