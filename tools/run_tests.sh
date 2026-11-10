@@ -34,6 +34,10 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_xe3u_import_lookup.c \
   runtime/guest/re_guest_xe3u_import_lookup.c \
   -o build/host-tests/test_re_guest_xe3u_import_lookup
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_xe3u_import_plan.c \
+  runtime/guest/re_guest_xe3u_import_plan.c runtime/guest/re_guest_imports.c \
+  runtime/guest/re_guest_memory.c runtime/guest/re_guest_memory_bus.c \
+  -o build/host-tests/test_re_guest_xe3u_import_plan
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_elf32_image.c \
   runtime/guest/re_guest_elf32_image.c \
   -o build/host-tests/test_re_guest_elf32_image
