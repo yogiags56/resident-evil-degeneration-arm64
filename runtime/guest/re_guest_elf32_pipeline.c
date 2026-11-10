@@ -26,7 +26,7 @@ REGUESTELF32PIPELINEStatus re_guest_elf32_load_pipeline(
     REGUESTELF32LOADREQUEST requests[RE_GUEST_ELF32_MAX_MODULES];
     REGUESTELF32BATCHRESULT loaded;
     const char *root_soname=NULL;
-    size_t root_matches=0,provider_module_count=0,provider_count=0,failed=0;
+    size_t root_matches=0,root_module_index=0,provider_module_count=0,provider_count=0,failed=0;
     size_t provider_failed_symbol=0,batch_failed_segment=0,batch_failed_relocation=0;
     int batch_inner=0;
 
@@ -88,6 +88,7 @@ REGUESTELF32PIPELINEStatus re_guest_elf32_load_pipeline(
         if(strcmp(m->module_name,root_name)==0||
            strcmp(identity,root_name)==0) {
             root_soname=identity;
+            root_module_index=i;
             root_matches++;
         }
 
@@ -171,6 +172,7 @@ REGUESTELF32PIPELINEStatus re_guest_elf32_load_pipeline(
     pending.loaded=loaded;
     pending.module_count=count;
     pending.provider_count=provider_count;
+    pending.root_module_index=root_module_index;
     *result=pending;
     if(failed_module)*failed_module=count;
     if(failed_index)*failed_index=0;
