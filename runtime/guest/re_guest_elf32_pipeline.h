@@ -31,6 +31,7 @@ typedef struct {
     REGUESTELF32BATCHRESULT loaded;
     size_t module_count;
     size_t provider_count;
+    size_t root_module_index;
 } REGUESTELF32PIPELINERESULT;
 typedef enum {
     RE_GUEST_ELF32_PIPELINE_OK=0,
