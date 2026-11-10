@@ -1,6 +1,6 @@
 # Resident Evil: Degeneration — Native ARM64 Port Research
 
-[![Stage](https://img.shields.io/badge/stage-119S-blue)](#project-status)
+[![Stage](https://img.shields.io/badge/stage-120R-blue)](#project-status)
 [![Platform](https://img.shields.io/badge/platform-Android%20ARM64-green)](#build-the-android-probe)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
@@ -519,3 +519,8 @@ Stage 120Q adds an independent GNU readelf differential check for ELF32 SHT_RELR
 
 
 Stage 120Q is complete. The ELF32 ARM RELR decoder now has an independent GNU readelf differential test, and Android DT_ANDROID_RELRCOUNT behavior matches Bionic's ignored-metadata semantics. CI passed 273 Python tests plus host C/native regressions. See STAGE120Q_REPORT.md and STAGE120Q_VALIDATION_LOG.txt.
+
+
+## Stage 120R — PT_DYNAMIC RELR differential validation
+
+Added an ELF32 EM_ARM fixture exposing one RELR stream through PT_DYNAMIC/PT_LOAD and a matching SHT_RELR section. The dynamic decoder is checked against GNU `readelf -rW`, and unified reconciliation verifies that RELR entries remain relative-only with no fabricated symbol index or addend. See `STAGE120R_REPORT.md` and `docs/STAGE120R_DYNAMIC_RELR_DIFFERENTIAL.md`.
