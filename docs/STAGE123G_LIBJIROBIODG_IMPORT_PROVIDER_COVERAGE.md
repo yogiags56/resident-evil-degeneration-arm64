@@ -41,6 +41,17 @@ These are link-time ELF symbol values, not runtime guest addresses. A loaded pro
 - The allocator data symbols `s3eMallocBase`, `s3eReallocBase`, and `s3eFreeBase` are not exports; bind them through explicit allocator callbacks.
 - The other 205 XE3U symbols do not match a defined export in this one shared object. This does not prove they are absent from the Android system libraries or other S3E runtime providers.
 
+## Export wrappers are not yet validated direct providers
+
+Disassembly shows that the matching GL exports are not necessarily simple direct calls into GLES:
+- `glTexParameterx` reads a function pointer from a shared table at offset `+0x4C`; when it is zero, the wrapper calls `s3eFibreExit_asm+0x6C44` to initialize/obtain the pointer, then invokes it with `BLX r3`.
+- `glDisable` uses a different table slot (`+0x38`) and the same lazy initialization helper.
+- `glLoadMatrixx` follows the same function-pointer-table pattern.
+
+Therefore the 22 exact symbol matches are **candidate guest providers**, not yet proven callable by simply adding the ELF load bias. The global function-pointer table, `s3eFibreExit_asm` behavior, initialization order, and required runtime stack/fibre state must be reconstructed before these exports are used as direct providers. A host GLES wrapper may ultimately be simpler, but it must preserve the fixed-point/API semantics and runtime context expected by the guest.
+
+The library imports `dlopen`, `dlsym`, `dlclose`, and `dlerror`, which is consistent with dynamic provider initialization; no assumption is made about which library or function each lookup resolves to.
+
 ## ELF dependency boundary
 
 The shared object declares these DT_NEEDED libraries:
