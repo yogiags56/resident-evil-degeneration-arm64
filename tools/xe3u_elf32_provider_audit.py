@@ -150,6 +150,12 @@ def _thumb_ldr_word_imm(halfword: int) -> tuple[int, int, int] | None:
     return halfword & 7, (halfword >> 3) & 7, ((halfword >> 6) & 31) * 4
 
 
+def _thumb_str_word_imm(halfword: int) -> tuple[int, int, int] | None:
+    if halfword & 0xf800 != 0x6000:
+        return None
+    return halfword & 7, (halfword >> 3) & 7, ((halfword >> 6) & 31) * 4
+
+
 def _thumb_bl_target(pc: int, first: int, second: int) -> int | None:
     if first & 0xf800 != 0xf000 or second & 0xd000 != 0xd000:
         return None
@@ -237,6 +243,7 @@ def audit_gl_dispatch_wrappers(elf_bytes: bytes, matched_exports: list[dict],
 
         name_literals = []
         resolver_targets = []
+        resolver_instruction_indices = []
         for i, halfword in enumerate(halfwords):
             literal_load = _thumb_ldr_literal(halfword, start + i * 2)
             if literal_load is not None and literal_load[0] == 0:
@@ -257,7 +264,13 @@ def audit_gl_dispatch_wrappers(elf_bytes: bytes, matched_exports: list[dict],
                 target = _thumb_bl_target(start + i * 2, halfword, halfwords[i + 1])
                 if target is not None:
                     resolver_targets.append(target)
+                    resolver_instruction_indices.append(i)
 
+        stores_resolved_pointer = any(
+            _thumb_str_word_imm(halfwords[j]) == (0, dispatch["table_register"],
+                                                   dispatch["slot_offset"])
+            for call_index in resolver_instruction_indices
+            for j in range(call_index + 2, len(halfwords)))
         wrappers.append({
             "name": export["name"], "elf_value": export["elf_value"],
             "classification": "thumb_lazy_dispatch_wrapper",
@@ -267,6 +280,7 @@ def audit_gl_dispatch_wrappers(elf_bytes: bytes, matched_exports: list[dict],
             "shared_call_targets": [f"0x{x:08x}" for x in resolver_targets],
             "name_literal_matches_export": any(x["name"] == export["name"]
                                                for x in name_literals),
+            "stores_resolved_pointer_to_dispatch_slot": stores_resolved_pointer,
         })
 
     classified = [x for x in wrappers
@@ -288,6 +302,8 @@ def audit_gl_dispatch_wrappers(elf_bytes: bytes, matched_exports: list[dict],
             x["table_base_literal_has_r_arm_relative"] for x in classified),
         "all_function_name_literals_match": bool(classified) and all(
             x["name_literal_matches_export"] for x in classified),
+        "all_wrappers_cache_resolved_pointer": bool(classified) and all(
+            x["stores_resolved_pointer_to_dispatch_slot"] for x in classified),
         "table_bases": [f"0x{x:08x}" for x in table_bases],
         "slot_offsets": [f"0x{x:02x}" for x in slot_offsets],
         "unclaimed_slot_offsets": holes,
