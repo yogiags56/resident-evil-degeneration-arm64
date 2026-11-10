@@ -17,7 +17,7 @@ A symbol-table comparison found 22 of 227 XE3U imports as defined Thumb exports 
 ### Critical next milestone — Stage 123H: load original ELF32 provider and bridge dependencies
 
 1. Run the existing ELF32 auditor and loader pipeline against the exact original `libjirobiodg.so`; verify program headers, dynamic symbols, relocations, ARM attributes, and constructor metadata.
-2. Build a guest ELF32 provider catalog from the loaded module and resolve the 22 matching XE3U imports to actual guest addresses, preserving Thumb state.
+2. Disassemble the 22 matching exports and reconstruct their shared function-pointer table plus `s3eFibreExit_asm` initialization/stack behavior before treating them as callable providers; then build the guest ELF32 provider catalog and resolve only verified exports to guest addresses, preserving Thumb state.
 3. Audit the six `DT_NEEDED` libraries (`libc.so`, `libm.so`, `liblog.so`, `libstdc++.so`, `libz.so`, `libdl.so`) and identify the exact imported symbols needed by the shared object.
 4. Bridge only verified system APIs to ARM64 handlers; do not load ARM32 system libraries through the ARM64 process linker.
 5. Keep the remaining 205 XE3U imports fail-closed until matched to a verified guest provider or host handler.
