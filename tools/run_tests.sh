@@ -199,8 +199,8 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
   -o build/host-tests/test_re_guest_runtime_mapped
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_dl_bridge.c \
   runtime/guest/re_guest_dl_bridge.c runtime/guest/re_guest_runtime.c \
-  runtime/guest/re_guest_imports.c runtime/guest/s3e_aapcs32.c \
-  runtime/guest/re_guest_cpu.c runtime/guest/re_guest_memory.c \
+  runtime/guest/re_guest_imports.c runtime/guest/re_guest_symbol_resolve.c \
+  runtime/guest/s3e_aapcs32.c runtime/guest/re_guest_cpu.c runtime/guest/re_guest_memory.c \
   runtime/guest/re_guest_memory_bus.c \
   -o build/host-tests/test_re_guest_dl_bridge
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_gl_imports.c \
