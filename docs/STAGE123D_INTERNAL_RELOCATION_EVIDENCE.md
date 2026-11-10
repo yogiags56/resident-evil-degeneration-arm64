@@ -35,6 +35,21 @@ Aggregate results:
 
 This is strong binary evidence that type-1 entries identify 32-bit absolute pointer cells and that the likely relocation operation for a runtime load bias `delta = runtime_base - 0x4A000000` is `word := word + delta`, preserving bit 0. It is not yet treated as production proof: validate representative code/data references against ARM/Thumb disassembly and ensure no special cases or alternate relocation domains exist before enabling writes.
 
+## External Thumb relocation cell observations (same read-only pass)
+
+The 238 type-4 records were also inspected as 4-byte little-endian cells in the code blob:
+- All 238 cell offsets are unique, 4-byte aligned, and fully file-backed.
+- 230 cells contain `0x4A000070` (the link-time image base plus RVA `0x70`).
+- 8 cells contain zero.
+- The eight zero-valued records are:
+  - `glTexParameteri` at `0xC7C4C`.
+  - `glTexParameterx` at `0xC7C50`.
+  - `s3eMallocBase` at `0x1603B8` and `0x170330`.
+  - `s3eReallocBase` at `0x1603BC` and `0x170334`.
+  - `s3eFreeBase` at `0x1603C0` and `0x170338`.
+
+The shared `0x4A000070` value is an observed placeholder-like in-image address, not yet a proven import thunk or callable target. The eight zero cells may represent unresolved/optional imports or another linker convention; no such meaning is assigned yet. Do not apply the internal type-1 add-load-bias rule to type-4 records merely because most cells look like in-image pointers. External symbol binding and ARM/Thumb interworking semantics remain a separate analysis task.
+
 ## Required next checks
 1. Decode and inspect the instruction/data context around representative patch sites from each region, especially patch sites in the initialized-data tail.
 2. Verify that all post-relocation targets remain within the chosen runtime image mapping and that signed/unsigned overflow is rejected before any writes.
