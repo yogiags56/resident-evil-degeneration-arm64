@@ -277,7 +277,7 @@ def audit_gl_dispatch_wrappers(elf_bytes: bytes, matched_exports: list[dict],
             **{key: f"0x{value:08x}" if isinstance(value, int) else value
                for key, value in dispatch.items()},
             "function_name_literals": name_literals,
-            "shared_call_targets": resolver_targets,
+            "shared_call_targets": [f"0x{x:08x}" for x in resolver_targets],
             "name_literal_matches_export": any(x["name"] == export["name"]
                                                for x in name_literals),
             "stores_resolved_pointer_to_dispatch_slot": stores_resolved_pointer,
@@ -307,7 +307,7 @@ def audit_gl_dispatch_wrappers(elf_bytes: bytes, matched_exports: list[dict],
         "table_bases": [f"0x{x:08x}" for x in table_bases],
         "slot_offsets": [f"0x{x:02x}" for x in slot_offsets],
         "unclaimed_slot_offsets": holes,
-        "shared_call_targets": [f"0x{x:08x}" for x in resolver_targets],
+        "shared_call_targets": resolver_targets,
         "wrappers": wrappers,
         "limits": [
             "The table slots are in the ELF PT_LOAD zero-fill tail; their initial runtime values are zero after compliant materialization.",
