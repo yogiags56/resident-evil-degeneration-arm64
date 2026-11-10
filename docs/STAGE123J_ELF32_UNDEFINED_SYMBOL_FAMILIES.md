@@ -98,7 +98,7 @@ This group includes filesystem, stdio, memory, pthread, networking, time, and Bi
 
 ## Reproducibility
 
-`tools/xe3u_elf32_provider_audit.py` now emits `elf.undefined_symbol_families` with unique-name and relocation-reference counts. The labels are explicitly marked as candidate families; exact DSO ownership and ABI compatibility remain separate validation tasks. Synthetic unit tests cover classification and relocation-reference counting.
+`tools/xe3u_elf32_provider_audit.py` now emits `elf.undefined_symbol_families` with unique-name and relocation-reference counts. The labels are explicitly marked as candidate families; exact DSO ownership and ABI compatibility remain separate validation tasks. Synthetic unit tests cover classification and relocation-reference counting; host CI passed in run `42885003645` (312 Python tests plus native regressions). Android ARM64 build passed in run `42884983999`.
 
 ## Next
 
