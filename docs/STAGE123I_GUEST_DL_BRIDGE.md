@@ -54,5 +54,5 @@ This is a bridge primitive, not yet the production backend for the original prov
 1. Add a host provider registry that maps the recovered `OGLES`/`OGLES2` defaults to verified ARM64 GLES/EGL backends and guest Thumb trampolines.
 2. Decide whether `libhgl.so` is an optional compatibility provider, an S3E shim, or a required module; fail closed until identified.
 3. Bind the four bridge handlers to the exact `dlopen`, `dlsym`, `dlclose`, and `dlerror` ELF import symbols using module-qualified IDs.
-4. Build virtual system-provider coverage for the six `DT_NEEDED` libraries and audit all 137 undefined symbols before attempting ELF32 load.
+4. Build virtual system-provider coverage for the six `DT_NEEDED` libraries and audit all 137 symbol-based relocation references across 136 unique undefined names before attempting ELF32 load.
 5. Run a complete read-only ELF32 relocation plan, reserve a 32-bit guest address range with the required `0x8000` alignment, and only then materialize the provider.
