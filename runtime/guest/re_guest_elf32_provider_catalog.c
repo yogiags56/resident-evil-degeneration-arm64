@@ -10,8 +10,11 @@
 #define STT_FILE 4u
 #define MAX_PROVIDERS 65536u
 static int valid_soname(const char *s) {
-    return s&&s[0]&&!strchr(s,'/')&&!strchr(s,'\\')&&
-        strlen(s)<RE_GUEST_ELF32_DYNAMIC_STRING_CAP;
+    if (!s || !s[0] || strchr(s, '/') || strchr(s, '\\') ||
+        strlen(s) >= RE_GUEST_ELF32_DYNAMIC_STRING_CAP) return 0;
+    for (const unsigned char *p = (const unsigned char *)s; *p; ++p)
+        if (*p < 0x21u || *p > 0x7eu) return 0;
+    return 1;
 }
 REGUESTELF32PROVIDERStatus re_guest_elf32_collect_providers(
     const REGUESTELF32PROVIDERMODULE *modules,size_t module_count,
@@ -34,7 +37,7 @@ REGUESTELF32PROVIDERStatus re_guest_elf32_collect_providers(
         for(size_t j=0;j<m->symbol_count;j++) {
             const REGUESTELF32LINKSYMBOL *s=&m->symbols[j];
             uint64_t value;
-            if (!memchr(s->name, '\\0', sizeof(s->name))) {
+            if (!memchr(s->name, '\0', sizeof(s->name))) {
                 if (failed_module) *failed_module = i;
                 if (failed_symbol) *failed_symbol = j;
                 return RE_GUEST_ELF32_PROVIDER_E_SYMBOL;
