@@ -47,9 +47,9 @@ static REGUESTELF32BATCHStatus preflight(REGUESTMEMORY *memory,
                 if(failed)*failed=i;return RE_GUEST_ELF32_BATCH_E_LAYOUT;
             }
             flags=ph->flags;
-            if((flags&~(uint32_t)(RE_GUESTELF32_PF_R|RE_GUESTELF32_PF_W|RE_GUESTELF32_PF_X))||
-               !(flags&(RE_GUESTELF32_PF_R|RE_GUESTELF32_PF_W|RE_GUESTELF32_PF_X))||
-               ((flags&RE_GUESTELF32_PF_W)&&(flags&RE_GUESTELF32_PF_X))) {
+            if((flags&~(uint32_t)(RE_GUEST_ELF32_PF_R|RE_GUEST_ELF32_PF_W|RE_GUEST_ELF32_PF_X))||
+               !(flags&(RE_GUEST_ELF32_PF_R|RE_GUEST_ELF32_PF_W|RE_GUEST_ELF32_PF_X))||
+               ((flags&RE_GUEST_ELF32_PF_W)&&(flags&RE_GUEST_ELF32_PF_X))) {
                 if(failed)*failed=i;return RE_GUEST_ELF32_BATCH_E_LAYOUT;
             }
             for(size_t k=0;k<RE_GUEST_MEMORY_MAX_REGIONS;k++) {
