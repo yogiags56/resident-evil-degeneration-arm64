@@ -317,7 +317,7 @@ REGUESTDLStatus re_guest_dl_bridge_bind_elf_symbols(
         for (size_t i = 0; i < symbol_count; ++i) {
             const REGUESTELF32LINKSYMBOL *s = &symbols[i];
             if (!s->name[0]) continue;
-            if (!memchr(s->name, '\\0', sizeof(s->name))) {
+            if (!memchr(s->name, '\0', sizeof(s->name))) {
                 if (failed_symbol_index) *failed_symbol_index = i;
                 return RE_GUEST_DL_E_SYMBOL_INDEX;
             }
