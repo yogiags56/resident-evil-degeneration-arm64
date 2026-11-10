@@ -1,0 +1,43 @@
+#include "re_guest_elf32_dynamic.h"
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+static void p16(uint8_t*p,uint16_t v){p[0]=(uint8_t)v;p[1]=(uint8_t)(v>>8);}
+static void p32(uint8_t*p,uint32_t v){p[0]=(uint8_t)v;p[1]=(uint8_t)(v>>8);p[2]=(uint8_t)(v>>16);p[3]=(uint8_t)(v>>24);}
+static void ph(uint8_t*p,uint32_t t,uint32_t o,uint32_t a,uint32_t fs,uint32_t ms,uint32_t f,uint32_t al){
+ p32(p,t);p32(p+4,o);p32(p+8,a);p32(p+12,a);p32(p+16,fs);p32(p+20,ms);p32(p+24,f);p32(p+28,al);
+}
+static void dyn(uint8_t*p,uint32_t tag,uint32_t value){p32(p,tag);p32(p+4,value);}
+static void fixture(uint8_t*b){
+ memset(b,0,256);b[0]=0x7f;b[1]='E';b[2]='L';b[3]='F';b[4]=1;b[5]=1;b[6]=1;
+ p16(b+16,RE_GUEST_ELF32_ET_EXEC);p16(b+18,RE_GUEST_ELF32_EM_ARM);p32(b+20,1);
+ p32(b+24,0x1000);p32(b+28,52);p16(b+40,52);p16(b+42,32);p16(b+44,2);
+ ph(b+52,RE_GUEST_ELF32_PT_LOAD,0,0x1000,256,256,RE_GUEST_ELF32_PF_R|RE_GUEST_ELF32_PF_X,0x1000);
+ ph(b+84,RE_GUEST_ELF32_PT_DYNAMIC,160,0x10a0,48,48,RE_GUEST_ELF32_PF_R,4);
+ dyn(b+160,RE_GUEST_ELF32_DT_STRTAB,0x10d0);
+ dyn(b+168,RE_GUEST_ELF32_DT_STRSZ,32);
+ dyn(b+176,RE_GUEST_ELF32_DT_NEEDED,1);
+ dyn(b+184,RE_GUEST_ELF32_DT_NEEDED,9);
+ dyn(b+192,RE_GUEST_ELF32_DT_SONAME,17);
+ dyn(b+200,RE_GUEST_ELF32_DT_NULL,0);
+ memcpy(b+208,"\0libc.so\0libm.so\0libroot.so\0",28);
+}
+int main(void){
+ uint8_t b[256];REGUESTELF32IMAGE image;REGUESTELF32DYNAMIC d;size_t failed=999;
+ fixture(b);assert(re_guest_elf32_parse_image(b,sizeof b,&image,&failed)==RE_GUEST_ELF32_OK);
+ assert(re_guest_elf32_parse_dynamic(b,sizeof b,&image,&d,&failed)==RE_GUEST_ELF32_DYNAMIC_OK);
+ assert(d.present&&d.has_string_table&&d.has_soname&&d.needed_count==2);
+ assert(strcmp(d.needed[0],"libc.so")==0&&strcmp(d.needed[1],"libm.so")==0);
+ assert(strcmp(d.soname,"libroot.so")==0&&d.entry_count==6);
+
+ fixture(b);b[200]=1;assert(re_guest_elf32_parse_image(b,sizeof b,&image,&failed)==0);
+ assert(re_guest_elf32_parse_dynamic(b,sizeof b,&image,&d,&failed)==RE_GUEST_ELF32_DYNAMIC_E_TERMINATOR);
+ fixture(b);p32(b+176+4,31);assert(re_guest_elf32_parse_image(b,sizeof b,&image,&failed)==0);
+ assert(re_guest_elf32_parse_dynamic(b,sizeof b,&image,&d,&failed)==RE_GUEST_ELF32_DYNAMIC_E_STRING);
+ fixture(b);p32(b+160+4,0x2000);assert(re_guest_elf32_parse_image(b,sizeof b,&image,&failed)==0);
+ assert(re_guest_elf32_parse_dynamic(b,sizeof b,&image,&d,&failed)==RE_GUEST_ELF32_DYNAMIC_E_STRING_TABLE);
+ fixture(b);p16(b+44,1);assert(re_guest_elf32_parse_image(b,sizeof b,&image,&failed)==0);
+ assert(re_guest_elf32_parse_dynamic(b,sizeof b,&image,&d,&failed)==RE_GUEST_ELF32_DYNAMIC_OK&&!d.present);
+ puts("Guest ELF32 PT_DYNAMIC parser tests: PASS");return 0;
+}
