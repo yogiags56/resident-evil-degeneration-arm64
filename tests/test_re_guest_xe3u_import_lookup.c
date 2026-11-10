@@ -7,7 +7,7 @@ static void put32(uint8_t *p,uint32_t v) {
  p[0]=(uint8_t)v;p[1]=(uint8_t)(v>>8);p[2]=(uint8_t)(v>>16);p[3]=(uint8_t)(v>>24);
 }
 int main(void) {
- const size_t code_size=0x13b70cu;
+ const size_t code_size=0x13b714u;
  uint8_t *code=(uint8_t *)calloc(code_size,1);
  REGUESTXE3UHEADER h={0};
  REGUESTXE3USYMBOL symbols[1]={{"sampleApi"}};
