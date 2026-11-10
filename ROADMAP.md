@@ -1,24 +1,41 @@
 # Project Roadmap
 
-## Active milestone update — Stage 123D (relocation evidence and candidate planner)
+## Active milestone update — Stage 123E (import-cell identity and ARM thunk execution)
 
-Stages 122D–122H, 123A, the 123B native XE3U metadata parser, and the 123C bounded LZMA-to-XE3U decode adapter have been implemented on the current working branch:
-- Transactional multi-ELF image loading.
-- Cross-module ELF32 symbol provider catalog and relocation planning.
-- Unified caller-driven ELF32 dependency/load pipeline.
-- DT_INIT/INIT_ARRAY and DT_FINI/FINI_ARRAY metadata parsing.
-- Dependency-ordered constructor sequence planning and bounded AArch32 constructor execution.
-- Root ELF32 entry/runtime handoff.
-- Native XE3U header and fixup-section parser (metadata only; no relocation application).
-- Bounded LZMA-alone decode adapter that validates decoded XE3U headers before publishing output.
+Stages 122D–122H and 123A–123E have host implementation coverage:
+- Transactional multi-ELF image loading, ELF32 dependency/provider/relocation planning, and bounded constructor execution.
+- Native XE3U header/fixup parser and bounded LZMA-alone decode adapter.
+- Read-only audit of all 36,377 internal relocation entries; candidate-only C planner preflights and plans all 36,377 original records without writing.
+- Verification of all 230 nonzero external type-4 ARM import stubs and read-only guest-`r12` cell-to-symbol lookup.
+- ARM CPU support for the pre-indexed writeback word transfers used by the original import stub and shared helper.
+- Synthetic end-to-end execution of the three-instruction import stub at `0x84` through shared helper `0x70`, resolver slot `0x13B704`, and a test resolver return path.
 
-Host synthetic regressions pass in GitHub Actions run 42869087966 (LZMA-to-XE3U decode plus XE3U parser), run 42868637357 (header/fixup parser), and run 42867835687 (root handoff, constructor sequence, and bounded constructor execution). The user re-uploaded the original APK and an independent re-audit matched the APK, compressed S3E, decoded XE3U, code blob, main.dz, s3e.icf, and libjirobiodg.so sizes and SHA-256 hashes exactly against Stage 97. See docs/STAGE123C_ORIGINAL_APK_REVALIDATION.md. A read-only scan of all 36,377 internal relocation entries found every patch site aligned/file-backed and every stored word pointing inside the link-time image, strongly supporting add-load-bias pointer semantics. This is evidence only; no writes or game execution. See docs/STAGE123D_INTERNAL_RELOCATION_EVIDENCE.md. The native C audit CLI has compiled in CI but has not yet been run against the uploaded asset. Android ARM64 NDK build and ELF verification passed in run 42873440349, producing the Stage 123D probe artifact. This is not a physical-device test or an original game boot. The read-only audit also disassembled the mixed ARM/Thumb image and verified all 230 nonzero external import stubs against their exact relocation cells. Eight zero-valued type-4 records remain unresolved. Internal pointer targets include 2,826 addresses in the memory-only tail, so BSS must be materialized before the eventual relocation transaction. A candidate-only internal relocation planner now performs complete preflight and publishes no memory writes; its host regression passes in CI run 42873066679.
+The re-uploaded original APK and key assets match Stage 97 SHA-256 hashes exactly. A native C harness planned all 36,377 original internal relocations at a test-only runtime base and a second native harness mapped 230/238 external records to verified stubs (the eight remaining cells correctly fail the stub check). Host CI passed in run `42875447333`. Android ARM64 NDK build and ELF verification passed in run `42875193411`. See [Stage 123C original asset validation](docs/STAGE123C_ORIGINAL_APK_REVALIDATION.md), [Stage 123D relocation evidence](docs/STAGE123D_INTERNAL_RELOCATION_EVIDENCE.md), and [Stage 123E import lookup/thunk execution](docs/STAGE123E_IMPORT_CELL_LOOKUP_AND_THUNK_EXECUTION.md).
 
-### Active milestone — Stage 123D: XE3U relocation semantics and image layout
+This remains an engineering prototype: the actual S3E resolver pointer at `0x13B704` is zero in the original image, its initialization path and AAPCS32 contract are not yet known, and the original game has not booted.
 
-Do not feed `biohazard.s3e` into the ELF32 pipeline. The Stage 97 audit proves the main guest executable is an LZMA-alone-compressed XE3U image; `libjirobiodg.so` is a separate ELF32 ARM shared object. Stages 123B–123C parse bounded header/fixup metadata and decode LZMA-alone XE3U data. The re-uploaded original S3E matches Stage 97 exactly. Stage 123D has now established strong read-only evidence that all 36,377 type-1 entries are aligned file-backed pointer cells containing link-time image addresses. Next, independently verify candidate add-load-bias semantics against representative ARM/Thumb literal pools and initialized-data/BSS references. Recover the shared import resolver protocol: 230 ARM stubs pass their cell address in `r12` to code at `0x70`, which loads a resolver pointer from zero-valued slot `0x13B704`; determine who initializes that slot and the exact AAPCS32 resolver contract. Classify the two remaining zero-valued GL cells. Run the native C XE3U audit CLI against the uploaded original in a local environment. Only after these checks, choose a runtime base, connect BSS materialization, and integrate the planner into a rollback-safe XE3U load transaction. Integrate the XE3U code/data image with the guest runtime only after those stages pass.
+### Critical next milestone — Stage 123F: shared resolver initialization and import dispatch
+
+1. Identify who initializes XE3U slot `0x13B704` and what function ABI it expects.
+2. Trace the S3E runtime's import-cell resolver path and establish how `r12` cell addresses become symbol-index/function mappings.
+3. Define the guest-side resolver entry and return contract, including LR/SP preservation and stack switching, without assigning guessed addresses.
+4. Classify the two zero-valued GL cells and define explicit bindings for the six allocator data cells.
+5. Build a complete import manifest for all 227 symbols; keep unknown APIs disabled and fail closed.
+6. Only after resolver semantics are proven, connect verified ARM64-side handlers through the guest AAPCS32 dispatcher.
 
 ### Remaining real-game gates
+
+1. Run `tools/xe3u_native_audit` against the re-uploaded original S3E in the local repository build environment.
+2. Complete Stage 123F shared resolver initialization, AAPCS32 call/return contract, and the 227-symbol import manifest.
+3. Classify and bind the six allocator data slots and two remaining GL cells; no guessed addresses.
+4. Finalize runtime image base, map the complete code/initialized-data/BSS memory extent, and apply the preflighted internal relocation plan transactionally.
+5. Determine which runtime pieces from the separate ELF32 ARM `libjirobiodg.so` must be represented or reimplemented on ARM64; do not treat it as the XE3U main executable.
+6. Connect archive/VFS/file APIs, runtime services, and ARM32 CPU execution; expand instruction coverage from the real executable's inventory.
+7. Run Android NDK build, install on an ARM64 device, record loader/constructor/entry telemetry, then progress through menu, rendering, input, audio, and gameplay.
+
+---
+
+
 
 1. Run `tools/xe3u_native_audit` against the re-uploaded original S3E in the local build environment and compare its output with docs/STAGE123C_ORIGINAL_APK_REVALIDATION.md.
 2. Validate representative internal pointer cells in code and initialized data against ARM/Thumb disassembly; establish exact data_offset and BSS interpretation.
