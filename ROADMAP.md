@@ -1,6 +1,6 @@
 # Project Roadmap
 
-## Active milestone update — Stage 123C
+## Active milestone update — Stage 123C (original asset revalidated)
 
 Stages 122D–122H, 123A, the 123B native XE3U metadata parser, and the 123C bounded LZMA-to-XE3U decode adapter have been implemented on the current working branch:
 - Transactional multi-ELF image loading.
@@ -12,21 +12,21 @@ Stages 122D–122H, 123A, the 123B native XE3U metadata parser, and the 123C bou
 - Native XE3U header and fixup-section parser (metadata only; no relocation application).
 - Bounded LZMA-alone decode adapter that validates decoded XE3U headers before publishing output.
 
-Synthetic host regressions pass in GitHub Actions run 42869087966 (LZMA-to-XE3U decode plus XE3U parser), run 42868637357 (header/fixup parser), and run 42867835687 (root handoff, constructor sequence, and bounded constructor execution). This does not represent an Android NDK build or a game boot.
+Host synthetic regressions pass in GitHub Actions run 42869087966 (LZMA-to-XE3U decode plus XE3U parser), run 42868637357 (header/fixup parser), and run 42867835687 (root handoff, constructor sequence, and bounded constructor execution). The user re-uploaded the original APK and an independent re-audit matched the APK, compressed S3E, decoded XE3U, code blob, main.dz, s3e.icf, and libjirobiodg.so sizes and SHA-256 hashes exactly against Stage 97. See docs/STAGE123C_ORIGINAL_APK_REVALIDATION.md. The native C audit CLI has compiled in CI but has not yet been run against the uploaded asset. This does not represent an Android NDK build or a game boot.
 
 ### Critical next milestone — Stage 123D: XE3U relocation semantics and image layout
 
-Do not feed `biohazard.s3e` into the ELF32 pipeline. The Stage 97 audit proves the main guest executable is an LZMA-alone-compressed XE3U image; `libjirobiodg.so` is a separate ELF32 ARM shared object. Stages 123B–123C now parse the bounded header/fixup metadata and decode synthetic LZMA-alone XE3U data. Next, decode the locally supplied S3E image, compare all observed header/subsection counts and SHA-256 values against Stage 97, then establish code/data/BSS layout and independently verify internal relocation and external Thumb-fixup semantics before implementing any writes. Integrate the XE3U code/data image with the guest runtime only after those stages pass.
+Do not feed `biohazard.s3e` into the ELF32 pipeline. The Stage 97 audit proves the main guest executable is an LZMA-alone-compressed XE3U image; `libjirobiodg.so` is a separate ELF32 ARM shared object. Stages 123B–123C now parse bounded header/fixup metadata and decode LZMA-alone XE3U data. The re-uploaded original S3E has been independently decoded and matches Stage 97 exactly, including all fixup counts and code-blob hash. Next, run the native C audit CLI against the exact original asset in a local build environment, then establish code/data/BSS layout and independently verify internal relocation and external Thumb-fixup semantics before implementing any writes. Integrate the XE3U code/data image with the guest runtime only after those stages pass.
 
 ### Remaining real-game gates
 
-1. Supply the legally usable original APK locally. The repository's `app/src/main/assets/` contains only `.gitkeep`; proprietary game assets are excluded by design.
-2. Decode the S3E LZMA-alone stream with bounded output/memory limits and verify SHA-256 against the recorded Stage 97 provenance.
-3. Parse XE3U header, code/data extents, fixup subsections, symbols, internal relocations, and external Thumb relocations with strict range checks.
-4. Establish code/data/BSS address layout and apply only proven relocation semantics.
-5. Inventory and load the actual ELF32 ARM shared object(s), including `libjirobiodg.so`, through the ELF32 pipeline as appropriate.
-6. Bind the verified S3E imports; unknown imports must fail closed.
-7. Connect archive/VFS/file APIs, runtime services, and ARM32 CPU execution; expand instruction coverage from the real executable's inventory.
+1. Run `tools/xe3u_native_audit` against the re-uploaded original S3E in the local build environment and compare its output with docs/STAGE123C_ORIGINAL_APK_REVALIDATION.md.
+2. Reconstruct internal relocation encoding from the actual image and independent loader/toolchain evidence; classify all 36,377 offsets against code, initialized data, and BSS ranges.
+3. Classify all 238 external Thumb relocation cells and determine exact thunk construction/branch semantics; unknown imports must remain unresolved.
+4. Implement a read-only relocation report and a transactional planner; do not write guest memory until every record is validated.
+5. Establish code/data/BSS guest address layout and then implement only proven relocation semantics.
+6. Inventory and load the actual ELF32 ARM shared object(s), including `libjirobiodg.so`, through the ELF32 pipeline as appropriate.
+7. Bind verified S3E imports; unknown imports must fail closed. Connect archive/VFS/file APIs, runtime services, and ARM32 CPU execution.
 8. Run the Android NDK build, install on an ARM64 device, record loader/constructor/entry telemetry, then progress through menu, rendering, input, audio, and gameplay.
 
 ---
