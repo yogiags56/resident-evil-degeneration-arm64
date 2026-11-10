@@ -112,7 +112,7 @@ static int test_relocation_failure_rolls_back_maps(void) {
 
 static int test_wx_and_short_buffer_rejected_before_mapping(void) {
     uint8_t elf[0x120], code[8]={0}, data[8]={0};
-    REGUESTELF32LOADBUFFER buffers[2]={{code,4u},{data,sizeof(data)}};
+    REGUESTELF32LOADBUFFER buffers[2]={{code,sizeof(code)},{data,sizeof(data)}};
     REGUESTELF32LOADREQUEST request={0};
     REGUESTELF32LOADRESULT result;
     REGUESTMEMORY memory;
@@ -127,6 +127,7 @@ static int test_wx_and_short_buffer_rejected_before_mapping(void) {
         RE_GUEST_ELF32_LOAD_E_FLAGS);
     assert(re_guest_memory_region_count(&memory)==0u);
 
+    buffers[0].capacity=4u;
     make_elf(elf, RE_GUEST_ELF32_PF_R | RE_GUEST_ELF32_PF_X);
     assert(re_guest_elf32_load_image(&memory,&request,&result,NULL,NULL)==
         RE_GUEST_ELF32_LOAD_E_BUFFER);
