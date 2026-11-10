@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include "re_guest_cpu.h"
 #include "re_guest_imports.h"
+#include "re_guest_memory_bus.h"
 
 typedef enum {
     RE_RUNTIME_OK = 0,
@@ -16,6 +17,7 @@ typedef enum {
 typedef struct {
     REGUESTCPU cpu;
     REGUESTMEM *memory;
+    REGUESTMEMBUS *memory_bus;
     REGUESTIMPORTTable *imports;
     uint32_t unresolved_placeholder_pc;
     uint64_t dispatched_imports;
@@ -28,6 +30,13 @@ typedef struct {
     REGUESTIMPORTStatus last_import_status;
     REGUESTRuntimeStatus last_stop_status;
 } REGUESTRuntime;
+
+void re_guest_runtime_init_mapped(REGUESTRuntime *runtime,
+                           REGUESTMEMBUS *memory_bus,
+                           REGUESTIMPORTTable *imports,
+                           uint32_t unresolved_placeholder_pc,
+                           uint32_t entry,
+                           int thumb_state);
 
 void re_guest_runtime_init(REGUESTRuntime *runtime,
                            REGUESTMEM *memory,
