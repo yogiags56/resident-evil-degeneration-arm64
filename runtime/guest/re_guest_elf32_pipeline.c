@@ -20,6 +20,7 @@ REGUESTELF32PIPELINEStatus re_guest_elf32_load_pipeline(
     size_t *failed_module,size_t *failed_index,int *inner_status) {
     REGUESTELF32PIPELINERESULT pending;
     REGUESTELF32MODULEDESC desc[RE_GUEST_ELF32_MAX_MODULES];
+    const char *needed_names[RE_GUEST_ELF32_MAX_MODULES][RE_GUEST_ELF32_MAX_MODULE_NEEDED];
     REGUESTELF32PROVIDERMODULE provider_modules[RE_GUEST_ELF32_MAX_MODULES];
     REGUESTELF32BATCHITEM batch[RE_GUEST_ELF32_MAX_MODULES];
     REGUESTELF32LOADREQUEST requests[RE_GUEST_ELF32_MAX_MODULES];
@@ -35,6 +36,7 @@ REGUESTELF32PIPELINEStatus re_guest_elf32_load_pipeline(
     if(result)memset(result,0,sizeof(*result));
     memset(&pending,0,sizeof(pending));
     memset(desc,0,sizeof(desc));
+    memset(needed_names,0,sizeof(needed_names));
     memset(provider_modules,0,sizeof(provider_modules));
     memset(batch,0,sizeof(batch));
     memset(requests,0,sizeof(requests));
@@ -79,7 +81,9 @@ REGUESTELF32PIPELINEStatus re_guest_elf32_load_pipeline(
                 RE_GUEST_ELF32_DYNAMIC_E_STRING);
         desc[i].soname=identity;
         desc[i].needed_count=md->dynamic.needed_count;
-        desc[i].needed=(const char *const *)md->dynamic.needed;
+        for(size_t n=0;n<md->dynamic.needed_count;n++)
+            needed_names[i][n]=md->dynamic.needed[n];
+        desc[i].needed=needed_names[i];
 
         if(strcmp(m->module_name,root_name)==0||
            strcmp(identity,root_name)==0) {
