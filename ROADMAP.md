@@ -1,5 +1,9 @@
 # Project Roadmap
 
+## Active milestone update — Stage 123N (guest dl bridge/provider catalog wiring)
+
+Stage 123N adds a small initializer that installs the Stage 123L exact-SONAME provider catalog callbacks into the Stage 123I guest libdl bridge. A host regression exercises opaque guest handles, per-provider symbol scope, Thumb/data address preservation, reference-counted opens/closes, stale-token rejection, and missing-provider behavior. The new source is registered in the host test runner and Android native target. CI validation is pending; this does not yet load Android system DSOs or supply GLES/EGL ARM32 trampolines. See docs/STAGE123N_GUEST_DL_BRIDGE_PROVIDER_WIRING.md.
+
 ## Active milestone update — Stage 123M (ELF32 exports into guest dlopen providers)
 
 Stage 123M adds a bounded adapter that converts already-parsed and already-mapped ELF32 module exports into the Stage 123L exact-SONAME guest DSO catalog. It preserves per-module lookup scope, applies load bias only to non-SHN_ABS symbols, and commits the live catalog only after the complete provider set validates. The host regression covers Thumb/data address preservation, provider-isolated dlsym, insufficient scratch capacity, and duplicate SONAME rollback. CI validation is pending. See docs/STAGE123M_ELF32_DLOPEN_PROVIDER_ADAPTER.md.
