@@ -49,13 +49,15 @@ REGUESTELF32INITStatus re_guest_elf32_build_init_sequence(
     memset(pending,0,sizeof(pending));
     for(size_t order=0;order<pipeline->graph.order_count;order++) {
         size_t i=pipeline->graph.order[order];
-        const REGUESTELF32DYNAMIC *d=&pipeline->metadata[i].dynamic;
-        uint32_t bias=modules[i].load_bias;
+        const REGUESTELF32DYNAMIC *d;
+        uint32_t bias;
         size_t failed=0;
         if(i>=module_count||!pipeline->graph.reachable[i]) {
             if(failed_module)*failed_module=i;
             return RE_GUEST_ELF32_INIT_E_ARGUMENT;
         }
+        d=&pipeline->metadata[i].dynamic;
+        bias=modules[i].load_bias;
         if(d->has_init&&d->init_address) {
             uint64_t address=(uint64_t)d->init_address+bias;
             if(address>UINT32_MAX) {
