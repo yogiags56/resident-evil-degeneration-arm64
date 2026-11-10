@@ -92,7 +92,7 @@ REGUESTELF32LINKStatus re_guest_elf32_parse_link_metadata(
     uint32_t hash=0,strtab=0,strsz=0,symtab=0,syment=0;
     uint32_t rel=0,relsz=0,relent=0,rela=0,relasz=0,relaent=0;
     uint32_t jmprel=0,pltsz=0,pltrel=0,hashoff=0,stroff=0,symoff=0;
-    int hp,sp,ssp,ep,rp,rsp,rep,rap,rasp,raep,jp,pp,tp;
+    int hp,sp,ssp,ep,rp,rsp,rep,rap,rasp,raep,jp,pp,tp,pltp;
     uint32_t nbucket,nchain;size_t used=0;
     REGUESTELF32LINKStatus st;
     if(failed_index)*failed_index=0;
@@ -105,7 +105,7 @@ REGUESTELF32LINKStatus re_guest_elf32_parse_link_metadata(
     GET(DT_SYMTAB,symtab,ep);GET(DT_SYMENT,syment,rp);
     GET(DT_REL,rel,rsp);GET(DT_RELSZ,relsz,rep);GET(DT_RELENT,relent,rap);
     GET(DT_RELA,rela,rasp);GET(DT_RELASZ,relasz,raep);GET(DT_RELAENT,relaent,jp);
-    GET(DT_JMPREL,jmprel,pp);GET(DT_PLTRELSZ,pltsz,tp);
+    GET(DT_JMPREL,jmprel,pp);GET(DT_PLTRELSZ,pltsz,tp);GET(DT_PLTREL,pltrel,pltp);
 #undef GET
     if((sp||ssp||ep||rp) && !(sp&&ssp&&ep&&rp))
         return RE_GUEST_ELF32_LINK_E_TAG;
@@ -113,9 +113,9 @@ REGUESTELF32LINKStatus re_guest_elf32_parse_link_metadata(
         return RE_GUEST_ELF32_LINK_E_TAG;
     if((rasp||raep||jp) && !(rasp&&raep&&jp))
         return RE_GUEST_ELF32_LINK_E_TAG;
-    if((pp||tp) && !(pp&&tp))
+    if((pp||tp||pltp) && !(pp&&tp&&pltp))
         return RE_GUEST_ELF32_LINK_E_TAG;
-    if((pp||tp) && !hp) return RE_GUEST_ELF32_LINK_E_UNSUPPORTED;
+    if((pp||tp||pltp) && !hp) return RE_GUEST_ELF32_LINK_E_UNSUPPORTED;
     if((sp&&syment!=16u)||(rsp&&relent!=8u)||(rasp&&relaent!=12u))
         return RE_GUEST_ELF32_LINK_E_FORMAT;
     if(!hp && (sp||rsp||rasp||pp))
