@@ -9,6 +9,8 @@
 - Maps decoder memory-limit, output-capacity, malformed-stream, and XE3U-header failures to distinct XE3U decode statuses.
 - Keeps the output header and written count unchanged/zero on failure; caller must discard partially written destination bytes after any decode failure.
 - Added a compressed synthetic XE3U fixture. Test verifies decode, header parse, fixup parse, output-capacity rejection, and malformed stream rejection.
+- Added `tools/xe3u_native_audit.c`, a host CLI that decodes a locally supplied `biohazard.s3e` and prints the header plus fixup-section/symbol/relocation counts without applying relocations.
+- Registered the CLI for strict compilation in the liblzma-enabled host test path.
 - The wrapper is compiled into Android native target only when `RE_ENABLE_LIBLZMA=ON`; host regression is registered when `pkg-config liblzma` is available.
 
 ## Explicit boundary
@@ -21,4 +23,4 @@ Host CI run 42869087966 passed and explicitly reported:
 - Guest XE3U LZMA decode tests: PASS
 - Guest XE3U header and fixup parser tests: PASS
 
-Android NDK build and validation against the user's original S3E asset remain required.
+To audit a locally staged original asset after installing host liblzma, run `build/host-tests/xe3u_native_audit /path/to/biohazard.s3e` (the host test script compiles this tool). Android NDK build and validation against the user's original S3E asset remain required.
