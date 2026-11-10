@@ -27,7 +27,7 @@ static void make_module(uint8_t*b,int provider){
  memcpy(b+0x180,"\0foo\0libprovider.so\0",20);
  p32(b+0x1c0+16,1);b[0x1c0+16+12]=0x10;
  p16(b+0x1c0+16+14,provider?1:0);
- if(provider)p32(b+0x1c0+16+4,0x2100);
+ if(provider)p32(b+0x1c0+16+4,0x2000);
  p32(b+0x220,1);p32(b+0x224,2);p32(b+0x228,1);
  if(!provider){
    p32(b+0x238,0x2000);p32(b+0x23c,(1u<<8)|RE_ARM_R_ABS32);
@@ -59,8 +59,8 @@ int main(void){
  assert(result.module_count==2&&result.provider_count==1);
  assert(result.graph.order_count==2&&result.graph.order[0]==1&&result.graph.order[1]==0);
  assert(result.loaded.module_count==2&&re_guest_memory_region_count(&memory)==4);
- assert(root_data[0]==0x00&&root_data[1]==0x20&&root_data[2]==0x21&&root_data[3]==0x04);
- assert(!strcmp(provider_scratch[0].name,"foo")&&provider_scratch[0].value==0x202100);
+ assert(root_data[0]==0x04&&root_data[1]==0x20&&root_data[2]==0x20&&root_data[3]==0x00);
+ assert(!strcmp(provider_scratch[0].name,"foo")&&provider_scratch[0].value==0x202000);
  assert(failed_module==2&&inner==0);
  puts("Guest ELF32 unified multi-module pipeline tests: PASS");
  return 0;
