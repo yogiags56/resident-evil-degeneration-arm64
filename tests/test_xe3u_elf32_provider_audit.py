@@ -43,7 +43,7 @@ def _synthetic_gl_wrapper_elf():
     struct.pack_into("<H", code, 0x10, 0x6040)  # STR r0,[r0,#4]
     struct.pack_into("<H", code, 0x12, 0x46c0)
     struct.pack_into("<I", code, 0x14, 0x1060)  # pointer to symbol name
-    code[0x60:0x67] = b"glTest\\0"
+    code[0x60:0x67] = b"glTest\0"
     data[0x100:0x180] = code
     return bytes(data)
 
