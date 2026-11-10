@@ -46,6 +46,17 @@ Aggregate verification: 22/22 wrappers have the same table base, 22/22 name lite
 
 The table base and slots are therefore zero after normal ELF BSS materialization. The wrappers lazily populate them through the shared helper; the actual callback source and complete resolver ABI still need reconstruction. Disassembly of helper `0x3d64c` shows it consults a global callback structure based at `0x000737f0`, including pointer fields at offsets `+0x34`, `+0x38`, and `+0x3c`. Their roles and initialization path are not yet assigned.
 
+### Resolver helper is a three-handle dlsym search
+
+Further disassembly resolves the key unknown in the preceding paragraph:
+- Helper `0x3d64c` reads the pointer fields at global structure offsets `+0x34`, `+0x38`, and `+0x3c` in sequence.
+- For each non-null field, it calls `0x35a0c` with the handle in `r0` and the GL name in `r1`.
+- `0x35a0c` forwards to `0x35a54`; the latter calls ELF PLT entry `0x0000a240`, independently identified from `.rel.plt` as `dlsym`.
+- A non-null result is passed with the name to helper `0x3d4f4`, then returned to the wrapper for caching in the BSS slot.
+- The same library contains a path/handle wrapper at `0x35a7c` that calls PLT `0x0000a198` (`dlopen`) with flags value `2`. Separate wrappers call PLT `dlclose` at `0x0000a078` and `dlerror` at `0x00009ebc`.
+
+This confirms that the GL wrapper resolver is a guest-side search across up to three dynamic-loader handles, not a hardcoded GLES function table. The names and creation/ownership of the three handles, the exact `dlopen` call sites, and the initialization order of the global structure remain open. A port must bridge guest `dlopen/dlsym/dlclose/dlerror` semantics; it must not place 64-bit host pointers directly into this 32-bit guest structure. The bridge should translate guest handle tokens to host handles and return guest-callable 32-bit Thumb trampolines for resolved functions.
+
 ### Verified dispatch slots
 
 All addresses below are link-time guest virtual addresses; apply the eventual ELF load bias when materializing the module.
