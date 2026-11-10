@@ -48,6 +48,16 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
   runtime/guest/re_guest_elf32_provider_catalog.c runtime/guest/re_guest_elf32_reloc_plan.c \
   runtime/guest/re_guest_symbol_resolve.c \
   -o build/host-tests/test_re_guest_elf32_cross_module_link
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_elf32_pipeline.c \
+  runtime/guest/re_guest_elf32_pipeline.c runtime/guest/re_guest_elf32_provider_catalog.c \
+  runtime/guest/re_guest_elf32_module_graph.c runtime/guest/re_guest_elf32_reloc_plan.c \
+  runtime/guest/re_guest_elf32_link.c runtime/guest/re_guest_elf32_dynamic.c \
+  runtime/guest/re_guest_elf32_image.c runtime/guest/re_guest_elf32_batch_loader.c \
+  runtime/guest/re_guest_elf32_loader.c runtime/guest/re_guest_symbol_resolve.c \
+  runtime/guest/re_guest_map_transaction.c runtime/guest/re_guest_elf_materialize.c \
+  runtime/guest/re_guest_permission_finalize.c runtime/guest/re_guest_relocation_apply.c \
+  runtime/guest/re_guest_memory.c \
+  -o build/host-tests/test_re_guest_elf32_pipeline
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_elf32_batch_loader.c \
   runtime/guest/re_guest_elf32_batch_loader.c runtime/guest/re_guest_elf32_loader.c \
   runtime/guest/re_guest_elf32_dynamic.c runtime/guest/re_guest_elf32_image.c \
