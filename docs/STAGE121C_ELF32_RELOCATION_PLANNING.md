@@ -18,6 +18,8 @@ This bridge does not locate or load DT_NEEDED libraries, allocate/map provider i
 
 ## Validation
 - Host regression suite, including `test_re_guest_elf32_reloc_plan`: PASS on commit `04ad19c2c17b4e000a0dd2f113435e91d5bf3686` (workflow run `42815789032`).
-- Android ARM64 native build/ELF verification: running on commit `04ad19c2c17b4e000a0dd2f113435e91d5bf3686` (workflow run `42815791052`).
+- Android ARM64 native build and ELF verification: PASS on commit `04ad19c2c17b4e000a0dd2f113435e91d5bf3686` (workflow run `42815791052`).
+- The unstripped output is ELF64 AArch64 and exports both `re_guest_elf32_parse_link_metadata` and `re_guest_elf32_prepare_relocations`.
+- Build artifact uploaded as `resident-evil-degeneration-arm64-stage118-runtime-foundation`, artifact ID `13763729959`.
 
-Stage 121C remains pending until the Android build finishes successfully.
+Stage 121C validation is complete. The helper prepares bounded relocation records but does not yet load dependencies or boot the game.
