@@ -154,6 +154,30 @@ def parse_fixups(data: bytes, header: dict[str, int | str]) -> dict[str, Any]:
     }
 
 
+def _verify_arm_import_stub(code_blob: bytes, cell_offset: int) -> int | None:
+    if cell_offset < 0x13B708 or (cell_offset - 0x13B708) & 3:
+        return None
+    slot = (cell_offset - 0x13B708) // 4
+    stub_offset = 0x84 + slot * 12
+    if stub_offset + 12 > len(code_blob):
+        return None
+    first = _u32(code_blob, stub_offset)
+    second = _u32(code_blob, stub_offset + 4)
+    third = _u32(code_blob, stub_offset + 8)
+    if first != 0xE28FC601:
+        return None
+    if second == 0xE28CCA3B:
+        add2 = 0x3B000
+    elif second == 0xE28CCA3A:
+        add2 = 0x3A000
+    else:
+        return None
+    if third & 0xFFFFF000 != 0xE5BCF000:
+        return None
+    effective_cell = stub_offset + 8 + 0x100000 + add2 + (third & 0xFFF)
+    return stub_offset if effective_cell == cell_offset else None
+
+
 def audit_image(data: bytes) -> dict[str, Any]:
     header = parse_header(data)
     fixups = parse_fixups(data, header)
@@ -162,11 +186,45 @@ def audit_image(data: bytes) -> dict[str, Any]:
     relocation_types: dict[str, dict[str, int]] = {
         name: {} for name in TARGET_SYMBOLS
     }
+    code_start = int(header["code_offset"])
+    code_blob = data[code_start:code_start + int(header["code_file_size"])]
+    manifest = [
+        {"symbol_index": index, "name": name,
+         "external_relocation_count": 0, "cells": []}
+        for index, name in enumerate(fixups["symbols"])
+    ]
+    cell_summary: dict[str, int] = {}
     for relocation in fixups["external_relocations"]:
         name = relocation["symbol"]
+        offset = relocation["offset"]
+        symbol_index = relocation["symbol_index"]
+        if offset & 3 or offset + 4 > len(code_blob):
+            raise S3EAuditError(
+                f"external relocation cell out of range or unaligned: 0x{offset:x}"
+            )
+        value = _u32(code_blob, offset)
+        stub_offset = None
+        if relocation["type"] != 4:
+            cell_kind = "non_thumb_external"
+        elif value == int(header["base_addr"]) + 0x70:
+            stub_offset = _verify_arm_import_stub(code_blob, offset)
+            cell_kind = "arm_import_stub" if stub_offset is not None else "unverified_resolver_placeholder"
+        elif value == 0:
+            cell_kind = "zero_function_pointer_data"
+        else:
+            cell_kind = "other"
+        cell_summary[cell_kind] = cell_summary.get(cell_kind, 0) + 1
+        manifest[symbol_index]["external_relocation_count"] += 1
+        manifest[symbol_index]["cells"].append({
+            "type": relocation["type"],
+            "offset": f"0x{offset:x}",
+            "original_value": f"0x{value:08x}",
+            "cell_kind": cell_kind,
+            "stub_offset": f"0x{stub_offset:x}" if stub_offset is not None else None,
+        })
         if name in target_map:
-            target_map[name].append(relocation["offset"])
-            target_indices[name].append(relocation["symbol_index"])
+            target_map[name].append(offset)
+            target_indices[name].append(symbol_index)
             type_key = str(relocation["type"])
             relocation_types[name][type_key] = (
                 relocation_types[name].get(type_key, 0) + 1
@@ -184,6 +242,8 @@ def audit_image(data: bytes) -> dict[str, Any]:
             "symbol_count": fixups["symbol_count"],
             "external_relocation_count": len(fixups["external_relocations"]),
         },
+        "external_relocation_cell_summary": cell_summary,
+        "import_manifest": manifest,
         "target_import_relocation_offsets": {
             name: [f"0x{offset:x}" for offset in offsets]
             for name, offsets in target_map.items()
