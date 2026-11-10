@@ -17,4 +17,7 @@ Connect the bounded ELF32 dynamic metadata decoder to the existing symbol resolv
 This bridge does not locate or load DT_NEEDED libraries, allocate/map provider images, implement Android linker namespaces or global symbol interposition, decode GNU symbol versions, perform lazy PLT binding, handle TLS/COPY/IFUNC, or execute constructors. Provider values must already be final guest virtual addresses and must be ordered by the caller. Defined symbols are resolved within the current image; this is not full ELF interposition semantics.
 
 ## Validation
-Host tests and Android ARM64 build/ELF verification are triggered for the stage commits. This stage is not marked complete until both pass.
+- Host regression suite, including `test_re_guest_elf32_reloc_plan`: PASS on commit `04ad19c2c17b4e000a0dd2f113435e91d5bf3686` (workflow run `42815789032`).
+- Android ARM64 native build/ELF verification: running on commit `04ad19c2c17b4e000a0dd2f113435e91d5bf3686` (workflow run `42815791052`).
+
+Stage 121C remains pending until the Android build finishes successfully.
