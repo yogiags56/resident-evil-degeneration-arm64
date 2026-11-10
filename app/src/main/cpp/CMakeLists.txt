@@ -11,6 +11,7 @@ add_library(re_asset_probe SHARED
     re_s3e_file_bridge.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/archive/re_dtrz_vfs.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/archive/re_dtrz_file_backend.c
+    # Stage 122A: ARM/Thumb execution over permission-checked multi-region guest memory.
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_cpu.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_cpu_checked.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_cpu_memory.c
