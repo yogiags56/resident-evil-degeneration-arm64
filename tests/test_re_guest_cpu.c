@@ -5,6 +5,7 @@
 #include <string.h>
 static void put32(unsigned char*p,unsigned v){p[0]=v;p[1]=v>>8;p[2]=v>>16;p[3]=v>>24;}
 static void put16(unsigned char*p,unsigned v){p[0]=v;p[1]=v>>8;}
+static unsigned get32(const unsigned char*p){return (unsigned)p[0]|((unsigned)p[1]<<8)|((unsigned)p[2]<<16)|((unsigned)p[3]<<24);}
 int main(void){
  unsigned char mem[128]={0};REGUESTMEM m={mem,sizeof(mem),0x50000000};REGUESTCPU c;
  /* A32: MOV r0,#7; ADD r1,r0,#5; CMP r1,#12; B +0 */
