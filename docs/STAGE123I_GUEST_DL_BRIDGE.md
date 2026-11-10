@@ -15,6 +15,7 @@ The module provides:
 - Callback-driven `dlopen`, `dlsym`, and `dlclose`.
 - POSIX-style one-shot `dlerror` retrieval into a caller-supplied guest-memory buffer.
 - Up to 8 simultaneous guest handles.
+- Best-effort `close_all` shutdown cleanup; failed host closes leave their slots active for retry rather than losing the handle.
 - Opaque 32-bit tokens tagged with `0xD1` and a generation counter; stale tokens are rejected after close/reuse.
 - Host-native handles are stored only in the host-side bridge structure as `uintptr_t`; they are never written into guest memory.
 - The `dlsym` callback must return a 32-bit guest-callable address (for example, a symbol-specific Thumb trampoline). The bridge preserves the returned bit 0 and never returns a raw host function pointer.
@@ -24,7 +25,7 @@ The module is compiled into the Android ARM64 native target through `app/src/mai
 
 ## Validation
 
-Host source-check workflow run `42883782470` passed. Its log explicitly reports:
+Host source-check workflow run `42884464704` passed, including capacity and retryable `close_all` coverage. Its log explicitly reports:
 
 `Guest dlopen/dlsym/dlclose/dlerror bridge tests: PASS`
 
@@ -33,9 +34,10 @@ The synthetic runtime test exercises:
 - `dlsym(token, "glTexImage2D")` returning a guest Thumb pointer.
 - Missing-symbol behavior and one-shot `dlerror` string delivery.
 - `dlclose`, stale-token rejection, and generation change after reopening.
+- All eight slots filled, ninth open rejected, failed close-all retained for retry, and successful close-all invalidated all tokens.
 - Failed `dlopen` and error retrieval.
 
-Android ARM64 build workflow run `42883782568` passed, including compilation of `re_guest_dl_bridge.c` into the ARM64 native target.
+Android ARM64 build workflow run `42883782568` passed for the initial bridge implementation. The new `close_all` addition is undergoing a fresh Android ARM64 build in run `42884437640`.
 
 ## Explicit non-claims
 
