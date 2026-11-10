@@ -87,8 +87,6 @@ def collect_relr_tables(data: bytes, tags: dict[int, int], loads: list[dict], en
         ("size", DT_RELRSZ, DT_ANDROID_RELRSZ),
         ("entry_size", DT_RELRENT, DT_ANDROID_RELRENT),
     )
-    if DT_ANDROID_RELRCOUNT in tags and not any(tag in tags for _, standard, android in alias_groups for tag in (standard, android)):
-        raise ELFAuditError("DT_ANDROID_RELRCOUNT is present without a RELR table")
     selected = {}
     source_tags = []
     for name, standard, android in alias_groups:
@@ -115,7 +113,10 @@ def collect_relr_tables(data: bytes, tags: dict[int, int], loads: list[dict], en
         offset, targets = 0, []
     else:
         offset, raw = mapper(data, address, size, loads, "DT_RELR")
-        targets = decode_relr(raw, endian)
+        target_records = decode_relr_records(raw, endian)
+        targets = [record["target_offset"] for record in target_records]
+    if size == 0:
+        target_records = []
     result = {
         "source_tag": "DT_RELR" if DT_RELR in tags else "DT_ANDROID_RELR",
         "source_tags": [
@@ -132,6 +133,7 @@ def collect_relr_tables(data: bytes, tags: dict[int, int], loads: list[dict], en
         "entry_count": size // WORD_SIZE,
         "relocation_count": len(targets),
         "targets": [f"0x{target:08x}" for target in targets],
+        "target_records": target_records,
         "android_relr_count_hint": tags.get(DT_ANDROID_RELRCOUNT),
     }
     return [result]
