@@ -20,6 +20,7 @@ The module provides:
 - Host-native handles are stored only in the host-side bridge structure as `uintptr_t`; they are never written into guest memory.
 - The `dlsym` callback must return a 32-bit guest-callable address (for example, a symbol-specific Thumb trampoline). The bridge preserves the returned bit 0 and never returns a raw host function pointer.
 - Mapped AAPCS32 handlers for the four functions can be registered transactionally into the existing `REGUESTIMPORTTable` with caller-provided unique binding IDs.
+- `re_guest_dl_bridge_build_provider_symbols()` exports the four guest trampoline addresses as `REGUESTSYMBOL` entries tagged with provider SONAME `libdl.so`; this list can be passed directly to `re_guest_elf32_load_linked_image()` as part of its caller-supplied `loaded_providers` catalog.
 
 The module is compiled into the Android ARM64 native target through `app/src/main/cpp/CMakeLists.txt`.
 
@@ -28,6 +29,8 @@ The module is compiled into the Android ARM64 native target through `app/src/mai
 Host source-check workflow run `42884464704` passed, including capacity and retryable `close_all` coverage. Its log explicitly reports:
 
 `Guest dlopen/dlsym/dlclose/dlerror bridge tests: PASS`
+
+The synthetic runtime test also resolves the exported `dlsym` entry through `re_guest_symbol_resolve()` using its `libdl.so` provider identity. Host source-check run `42885707892` passed (312 Python tests plus native regressions, including `Guest dlopen/dlsym/dlclose/dlerror bridge tests: PASS`). Android ARM64 build for this provider-export addition is running in run `42885707759`.
 
 The synthetic runtime test exercises:
 - `dlopen("libGLESv1_CM.so", 2)` and opaque token creation.
