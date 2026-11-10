@@ -42,6 +42,7 @@ typedef struct {
     uint8_t little_endian;
     uint8_t load_count;
     uint8_t dynamic_count;
+    uint16_t load_overlap_count;
     uint8_t entry_in_executable_load;
     REGUESTELF32PROGRAMHEADER program_headers[RE_GUEST_ELF32_MAX_PROGRAM_HEADERS];
 } REGUESTELF32IMAGE;
