@@ -10,10 +10,10 @@ static void ph(uint8_t*p,uint32_t t,uint32_t o,uint32_t a,uint32_t fs,uint32_t m
 }
 static void dyn(uint8_t*p,uint32_t t,uint32_t v){p32(p,t);p32(p+4,v);}
 static void fixture(uint8_t*b){
- memset(b,0,512);b[0]=0x7f;b[1]='E';b[2]='L';b[3]='F';b[4]=1;b[5]=1;b[6]=1;
+ memset(b,0,768);b[0]=0x7f;b[1]='E';b[2]='L';b[3]='F';b[4]=1;b[5]=1;b[6]=1;
  p16(b+16,RE_GUEST_ELF32_ET_EXEC);p16(b+18,RE_GUEST_ELF32_EM_ARM);p32(b+20,1);
  p32(b+24,0x1000);p32(b+28,52);p16(b+40,52);p16(b+42,32);p16(b+44,2);
- ph(b+52,RE_GUEST_ELF32_PT_LOAD,0,0x1000,512,512,RE_GUEST_ELF32_PF_R|RE_GUEST_ELF32_PF_X,0x1000);
+ ph(b+52,RE_GUEST_ELF32_PT_LOAD,0,0x1000,768,768,RE_GUEST_ELF32_PF_R|RE_GUEST_ELF32_PF_X,0x1000);
  ph(b+84,RE_GUEST_ELF32_PT_DYNAMIC,0x40,0x1040,72,72,RE_GUEST_ELF32_PF_R,4);
  dyn(b+0x40,4,0x1200); /* DT_HASH */
  dyn(b+0x48,5,0x1180); /* DT_STRTAB */
@@ -34,7 +34,7 @@ static void fixture(uint8_t*b){
  p32(b+0x220,0x1300);p32(b+0x224,(1u<<8)|2u);
 }
 int main(void){
- uint8_t b[512];REGUESTELF32IMAGE im;REGUESTELF32DYNAMIC d;
+ uint8_t b[768];REGUESTELF32IMAGE im;REGUESTELF32DYNAMIC d;
  REGUESTELF32LINKINFO info;REGUESTELF32LINKSYMBOL syms[4];
  REGUESTELF32LINKRELOCATION rels[4];size_t failed=999;
  fixture(b);
