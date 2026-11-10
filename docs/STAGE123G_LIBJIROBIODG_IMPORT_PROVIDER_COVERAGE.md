@@ -3,6 +3,19 @@
 ## Input provenance
 The user-supplied APK and `lib/armeabi/libjirobiodg.so` match Stage 97 SHA-256 hashes exactly. The shared object is ELF32 little-endian ARM EABI5 (431,528 bytes); it is not an ARM64 library.
 
+## Complete XE3U import manifest
+
+The read-only `tools/s3e_binary_audit.py` now emits `import_manifest` in its JSON report. Each of the 227 symbols has its exact symbol index, external relocation count, and every cell's offset, original value, type, classification, and verified ARM stub offset where applicable. It rejects external cell offsets that are unaligned or outside the file-backed code blob.
+
+Re-running the manifest logic against the re-uploaded original image yields:
+- 227 / 227 symbols represented.
+- 238 / 238 external records classified.
+- 230 verified three-instruction ARM import stubs.
+- 8 zero-valued function-pointer data cells.
+- No unverified resolver placeholders or other cell forms.
+
+The eight data cells map to five symbol indices: `glTexParameteri` (1), `glTexParameterx` (1), `s3eMallocBase` (2), `s3eReallocBase` (2), and `s3eFreeBase` (2). This is a reproducible metadata inventory, not proof that those APIs have production handlers.
+
 ## Exact symbol intersection
 
 The XE3U image contains 227 API symbol names. The original shared object has 56 defined global dynamic exports. An exact-name comparison finds 22 symbols in common (9.7% of the XE3U symbol table). All 22 export values are Thumb-tagged (bit 0 set), which is compatible with the type-4 Thumb import-cell model and the new direct Thumb-trampoline/guest-provider binding path.
