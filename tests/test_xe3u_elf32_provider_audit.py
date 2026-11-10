@@ -86,6 +86,35 @@ class ThumbWrapperDecodeTests(unittest.TestCase):
         self.assertEqual(wrapper["slot_address"], "0x00001084")
         self.assertEqual(wrapper["shared_call_targets"], ["0x00001020"])
 
+    def test_undefined_symbol_family_candidates_count_only_symbol_relocations(self):
+        report = AUDIT.undefined_symbol_families([{
+            "entries": [
+                {"symbol_undefined": True, "symbol": "dlsym"},
+                {"symbol_undefined": True, "symbol": "free"},
+                {"symbol_undefined": True, "symbol": "free"},
+                {"symbol_undefined": True, "symbol": "__aeabi_dadd"},
+                {"symbol_undefined": True, "symbol": "__android_log_print"},
+                {"symbol_undefined": False, "symbol": "defined_local"},
+                {"symbol_undefined": True, "symbol": ""},
+            ]
+        }])
+        self.assertEqual(report["unique_symbol_count"], 4)
+        self.assertEqual(report["relocation_reference_count"], 5)
+        families = {x["candidate_family"]: x for x in report["families"]}
+        self.assertEqual(families["libdl candidate"]["unique_symbol_count"], 1)
+        self.assertEqual(families["libc / POSIX / Bionic candidate"]
+                         ["relocation_reference_count"], 2)
+        self.assertEqual(families["ARM EABI compiler-runtime candidate"]
+                         ["unique_symbol_count"], 1)
+        self.assertEqual(families["liblog candidate"]["unique_symbol_count"], 1)
+
+    def test_undefined_symbol_family_classifier_keeps_libm_and_eabi_distinct(self):
+        self.assertEqual(AUDIT.classify_undefined_symbol("sqrt"), "libm candidate")
+        self.assertEqual(AUDIT.classify_undefined_symbol("__aeabi_ddiv"),
+                         "ARM EABI compiler-runtime candidate")
+        self.assertEqual(AUDIT.classify_undefined_symbol("pthread_create"),
+                         "libc / POSIX / Bionic candidate")
+
     def test_rejects_nonmatching_encodings(self):
         self.assertIsNone(AUDIT._thumb_ldr_literal(0x6800, 0x1000))
         self.assertIsNone(AUDIT._thumb_ldr_word_imm(0x4800))
