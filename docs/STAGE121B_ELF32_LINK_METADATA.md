@@ -33,5 +33,9 @@ ELFs are reported as unsupported.
 ## Validation
 The synthetic test covers a SysV hash, three symbol slots, bounded symbol-name
 decoding, one REL record, output-capacity rejection, and out-of-range table
-rejection. GitHub Actions host tests and Android ARM64 build are required
-before this stage is marked complete.
+rejection. ## Validation results
+- Host regression suite, including `test_re_guest_elf32_link`: PASS on commit `daa1069b2099dc00d0c502447d0677b7db07a373` (workflow run `42815318804`).
+- Android ARM64 native build and ELF verification: PASS on commit `21ddc4a50b53629e198a72d857e706ec2eade99e` (workflow run `42815274644`). The runtime decoder and Android CMake source integration are identical in the validated host and Android commits; the later host-only commit corrected the synthetic test fixture offsets.
+- Android artifact uploaded as workflow artifact `resident-evil-degeneration-arm64-stage118-runtime-foundation`, artifact ID `13763829438`.
+
+Stage 121B validation is complete. This remains a metadata decoder, not a dependency loader or playable game runtime.
