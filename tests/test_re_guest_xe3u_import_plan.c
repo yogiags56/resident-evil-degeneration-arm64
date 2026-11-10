@@ -18,7 +18,6 @@ static void init_image(uint8_t*code,size_t size,uint32_t base,REGUESTXE3UHEADER*
 int main(void){
  const size_t size=0x13b710u;const uint32_t base=0x50000000u;
  uint8_t*code=(uint8_t*)calloc(size,1);REGUESTXE3UHEADER h;
- REGUESTXE3USYMBOL symbols[7]={0};
  REGUESTXE3UEXTERNALRELOCATION ext[2]={{0x100u,6u,4u},{0x13b708u,5u,4u}};
  REGUESTIMPORTTable imports;uint32_t ptr=0,scratch[4];size_t unbound=0,failed=0;
  REGUESTXE3UEXTERNALPATCH plan[2],before[2];
