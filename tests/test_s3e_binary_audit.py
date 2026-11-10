@@ -13,7 +13,7 @@ SPEC.loader.exec_module(s3e)
 def synthetic_image():
     symbols = b"s3eFileOpen\0s3eFileRead\0"
     sym_section = struct.pack("<IIH", 0, 8 + 2 + len(symbols), 2) + symbols
-    # Two external relocation cells: 0x12345678 -> symbol 0, 0x00000abc -> symbol 1.
+    # Two in-range external relocation cells: code offsets 0x4 and 0x8.
     ext = struct.pack("<II", 4, 8 + 4 + 12) + struct.pack(
         "<IHHHHHH", 2, 0, 0x0004, 0, 0, 0x0008, 1
     )
