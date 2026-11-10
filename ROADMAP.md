@@ -21,7 +21,7 @@ A deeper Thumb audit shows those 22 exports are lazy GL dispatch wrappers, not d
 3. Bind Stage 123I `dlopen`/`dlsym`/`dlclose`/`dlerror` mapped handlers to the exact dynamic-symbol IDs in `libjirobiodg.so`, using module-qualified binding IDs and the opaque guest-handle table.
 4. Install the dynamic-loader bridge/provider registry before guest `JNI_OnLoad`: its call at `0x34056` enters GL initializer `0x3d3b0`, which initializes the global state and opens the GLES libraries. Continue tracing the remaining JNI method registration and Java/native startup contract.
 5. Build a read-only relocation/provider plan for the original ELF32 module. Select no load bias until its `0x8000` PT_LOAD alignment and guest address-space reservation are accounted for.
-6. Audit the six `DT_NEEDED` libraries (`libc.so`, `libm.so`, `liblog.so`, `libstdc++.so`, `libz.so`, `libdl.so`) and map all 137 relocation-referenced undefined names to verified providers or explicit guest bridges.
+6. Audit the six `DT_NEEDED` libraries (`libc.so`, `libm.so`, `liblog.so`, `libstdc++.so`, `libz.so`, `libdl.so`) and map all 137 symbol-based relocation references across 136 unique undefined names to verified providers or explicit guest bridges.
 7. Bridge only verified system APIs to ARM64 handlers; never load ARM32 system libraries through the ARM64 process linker. Keep unknown imports fail-closed.
 
 ### Remaining real-game gates
