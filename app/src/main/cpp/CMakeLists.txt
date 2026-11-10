@@ -47,6 +47,7 @@ add_library(re_asset_probe SHARED
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_memory_view.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_imports.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_dl_bridge.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_dl_provider_catalog.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_runtime.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/s3e_aapcs32.c)
 
