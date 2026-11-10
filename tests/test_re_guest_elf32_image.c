@@ -62,7 +62,8 @@ int main(void) {
     valid_elf(bytes,1); put32(bytes+84+28,3,1);
     assert(re_guest_elf32_parse_image(bytes,sizeof(bytes),&image,&failed)==RE_GUEST_ELF32_E_ALIGNMENT && failed==1);
     valid_elf(bytes,1); put32(bytes+84+8,0x1004,1);
-    assert(re_guest_elf32_parse_image(bytes,sizeof(bytes),&image,&failed)==RE_GUEST_ELF32_E_OVERLAP && failed==1);
+    assert(re_guest_elf32_parse_image(bytes,sizeof(bytes),&image,&failed)==RE_GUEST_ELF32_OK);
+    assert(image.load_overlap_count==1u);
     valid_elf(bytes,1); put32(bytes+24,0x5000,1);
     assert(re_guest_elf32_parse_image(bytes,sizeof(bytes),&image,&failed)==RE_GUEST_ELF32_OK);
     assert(image.entry_in_executable_load==0);
