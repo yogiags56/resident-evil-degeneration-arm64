@@ -4,7 +4,7 @@
 static int map_bus_status(const REGUESTMEM *m, REGUESTMEMStatus s) {
  if(m && m->bus_fault)*m->bus_fault=(int)s;
  if(s==RE_GUEST_MEM_OK)return 1;
- if(s==RE_GUEST_MEM_E_PERMISSION)return -2;
+ if(s==RE_GUEST_MEM_E_PERMISSION)return 0;
  if(s==RE_GUEST_MEM_E_RANGE)return -1;
  return 0;
 }
