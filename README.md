@@ -1,6 +1,6 @@
 # Resident Evil: Degeneration — Native ARM64 Port Research
 
-[![Stage](https://img.shields.io/badge/stage-118-blue)](#project-status)
+[![Stage](https://img.shields.io/badge/stage-119S-blue)](#project-status)
 [![Platform](https://img.shields.io/badge/platform-Android%20ARM64-green)](#build-the-android-probe)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
@@ -336,3 +336,140 @@ This automation script is provided because the connected GitHub integration in t
 ## Stage 117–118 runtime foundation
 
 Stage 117 compiles the partial ARM32/Thumb CPU interpreter, AAPCS32 dispatcher, and runtime coordinator into the Android ARM64 native library. Its CI build and source checks passed on commit `b090f90`. Stage 118 adds runtime stop/fault diagnostics and tests for unresolved imports, failed import dispatch, and invalid guest instruction fetch. See [Stage 118 report and roadmap](docs/STAGE118_RUNTIME_DIAGNOSTICS_AND_ROADMAP.md). The native probe remains a research harness: no physical-device execution or original game boot is claimed.
+
+
+## Current engineering milestone — Stage 119S
+
+The latest documented source milestone is Stage 119S (guest ARM architecture-profile evidence audit). The opt-in helper routes immediate pre-indexed/no-writeback byte, word, and halfword transfers through the Stage 119O scalar helper, including signed LDRSB/LDRSH. It is not called by the production CPU interpreter.
+
+See [current status](docs/STATUS.md), [Stage 119S report](docs/STAGE119S_GUEST_ARM_PROFILE_AUDIT.md), [Stage 119R report](docs/STAGE119R_A32_DIRECTED_FAULT_TESTS.md), [Stage 119Q report](docs/STAGE119Q_A32_SCALAR_DIFFERENTIAL.md), [Stage 119P report](docs/STAGE119P_A32_SCALAR_TRANSFER_INTEGRATION.md), [Stage 119O report](docs/STAGE119O_CHECKED_SCALAR_TRANSFER.md), and [project roadmap](ROADMAP.md). Stage 119Q host CI passed on commit `c4325e6` (75 Python checks, native C syntax checks, integration tests, and 512 differential cases). Stage 119R host CI passed on code commit `46a8d8a` (75 Python checks, native C syntax checks, integration tests, 512 differential cases, and directed fault tests). Stage 119P and 119Q Android ARM64 builds passed; Stage 119R host CI and Android ARM64 build passed on commit `080203b`. No production CPU migration, original game boot, or playable build is claimed.
+
+
+## Stage 119T — Guest ELF and ARM ABI metadata audit
+
+Added a read-only ELF32/ELF64 metadata auditor with synthetic fixtures. It reports ELF class, endianness, machine, flags, section names, and selected AEABI ARM attributes. It does not execute or modify the input. The original game executable is not stored in this repository, so game-specific attributes remain unknown.
+
+    python3 tools/guest_arm_elf_audit.py /path/to/guest.elf --json /tmp/guest-elf-report.json
+
+See [Stage 119T report](docs/STAGE119T_GUEST_ELF_ARM_ABI_AUDIT.md). Host source checks and Android ARM64 native build passed on commit ffd61f9. This is build validation only, not game boot validation.
+
+## Stage 119U — ARM attribute scopes and external evidence capture
+
+Expanded public AEABI attribute parsing to file, section, and symbol scopes, including Tag_compatibility and Tag_nodefaults. Added readelf/llvm-readobj evidence capture with source SHA-256 and tool-version recording.
+
+    python3 tools/guest_arm_elf_evidence.py /path/to/guest.elf --tool auto --json /tmp/guest-evidence.json
+
+See [Stage 119U report](docs/STAGE119U_ARM_ATTRIBUTES_EVIDENCE.md). Review evidence output before sharing because it can contain symbol names and local paths. The tool does not execute the supplied ELF.
+
+
+## Stage 119V — ARM/Thumb instruction inventory
+
+Added an optional Capstone-based instruction inventory for ELF32 EM_ARM executable sections. The mode is explicit (--mode arm or --mode thumb); mixed-mode mapping symbols are not yet interpreted. Reports include raw/decoded byte counts, undecoded ranges, mnemonic counts, capped instruction samples, decoder version, and input SHA-256.
+
+    python3 tools/guest_arm_instruction_inventory.py /path/to/guest.elf --mode thumb --json /tmp/thumb-inventory.json
+
+See docs/STAGE119V_ARM_THUMB_INSTRUCTION_INVENTORY.md. Original game binary remains absent; no game instruction profile is claimed.
+
+
+## Stage 119W — ARM mapping symbols
+
+Instruction inventory now reads ELF32 local mapping symbols ($a/$t/$d) and splits executable sections into ARM, Thumb, data, and unknown ranges. Unknown prefixes are not guessed. Sections without mapping symbols require an explicit fallback mode. See docs/STAGE119W_ARM_MAPPING_SYMBOLS.md.
+
+
+## Stage 119X — ARM relocation audit
+
+Added a read-only ELF32 EM_ARM REL/RELA relocation auditor. It validates relocation table links, target section bounds, symbol indices, and reports known relocation names while preserving unknown types numerically. No relocation is applied. See docs/STAGE119X_ARM_RELOCATION_AUDIT.md.
+
+
+## Stage 119Y — Relocation/mapping cross-check
+
+Added a report correlating ELF32 ARM relocation sites with local ARM/Thumb/data mapping-symbol ranges. CALL/JUMP relocations outside mapped ARM/Thumb code are flagged; undefined symbols remain external/undefined rather than guessed as Marmalade imports. No relocations are applied. See docs/STAGE119Y_RELOCATION_MAPPING_CROSSCHECK.md.
+
+
+## Stage 119Z — Function-symbol inventory
+
+Added ELF32 ARM STT_FUNC inventory with $a/$t/$d overlap classification, Thumb state-bit reporting, and CALL/JUMP relocation correlation by exact symbol-table and symbol index. Zero-size and out-of-section extents remain explicit. See docs/STAGE119Z_FUNCTION_SYMBOL_INVENTORY.md.
+
+
+## Stage 120A — Dynamic import inventory
+
+Added a read-only ELF32 ARM dynamic metadata auditor for DYNSYM undefined symbols, DT_NEEDED dependencies, SHT_DYNAMIC tags, and SHT_REL/SHT_RELA sections linked to dynamic symbol tables. No relocation is applied and undefined symbols are not guessed to be S3E imports. See docs/STAGE120A_DYNAMIC_IMPORT_INVENTORY.md.
+
+
+## Stage 120B — PLT/GOT cross-reference
+
+Added a conservative PLT/GOT report for section-backed ELF32 ARM dynamic relocations. It identifies R_ARM_JUMP_SLOT entries, correlates them to undefined dynamic symbols, and preserves DT_PLTGOT/DT_JMPREL/DT_PLTRELSZ/DT_PLTREL when present. It does not infer resolved GOT contents or apply relocations. See docs/STAGE120B_PLT_GOT_CROSS_REFERENCE.md.
+
+
+## Stage 120C — PT_DYNAMIC / PT_LOAD parser
+
+Added a section-header-independent ELF32 EM_ARM program-header auditor. It maps virtual ranges only through unique PT_LOAD file-backed bytes and parses PT_DYNAMIC/DT_NEEDED without relying on section headers. See docs/STAGE120C_PT_DYNAMIC_LOAD_PARSER.md.
+
+
+## Stage 120D — Dynamic relocation segment mapping
+
+Added a section-header-independent ELF32 EM_ARM dynamic relocation auditor for DT_REL, DT_RELA, and DT_JMPREL tables. It maps file-backed table bytes through PT_LOAD and correlates symbol identities when SysV DT_HASH provides safe bounds. See docs/STAGE120D_DYNAMIC_RELOCATION_SEGMENT_MAPPING.md.
+
+
+## Stage 120E — Android APS2 packed relocations
+
+Added a read-only ELF32 EM_ARM auditor for Android APS2 packed REL/RELA streams referenced by PT_DYNAMIC. It validates SLEB128 and group encoding, maps the packed stream through PT_LOAD file-backed ranges, and optionally correlates symbols using bounded SysV DT_HASH metadata. The parser reports relocation records only; it does not apply relocations or infer runtime providers.
+
+    python3 tools/guest_arm_aps2_relocation_audit.py /path/to/guest.elf --json /tmp/aps2-relocations.json
+
+See STAGE120E_REPORT.md, ROADMAP_THROUGH_STAGE120E.md, and docs/STAGE120E_ANDROID_APS2_PACKED_RELOCATIONS.md. The original game executable is not included, so no game-specific APS2 presence or boot status is claimed.
+
+
+## Stage 120F — Dynamic relocation reconciliation
+
+Added a read-only unified audit across section-backed REL/RELA, PT_DYNAMIC REL/RELA/JMPREL, and Android APS2 records. The report preserves source tables, normalizes relocation identities, flags exact duplicates only within matching symbol-table namespaces, and reports exact/partial file-range overlaps. Stripped ELF inputs remain supported through the PT_DYNAMIC path.
+
+    python3 tools/guest_arm_relocation_reconciliation.py /path/to/guest.elf --json /tmp/relocation-reconciliation.json
+
+See STAGE120F_REPORT.md, ROADMAP_THROUGH_STAGE120F.md, and docs/STAGE120F_DYNAMIC_RELOCATION_RECONCILIATION.md. GitHub Actions host suite passed 147 tests; no relocation is applied and no game boot is claimed.
+
+
+## Stage 120G — GNU hash dynamic symbol bounds
+
+Added bounded DT_GNU_HASH parsing for ELF32 EM_ARM. The auditor validates the header, bloom filter, buckets, and chain terminators; derives a safe dynamic-symbol count for GNU-hash-only binaries; validates GNU chain hashes and bloom membership against bounded DT_SYMTAB names; and cross-checks the result against SysV DT_HASH nchain when both are present. See STAGE120G_REPORT.md and docs/STAGE120G_GNU_HASH_SYMBOL_BOUNDS.md.
+
+    python3 tools/guest_arm_dynamic_relocation_segment_audit.py /path/to/guest.elf --json /tmp/dynamic-relocations.json
+
+The parser remains read-only and does not apply relocations or resolve runtime library providers.
+
+
+## Stage 120H — ELF dynamic symbol version metadata
+
+Added bounded ELF32 symbol version parsing for DT_VERSYM, DT_VERDEF/DT_VERDEFNUM, and DT_VERNEED/DT_VERNEEDNUM. Symbol entries now retain local/global, definition/requirement, version name, library, and hidden-bit identity. Dynamic REL/RELA/JMPREL, APS2, and relocation reconciliation preserve version identity rather than treating matching symbol indices as proof of ABI identity.
+
+    python3 tools/guest_arm_dynamic_relocation_segment_audit.py /path/to/guest.elf --json /tmp/dynamic-relocations.json
+
+See STAGE120H_REPORT.md and docs/STAGE120H_ELF_SYMBOL_VERSIONING.md. GitHub Actions Source checks passed 165 Python tests plus host C/native regressions. This remains metadata analysis only; no provider compatibility or game boot is claimed.
+
+
+## Stage 120I — ELF32 RELR relative relocation decoding
+
+Added a read-only ELF32 EM_ARM decoder for DT_RELR/DT_RELRSZ/DT_RELRENT. It expands direct offsets and bitmap entries with alignment, file-backed table bounds, and 32-bit overflow checks. RELR targets are integrated into relocation reconciliation as relative-only records with no fabricated symbol index or addend.
+
+    python3 tools/guest_arm_relr_audit.py /path/to/guest.elf --json /tmp/relr.json
+    python3 tools/guest_arm_relocation_reconciliation.py /path/to/guest.elf --json /tmp/relocation-reconciliation.json
+
+See STAGE120I_REPORT.md and docs/STAGE120I_ELF32_RELR_DECODING.md. GitHub Actions Source checks passed 177 Python tests plus host C/native regressions. No relocation is applied and no game boot is claimed.
+
+
+## Stage 120J — Relocation target segment and memory-range validation
+
+Unified relocation reconciliation now annotates each target against ELF32 PT_LOAD memory ranges. It distinguishes file-backed bytes, zero-fill/BSS, cross-boundary targets, segment-end crossings, out-of-range addresses, and ambiguous overlapping PT_LOAD mappings. Known ARM relocation widths are checked; unknown widths are left unknown, and R_ARM_NONE is treated as no target memory access.
+
+    python3 tools/guest_arm_relocation_reconciliation.py /path/to/guest.elf --json /tmp/relocation-reconciliation.json
+
+See STAGE120J_REPORT.md and docs/STAGE120J_RELOCATION_TARGET_RANGE_AUDIT.md. GitHub Actions Source checks passed 188 Python tests plus host C/native regressions. The audit does not read or modify target bytes, calculate load bias, apply relocations, or claim game boot.
+
+
+## Stage 120K — ARM ELF32 relocation semantics and ABI metadata
+
+Added an explicit AAELF32-backed registry of 60 ARM relocation codes, recording target storage width, place alignment, relocation class, and semantic summary. Corrects target-width handling for ABS8 (1 byte), ABS16 (2 bytes), ABS32 (4 bytes), Thumb16 (2 bytes), Thumb32 (4 bytes), variable-size COPY (symbol st_size), and NONE (zero target access). Unknown relocation codes remain unknown. The registry is integrated with target-range checks, dynamic relocation naming, and unified ABI coverage counts.
+
+    python3 tools/guest_arm_relocation_reconciliation.py /path/to/guest.elf --json /tmp/relocation-reconciliation.json
+
+See STAGE120K_REPORT.md and docs/STAGE120K_ARM_RELOCATION_ABI.md. GitHub Actions run 42602775178 passed 199 Python tests plus host C/native regressions. This remains static metadata analysis; no relocation is applied and no game boot is claimed.
