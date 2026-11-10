@@ -27,6 +27,36 @@ def u32(data: bytes, off: int) -> int:
         raise AuditError(f"u32 out of range at 0x{off:x}")
     return struct.unpack_from("<I", data, off)[0]
 
+def verify_arm_import_stub(code: bytes, cell_offset: int):
+    """Verify the observed 3-instruction ARM import thunk addressing one cell."""
+    cell_base, stub_base = 0x13B708, 0x84
+    delta = cell_offset - cell_base
+    if delta < 0 or delta % 4:
+        return None
+    slot = delta // 4
+    stub = stub_base + slot * 12
+    if stub + 12 > len(code):
+        return None
+    first, second, third = struct.unpack_from("<III", code, stub)
+    if first != 0xE28FC601:
+        return None
+    if second == 0xE28CCA3B:
+        second_add = 0x3B000
+    elif second == 0xE28CCA3A:
+        second_add = 0x3A000
+    else:
+        return None
+    if (third & 0xFFFFF000) != 0xE5BCF000:
+        return None
+    ldr_offset = third & 0xFFF
+    # The first ADD uses ARM's PC value (instruction address + 8).
+    effective_cell = stub + 8 + 0x100000 + second_add + ldr_offset
+    if effective_cell != cell_offset:
+        return None
+    return {"stub_offset": f"0x{stub:x}", "slot_index": slot,
+            "ldr_offset": f"0x{ldr_offset:x}",
+            "effective_cell": f"0x{effective_cell:x}"}
+
 def load_image(path: Path, asset: str) -> tuple[bytes, str]:
     raw = path.read_bytes()
     source = path.name
@@ -164,6 +194,8 @@ def audit_image(image: bytes, source: str = "<memory>") -> dict:
     external_sites = set()
     external_values = collections.Counter()
     external_zero_records = []
+    external_nonzero_count = 0
+    verified_arm_stubs = []
     for typ, offset, sym in external:
         if offset in external_sites:
             raise AuditError(f"duplicate external patch site 0x{offset:x}")
@@ -174,6 +206,13 @@ def audit_image(image: bytes, source: str = "<memory>") -> dict:
             external_zero_records.append({
                 "offset": f"0x{offset:x}", "symbol": symbols[sym],
                 "section_type": typ})
+        else:
+            external_nonzero_count += 1
+            match = verify_arm_import_stub(code, offset) if typ == 4 else None
+            if match:
+                verified_arm_stubs.append({
+                    "offset": f"0x{offset:x}", "symbol": symbols[sym],
+                    "cell_value": f"0x{word:08x}", **match})
     return {
         "source": source,
         "image_size": len(image),
@@ -202,7 +241,10 @@ def audit_image(image: bytes, source: str = "<memory>") -> dict:
         "external_relocations": {
             "count": len(external), "unique_patch_sites": len(external_sites),
             "cell_values": dict(external_values),
+            "nonzero_cells": external_nonzero_count,
             "zero_cells": external_zero_records,
+            "verified_arm_import_stubs": len(verified_arm_stubs),
+            "verified_stub_details": verified_arm_stubs,
             "note": "external cells are reported separately; no internal relocation rule is applied",
         },
     }
