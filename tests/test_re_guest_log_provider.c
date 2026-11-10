@@ -112,7 +112,7 @@ int main(void) {
     re_guest_memory_bus_init(&bus, &memory);
     put_string(bytes, 0x100u, "Degeneration");
     put_string(bytes, 0x180u, "id=%d name=%s code=%08x %%");
-    put_string(bytes, 0x1c0u, "first line\\nsecond line");
+    put_string(bytes, 0x1c0u, "first line\nsecond line");
     put_string(bytes, 0x240u, "hello from guest");
 
     re_guest_runtime_init_mapped(&runtime, &bus, &imports, 0x40000000u,
