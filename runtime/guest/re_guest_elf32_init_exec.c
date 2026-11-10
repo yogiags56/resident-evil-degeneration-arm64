@@ -65,6 +65,7 @@ REGUESTELF32INITEXECStatus re_guest_elf32_execute_init_sequence(
             return rs==RE_RUNTIME_OK?RE_GUEST_ELF32_INIT_EXEC_E_BUDGET:
                 RE_GUEST_ELF32_INIT_EXEC_E_RUNTIME;
         }
+        state->completed=0u;
         pending.completed_calls++;
     }
     pending.runtime_status=RE_RUNTIME_OK;
