@@ -1,6 +1,6 @@
 # Project Roadmap
 
-## Current milestone: Stage 120N — Packed and dynamic relocation metadata parity
+## Historical milestone: Stage 120N — Packed and dynamic relocation metadata parity
 
 GitHub Actions run 42614083636 passed 229 Python tests plus host C/native regressions. See STAGE120N_VALIDATION_LOG.txt.
 
@@ -83,9 +83,9 @@ Added a bounded, version-aware resolver for pre-parsed provider symbols. It filt
 
 Added bounded DT_NEEDED extraction and complete dynamic-symbol inventory output to the PT_DYNAMIC auditor. A JSON adapter separates external provider definitions from undefined GLOBAL/WEAK requests and preserves version names and SONAME constraints. No library loading, search-path resolution, dependency scope inference, or relocation application. CI validation pending.
 
-## Stage 120Z — DT_NEEDED dependency graph resolution
+## Completed milestone: Stage 120Z — DT_NEEDED dependency graph resolution
 
-Added a deterministic graph builder over caller-supplied adapter inventories. It validates SONAME uniqueness, reports unresolved dependencies, detects cycles, and emits dependency-first order only for complete acyclic graphs. No filesystem search, Android linker namespace emulation, loading, mapping, or relocation. CI validation pending.
+Added a deterministic graph builder over caller-supplied adapter inventories. It validates SONAME uniqueness, reports unresolved dependencies, detects cycles, and emits dependency-first order only for complete acyclic graphs. No filesystem search, Android linker namespace emulation, loading, mapping, or relocation. Host source checks passed in GitHub Actions run 42805208188; Android ARM64 native build passed in run 42805208140. Original game boot and device gameplay remain unverified.
 
 ## Remaining major gates
 
