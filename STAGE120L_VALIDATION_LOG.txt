@@ -1,0 +1,24 @@
+Stage 120L validation record
+============================
+
+GitHub Actions workflow: Source checks
+Run ID: 42603875912
+Validated source commit: f626e08e27577fdd88639fa5279c1fbdbb60fc06
+Result: success
+
+Observed:
+- Python unittest discovery completed.
+- 206 tests passed (8.550 seconds).
+- Relocation contract tests passed:
+  * R_ARM_RELATIVE symbol-free policy.
+  * Mandatory symbol policies for COPY/GLOB_DAT/JUMP_SLOT/DTPOFF32.
+  * Nullable TLS DTPMOD32/TPOFF32 cases.
+  * R_ARM_NONE leaves symbol index unconstrained and target access width zero.
+  * ET_REL section-relative target domains accepted.
+  * Unknown relocation contract remains unknown.
+- Host C mock compilation succeeded.
+- Native host C regression executables succeeded.
+
+No Android ARM64 device build or original game boot is claimed.
+Normative reference:
+https://github.com/ARM-software/abi-aa/blob/main/aaelf32/aaelf32.rst
