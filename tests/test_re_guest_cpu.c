@@ -20,6 +20,19 @@ int main(void){
  assert(re_guest_cpu_step(&c,&m)==RE_CPU_OK && c.r[0]==9);
  assert(re_guest_cpu_step(&c,&m)==RE_CPU_OK && c.r[0]==12);
  assert(re_guest_cpu_step(&c,&m)==RE_CPU_OK && c.r[15]==0x50000008);
+ /* ARM import-thunk transfer: LDR pc,[r12,#4]! updates r12 and branches. */
+ memset(mem,0,sizeof(mem));
+ put32(mem,0xe5bcf004);put32(mem+0x40,0x50000060);put32(mem+0x60,0xe3a00001);
+ re_guest_cpu_reset(&c,0x50000000,0);c.r[12]=0x5000003c;
+ assert(re_guest_cpu_step(&c,&m)==RE_CPU_OK);
+ assert(c.r[12]==0x50000040&&c.r[15]==0x50000060&&!c.thumb);
+ assert(re_guest_cpu_step(&c,&m)==RE_CPU_OK&&c.r[0]==1);
+ /* Failed loads do not commit the base-register writeback. */
+ memset(mem,0,sizeof(mem));put32(mem,0xe5bcf004);
+ re_guest_cpu_reset(&c,0x50000000,0);c.r[12]=0x5000007c;
+ assert(re_guest_cpu_step(&c,&m)==RE_CPU_E_MEMORY&&c.r[12]==0x5000007c);
+ re_guest_cpu_reset(&c,0x50000000,0);c.r[12]=0x5000003d;
+ assert(re_guest_cpu_step(&c,&m)==RE_CPU_E_ALIGNMENT&&c.r[12]==0x5000003d);
  /* Memory fault and alignment fault are distinguished */
  re_guest_cpu_reset(&c,0x5000007c,0);c.r[15]=0x5000007e;assert(re_guest_cpu_step(&c,&m)==RE_CPU_E_ALIGNMENT);
  re_guest_cpu_reset(&c,0x4fffffff,0);assert(re_guest_cpu_step(&c,&m)==RE_CPU_E_MEMORY);
