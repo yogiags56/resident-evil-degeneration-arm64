@@ -63,6 +63,20 @@ class S3EBinaryAuditTests(unittest.TestCase):
         self.assertEqual(result["import_manifest"][0]["cells"][0]["offset"], "0x4")
         self.assertEqual(result["import_manifest"][1]["cells"][0]["cell_kind"], "other")
 
+    def test_rejects_external_cell_out_of_code_bounds(self):
+        image = bytearray(synthetic_image())
+        fixup_size = struct.unpack_from("<I", image, 0x10)[0]
+        pos = 0x48
+        end = pos + fixup_size
+        while pos < end:
+            typ, size = struct.unpack_from("<II", image, pos)
+            if typ == 4:
+                struct.pack_into("<HH", image, pos + 12, 0, 0x1000)
+                break
+            pos += size
+        with self.assertRaises(s3e.S3EAuditError):
+            s3e.audit_image(bytes(image))
+
     def test_lzma_alone_decompression(self):
         import lzma
         image = synthetic_image()
