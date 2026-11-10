@@ -24,8 +24,7 @@ int main(void) {
     uint8_t code[2]={0x09,0x22};
     uint8_t stack[32]={0};
     uint8_t slots[8]={0};
-    uint32_t trampoline=0, pointer=0, slot_value=0;
-    uint64_t done=0;
+    uint32_t trampoline=0, slot_value=0;
     stack[0]=7;
     stack[4]=0xD4;stack[5]=0xC3;stack[6]=0xB2;stack[7]=0xA1;
     re_guest_memory_init(&memory);
