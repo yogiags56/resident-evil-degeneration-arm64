@@ -1,5 +1,9 @@
 # Project Roadmap
 
+## Active milestone update — Stage 123P (ARM32 guest liblog provider)
+
+Stage 123P adds a callback-driven virtual liblog.so provider for the two relocation-backed symbols __android_log_print and __android_log_write. It binds exact ELF32 undefined symbol indices to guest Thumb import trampolines, copies guest strings through permission-checked memory, formats a bounded AAPCS32 variadic subset, and rolls back the import table on binding failure. Host regression and Android native source registration are added. Android callback integration and CI validation remain pending. See docs/STAGE123P_LIBLOG_GUEST_ABI_PROVIDER.md.
+
 ## Active milestone update — Stage 123O (original ELF32 DSO dependency evidence)
 
 A fresh readelf inspection of the uploaded APK's `lib/armeabi/libjirobiodg.so` is recorded with both APK/ELF SHA-256 provenance and a machine-readable manifest. It confirms six direct DT_NEEDED entries, 4,057 dynamic relocations (3,920 RELATIVE, 135 JUMP_SLOT, 2 ABS32), and 137 symbol-backed references across 136 unique undefined names. Runtime GLES fallback SONAMEs are recorded separately from DT_NEEDED. This is static evidence only; no provider ABI compatibility or game boot is claimed. See `docs/STAGE123O_ORIGINAL_DSO_DEPENDENCY_EVIDENCE.md` and `reports/STAGE123O_LIBJIROBIODG_PROVIDER_MANIFEST.json`.
