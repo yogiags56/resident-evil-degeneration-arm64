@@ -317,6 +317,60 @@ def audit_gl_dispatch_wrappers(elf_bytes: bytes, matched_exports: list[dict],
     }
 
 
+def classify_undefined_symbol(name: str) -> str:
+    if name in {"dlopen", "dlsym", "dlclose", "dlerror"}:
+        return "libdl candidate"
+    if name in {"inflate", "inflateEnd", "inflateInit_", "inflateInit2_"}:
+        return "libz candidate"
+    if name in {"__android_log_print", "__android_log_write"}:
+        return "liblog candidate"
+    if name in {"_Znaj", "_ZdlPv", "_ZdaPv", "_Znwj"}:
+        return "libstdc++ / C++ ABI candidate"
+    if name.startswith("__aeabi_"):
+        return "ARM EABI compiler-runtime candidate"
+    math_names = {
+        "acos", "asin", "atan", "atan2", "ceil", "cos", "cosf", "exp",
+        "fabs", "floor", "fmod", "frexp", "ldexp", "log", "log10", "modf",
+        "pow", "sin", "sinf", "sqrt", "sqrtf", "tan", "tanf", "tanh",
+        "sinh", "cosh", "hypot", "fmodf", "logf", "powf",
+    }
+    if name in math_names:
+        return "libm candidate"
+    return "libc / POSIX / Bionic candidate"
+
+
+def undefined_symbol_families(dynamic_relocation_sections: list[dict]) -> dict:
+    counts = collections.Counter()
+    for section in dynamic_relocation_sections:
+        for entry in section["entries"]:
+            if entry["symbol_undefined"] and entry["symbol"]:
+                counts[entry["symbol"]] += 1
+    grouped = collections.defaultdict(list)
+    for name, count in sorted(counts.items()):
+        grouped[classify_undefined_symbol(name)].append({
+            "name": name, "relocation_count": count,
+        })
+    families = []
+    for family in sorted(grouped):
+        rows = grouped[family]
+        families.append({
+            "candidate_family": family,
+            "unique_symbol_count": len(rows),
+            "relocation_reference_count": sum(x["relocation_count"] for x in rows),
+            "symbols": rows,
+        })
+    return {
+        "unique_symbol_count": len(counts),
+        "relocation_reference_count": sum(counts.values()),
+        "families": families,
+        "limits": [
+            "Family labels are name-based triage only, not verified DT_NEEDED ownership.",
+            "The six DT_NEEDED dependencies must still be inspected as a dependency closure.",
+            "ARM EABI helper symbols are not assigned to libm or a compiler-runtime DSO without export evidence.",
+        ],
+    }
+
+
 def build_report(apk_path: Path, s3e_asset: str, elf_asset: str) -> dict:
     try:
         with zipfile.ZipFile(apk_path) as apk:
@@ -357,7 +411,7 @@ def build_report(apk_path: Path, s3e_asset: str, elf_asset: str) -> dict:
             relocation_types[entry["type_name"]] += 1
 
     return {
-        "schema": "resident-evil-degeneration-stage123h-provider-audit-v1",
+        "schema": "resident-evil-degeneration-stage123i-provider-audit-v2",
         "source_apk": apk_path.name,
         "elf": {
             "size": len(elf_bytes), "sha256": elf_report["sha256"],
@@ -375,6 +429,8 @@ def build_report(apk_path: Path, s3e_asset: str, elf_asset: str) -> dict:
                 for table in dynamic_report["dynamic_symbol_tables"]
                 for sym in table["undefined_symbols"]
             ],
+            "undefined_symbol_families": undefined_symbol_families(
+                dynamic_report["dynamic_relocation_sections"]),
             "needed_libraries": dynamic_report["dynamic_dependencies"],
             "dynamic_relocation_count": dynamic_report["dynamic_relocation_count"],
             "dynamic_relocation_types": dict(sorted(relocation_types.items())),
