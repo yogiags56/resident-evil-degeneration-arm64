@@ -254,8 +254,10 @@ static REGUESTCPUStatus thumb(REGUESTCPU*c,const REGUESTMEMACCESS*m,uint32_t pc)
   new_sp=(uint64_t)c->r[13]-(uint64_t)n*4u;
   addr=(uint32_t)new_sp;
   for(unsigned i=0;i<8;i++)if(list&(1u<<i)) {
-   q=write32(m,addr,c->r[i]);if(q<0)return RE_CPU_E_ALIGNMENT;
-   if(!q)return RE_CPU_E_MEMORY;addr+=4u;
+   q=write32(m,addr,c->r[i]);
+   if(q<0)return RE_CPU_E_ALIGNMENT;
+   if(!q)return RE_CPU_E_MEMORY;
+   addr+=4u;
   }
   if(include_lr){q=write32(m,addr,c->r[14]);if(q<0)return RE_CPU_E_ALIGNMENT;
    if(!q)return RE_CPU_E_MEMORY;}
@@ -268,11 +270,13 @@ static REGUESTCPUStatus thumb(REGUESTCPU*c,const REGUESTMEMACCESS*m,uint32_t pc)
   uint32_t values[8],pc_value=0,sp=c->r[13];
   for(unsigned i=0;i<8;i++)if(list&(1u<<i))n++;
   if(!n)return RE_CPU_E_UNIMPLEMENTED;
-  if((uint64_t)sp+(uint64_t)n*4u>0x100000000ULL)return RE_CPU_E_MEMORY;
+  if((uint64_t)sp+(uint64_t)n*4u>UINT32_MAX)return RE_CPU_E_MEMORY;
   addr=sp;
   for(unsigned i=0;i<8;i++)if(list&(1u<<i)) {
-   q=read32(m,addr,&values[i]);if(q<0)return RE_CPU_E_ALIGNMENT;
-   if(!q)return RE_CPU_E_MEMORY;addr+=4u;
+   q=read32(m,addr,&values[i]);
+   if(q<0)return RE_CPU_E_ALIGNMENT;
+   if(!q)return RE_CPU_E_MEMORY;
+   addr+=4u;
   }
   if(include_pc){q=read32(m,addr,&pc_value);if(q<0)return RE_CPU_E_ALIGNMENT;
    if(!q)return RE_CPU_E_MEMORY;
