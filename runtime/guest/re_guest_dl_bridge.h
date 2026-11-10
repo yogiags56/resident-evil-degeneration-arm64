@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "re_guest_imports.h"
+#include "re_guest_symbol_resolve.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -92,6 +93,13 @@ REGUESTDLStatus re_guest_dl_bridge_close_all(REGUESTDLBridge *bridge);
 REGUESTDLStatus re_guest_dl_bridge_bind_imports(
     REGUESTDLBridge *bridge, REGUESTIMPORTTable *imports,
     const REGUESTDLImportIDs *ids, REGUESTDLImportPointers *pointers);
+/* Export the four mapped handler trampolines as ordinary ELF provider
+ * symbols for the virtual libdl.so provider catalog. The values are guest
+ * addresses; version_library is the caller-supplied provider SONAME.
+ */
+REGUESTDLStatus re_guest_dl_bridge_build_provider_symbols(
+    const char *soname, const REGUESTDLImportPointers *pointers,
+    REGUESTSYMBOL *symbols, size_t symbol_capacity, size_t *symbol_count);
 
 #ifdef __cplusplus
 }
