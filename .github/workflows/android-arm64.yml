@@ -27,6 +27,11 @@ on:
 permissions:
   contents: read
 
+# Cancel superseded native builds for the same branch/PR.
+concurrency:
+  group: android-arm64-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
 jobs:
   arm64-build:
     runs-on: ubuntu-24.04
