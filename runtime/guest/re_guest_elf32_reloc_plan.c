@@ -76,6 +76,13 @@ REGUESTELF32RELOCPLANStatus re_guest_elf32_prepare_relocations(
             return RE_GUEST_ELF32_RELOC_PLAN_E_SYMBOL;
         }
         const REGUESTELF32LINKSYMBOL *s=&symbols[in->symbol_index];
+        /* This public planner also accepts caller-built symbol tables. */
+        if (!memchr(s->name, '\\0', sizeof(s->name)) ||
+            s->binding > RE_GUEST_STB_WEAK ||
+            s->visibility > RE_GUEST_STV_PROTECTED) {
+            if(failed_index)*failed_index=i;
+            return RE_GUEST_ELF32_RELOC_PLAN_E_SYMBOL;
+        }
         if(s->type==RE_ELF32_STT_TLS) {
             if(failed_index)*failed_index=i;
             return RE_GUEST_ELF32_RELOC_PLAN_E_UNSUPPORTED;
