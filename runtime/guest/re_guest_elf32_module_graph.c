@@ -1,8 +1,13 @@
 #include "re_guest_elf32_module_graph.h"
 #include <string.h>
 static int valid_name(const char *s) {
-    if (!s || !*s || strchr(s,'/') || strchr(s,'\\')) return 0;
-    return strlen(s)<RE_GUEST_ELF32_SONAME_CAP;
+    if (!s) return 0;
+    for (size_t i=0;i<RE_GUEST_ELF32_SONAME_CAP;i++) {
+        unsigned char c=(unsigned char)s[i];
+        if (c=='\0') return i!=0u;
+        if (c<0x21u || c>0x7eu || c=='/' || c=='\\') return 0;
+    }
+    return 0; /* No NUL terminator within the bounded SONAME field. */
 }
 static size_t find_module(const REGUESTELF32MODULEDESC *m,size_t n,const char *name) {
     for(size_t i=0;i<n;i++) if(strcmp(m[i].soname,name)==0) return i;
