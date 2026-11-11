@@ -22,6 +22,25 @@ but not executed: the latest Source checks and Android ARM64 Actions runs
 still terminate before runner allocation (runner_id=0, empty steps). No
 compile or test pass is claimed. PR #27 remains open and draft.
 
+## Stage 123T — PT_DYNAMIC mapping consistency (2026-11-12)
+
+The ELF32 dynamic parser now verifies that PT_DYNAMIC's p_offset and
+p_vaddr describe the same file-backed bytes in exactly one PT_LOAD segment.
+Previously, the parser bounded the dynamic bytes by file size but consumed
+them directly from p_offset without cross-checking the virtual mapping.
+A malformed program header could therefore present dynamic metadata at a
+virtual address unrelated to the bytes parsed. The parser now rejects that
+mismatch with RE_GUEST_ELF32_DYNAMIC_E_RANGE.
+
+A regression mutates the PT_DYNAMIC virtual address while leaving its file
+offset unchanged and expects the range error. The change is in
+runtime/guest/re_guest_elf32_dynamic.c and tests/test_re_guest_elf32_dynamic.c.
+Commit: aa2371734d4b79c1d681384f4791d629b762ff63.
+
+Validation remains blocked: Source checks at this HEAD failed with
+runner_id=0, empty runner name, and no steps. No host test or Android build
+has run. Treat Stage 123T as source-committed, not validated; keep PR #27 draft.
+
 ## Stage 123S — ELF32 string-table boundary regression (2026-11-12)
 
 Added a malformed-input regression to the ELF32 link-metadata parser test.
