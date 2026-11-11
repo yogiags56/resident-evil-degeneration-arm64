@@ -154,7 +154,7 @@ REGUESTELF32LINKStatus re_guest_elf32_parse_link_metadata(
             s->binding=p[12]>>4;s->type=p[12]&15u;s->visibility=p[13]&3u;
             s->section_index=rd16(p+14,image->little_endian);
             /* st_name == 0 is the valid empty name (not caller scratch data). */
-            s->name[0]='\\0';
+            s->name[0]='\0';
             if(s->name_offset && !copy_name(bytes,size,stroff,strsz,s->name_offset,s->name))
                 return RE_GUEST_ELF32_LINK_E_STRING;
             if(s->binding>2u || s->visibility>3u)
