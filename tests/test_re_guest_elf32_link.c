@@ -52,5 +52,11 @@ int main(void){
  assert(re_guest_elf32_parse_image(b,sizeof b,&im,&failed)==RE_GUEST_ELF32_OK);
  assert(re_guest_elf32_parse_dynamic(b,sizeof b,&im,&d,&failed)==RE_GUEST_ELF32_DYNAMIC_OK);
  assert(re_guest_elf32_parse_link_metadata(b,sizeof b,&im,&d,&info,syms,4,rels,4,&failed)==RE_GUEST_ELF32_LINK_E_RANGE);
+
+ /* A symbol name without a terminator inside DT_STRSZ is rejected. */
+ fixture(b);memset(b+0x180,'A',16);p32(b+0x1d0,15);
+ assert(re_guest_elf32_parse_image(b,sizeof b,&im,&failed)==RE_GUEST_ELF32_OK);
+ assert(re_guest_elf32_parse_dynamic(b,sizeof b,&im,&d,&failed)==RE_GUEST_ELF32_DYNAMIC_OK);
+ assert(re_guest_elf32_parse_link_metadata(b,sizeof b,&im,&d,&info,syms,4,rels,4,&failed)==RE_GUEST_ELF32_LINK_E_STRING);
  puts("Guest ELF32 link metadata tests: PASS");return 0;
 }
