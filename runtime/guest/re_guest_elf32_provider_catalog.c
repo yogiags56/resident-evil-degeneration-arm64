@@ -10,11 +10,13 @@
 #define STT_FILE 4u
 #define MAX_PROVIDERS 65536u
 static int valid_soname(const char *s) {
-    if (!s || !s[0] || strchr(s, '/') || strchr(s, '\\') ||
-        strlen(s) >= RE_GUEST_ELF32_DYNAMIC_STRING_CAP) return 0;
-    for (const unsigned char *p = (const unsigned char *)s; *p; ++p)
-        if (*p < 0x21u || *p > 0x7eu) return 0;
-    return 1;
+    if (!s) return 0;
+    for (size_t i = 0; i < RE_GUEST_ELF32_DYNAMIC_STRING_CAP; ++i) {
+        unsigned char c = (unsigned char)s[i];
+        if (c == '\0') return i != 0u;
+        if (c < 0x21u || c > 0x7eu || c == '/' || c == '\\') return 0;
+    }
+    return 0; /* No terminator within the bounded SONAME field. */
 }
 REGUESTELF32PROVIDERStatus re_guest_elf32_collect_providers(
     const REGUESTELF32PROVIDERMODULE *modules,size_t module_count,
