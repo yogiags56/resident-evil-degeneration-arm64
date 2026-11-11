@@ -50,6 +50,21 @@ int main(void) {
     assert(re_guest_elf32_prepare_relocations(&dynamic,symbols,4,input,1,
         providers,1,0x100000,output,4,&failed)==RE_GUEST_ELF32_RELOC_PLAN_E_SYMBOL);
 
+    /* Caller-built dynamic tables must retain a bounded DT_NULL terminator. */
+    dynamic.entries[0].tag=RE_GUEST_ELF32_DT_NEEDED;
+    assert(re_guest_elf32_prepare_relocations(&dynamic,symbols,4,input,1,
+        providers,1,0x100000,output,4,&failed)==RE_GUEST_ELF32_RELOC_PLAN_E_ARGUMENT);
+    assert(memcmp(output,before,sizeof(output))==0);
+    dynamic.entries[0].tag=RE_GUEST_ELF32_DT_NULL;
+
+    /* Non-data/non-callable ELF symbol kinds cannot drive relocations. */
+    symbols[2].type=3u; /* STT_SECTION */
+    input[0].symbol_index=2;
+    assert(re_guest_elf32_prepare_relocations(&dynamic,symbols,4,input,1,
+        providers,1,0x100000,output,4,&failed)==RE_GUEST_ELF32_RELOC_PLAN_E_UNSUPPORTED);
+    assert(failed==0&&memcmp(output,before,sizeof(output))==0);
+    symbols[2].type=0u;
+
     /* Caller-provided unterminated names must fail before any output write. */
     memset(symbols[2].name, 'X', sizeof(symbols[2].name));
     input[0]=(REGUESTELF32LINKRELOCATION){0x2000,2,RE_ARM_R_GLOB_DAT,0,1,0};
