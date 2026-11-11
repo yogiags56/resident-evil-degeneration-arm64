@@ -2,6 +2,21 @@
 
 **Current implementation milestone: Stage 123Q — ELF32 provider metadata hardening (implementation committed; validation blocked).** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
 
+## Stage 123S — ELF32 string-table boundary regression (2026-11-12)
+
+Added a malformed-input regression to the ELF32 link-metadata parser test.
+The fixture fills the entire declared DT_STRTAB range with non-NUL bytes and
+points a symbol name at the final byte. The parser must return
+RE_GUEST_ELF32_LINK_E_STRING rather than read beyond the declared string
+table. The test is already part of tools/run_tests.sh.
+
+The change is committed at a0da89bc169b70952800baa163dd12e2bdf62c2c.
+The corresponding Source checks run again terminated before runner
+allocation (runner_id=0, empty steps); no compiler or test output exists.
+This regression is not yet executed. Android ARM64 build also remains
+unvalidated. Preserve the draft PR and resume validation only when a hosted
+runner is actually allocated.
+
 ## Stage 123R — ELF32 symbol-boundary hardening (2026-11-12)
 
 The relocation planner is a public API and can receive caller-constructed
