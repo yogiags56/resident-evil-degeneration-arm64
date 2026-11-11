@@ -49,5 +49,12 @@ int main(void) {
     input[0].offset=0x2000;input[0].symbol_index=1;
     assert(re_guest_elf32_prepare_relocations(&dynamic,symbols,4,input,1,
         providers,1,0x100000,output,4,&failed)==RE_GUEST_ELF32_RELOC_PLAN_E_SYMBOL);
+
+    /* Caller-provided unterminated names must fail before any output write. */
+    memset(symbols[2].name, 'X', sizeof(symbols[2].name));
+    input[0]=(REGUESTELF32LINKRELOCATION){0x2000,2,RE_ARM_R_GLOB_DAT,0,1,0};
+    assert(re_guest_elf32_prepare_relocations(&dynamic,symbols,4,input,1,
+        providers,1,0x100000,output,4,&failed)==RE_GUEST_ELF32_RELOC_PLAN_E_SYMBOL);
+    assert(failed==0&&memcmp(output,before,sizeof(output))==0);
     puts("Guest ELF32 relocation planning tests: PASS");return 0;
 }
