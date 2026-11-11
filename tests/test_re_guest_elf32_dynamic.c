@@ -56,6 +56,11 @@ int main(void){
  assert(re_guest_elf32_parse_dynamic(b,sizeof b,&image,&d,&failed)==RE_GUEST_ELF32_DYNAMIC_E_STRING_TABLE);
  fixture(b);p16(b+44,1);assert(re_guest_elf32_parse_image(b,sizeof b,&image,&failed)==0);
  assert(re_guest_elf32_parse_dynamic(b,sizeof b,&image,&d,&failed)==RE_GUEST_ELF32_DYNAMIC_OK&&!d.present);
+
+ /* PT_DYNAMIC file offset and virtual address must identify the same bytes. */
+ fixture(b);p32(b+84+8,0x10a4);
+ assert(re_guest_elf32_parse_image(b,sizeof b,&image,&failed)==RE_GUEST_ELF32_OK);
+ assert(re_guest_elf32_parse_dynamic(b,sizeof b,&image,&d,&failed)==RE_GUEST_ELF32_DYNAMIC_E_RANGE);
  {
   uint8_t init_bytes[512];init_fixture(init_bytes);
   assert(re_guest_elf32_parse_image(init_bytes,sizeof init_bytes,&image,&failed)==RE_GUEST_ELF32_OK);
