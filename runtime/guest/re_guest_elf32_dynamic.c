@@ -45,6 +45,7 @@ REGUESTELF32DYNAMICStatus re_guest_elf32_parse_dynamic(
  REGUESTELF32DYNAMIC *dynamic,size_t *failed_entry) {
  const REGUESTELF32PROGRAMHEADER *segment=NULL;
  uint32_t needed_offsets[RE_GUEST_ELF32_MAX_NEEDED];
+ uint32_t dynamic_file_offset=0u;
  uint32_t soname_offset=0u,strtab=0u,strsz=0u,strtab_file=0u;
  uint8_t has_init=0u,has_fini=0u,has_ia=0u,has_iasz=0u,has_fa=0u,has_fasz=0u;
  uint32_t init=0u,fini=0u,ia=0u,iasz=0u,fa=0u,fasz=0u,file_check=0u;
@@ -63,6 +64,10 @@ REGUESTELF32DYNAMICStatus re_guest_elf32_parse_dynamic(
  if(!segment->file_size||segment->file_size%8u||
     (uint64_t)segment->offset+segment->file_size>size)
   return RE_GUEST_ELF32_DYNAMIC_E_SIZE;
+ /* PT_DYNAMIC must be the same file-backed bytes exposed by one PT_LOAD. */
+ if(!map_file_backed(image,segment->virtual_address,segment->file_size,
+       &dynamic_file_offset)||dynamic_file_offset!=segment->offset)
+  return RE_GUEST_ELF32_DYNAMIC_E_RANGE;
  if(segment->file_size/8u>RE_GUEST_ELF32_MAX_DYNAMIC_ENTRIES)
   return RE_GUEST_ELF32_DYNAMIC_E_CAPACITY;
  dynamic->present=1u;
