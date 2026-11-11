@@ -1,6 +1,28 @@
 # Current Status
 
-**Current implementation milestone: Stage 123L — ELF32 undefined-symbol family manifest and provider triage.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
+**Current implementation milestone: Stage 123Q — ELF32 provider metadata hardening (implementation committed; validation blocked).** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
+
+## Recovery audit — 2026-11-12
+
+The working branch is preserved at `stage-120z-dependency-graph-resolution`.
+The pull request remains open and draft. Recent workflow attempts repeatedly
+terminate before runner assignment (`runner_id=0`, no runner name, no steps);
+this is an infrastructure-level failure and does not establish whether the
+latest C sources compile. The default `main` branch has recent successful
+host-test runs, so the failure is isolated to the feature-branch workflow
+execution path or its GitHub Actions provisioning context, not yet proven
+to be a source regression.
+
+Stage 123Q follow-up hardens SONAME validation with a bounded scan instead
+of unbounded `strlen`, and adds a regression for a fixed-size unterminated
+SONAME field. The guest liblog error paths now both use `-EINVAL`. These
+changes are committed but remain unvalidated until a runner executes the
+host suite and Android ARM64 build.
+
+Recovery rule: do not add new runtime features until the current branch has
+completed host tests, Android ARM64 native build, and source-manifest checks.
+Do not label Stage 123P/123Q as validated based solely on committed tests.
+
 
 Stage 123L adds a bounded guest DSO provider catalog for the Stage 123I/123K dynamic-loader bridge. It validates unique basename-only SONAMEs, resolves symbols only within the opened provider, tracks open references, and returns caller-supplied guest addresses without exposing host pointers. The standalone regression is wired into host tests and the Android CMake target. CI validation is pending; earlier failed GitHub Actions attempts did not expose downloadable logs or artifacts, so their failure cannot yet be attributed to source code. See [Stage 123L](STAGE123L_GUEST_DSO_PROVIDER_REGISTRY.md).
 
