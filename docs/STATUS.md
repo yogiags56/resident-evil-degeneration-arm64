@@ -2,6 +2,27 @@
 
 **Current implementation milestone: Stage 123Q — ELF32 provider metadata hardening (implementation committed; validation blocked).** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
 
+## Stage 123R — ELF32 symbol-boundary hardening (2026-11-12)
+
+The relocation planner is a public API and can receive caller-constructed
+symbol records, not only parser output. It now independently checks that each
+referenced symbol name has a NUL terminator within its fixed 128-byte field,
+and rejects out-of-range binding/visibility values before symbol resolution.
+A regression fills the complete name field without a terminator and verifies
+fail-closed behavior, failed-index reporting, and unchanged output.
+
+The ELF32 metadata parser now initializes every symbol name to the empty
+string before conditionally copying a nonzero st_name. This prevents the
+mandatory ELF null symbol (st_name == 0) from exposing uninitialized caller
+scratch bytes. A regression asserts the null symbol name is empty.
+
+These are source-level fixes only. The current HEAD is
+1c9e14afb06a4b240d8bd71d4a48b04d81478a97. Host and Android workflows were
+triggered by the changes but again failed with zero executed steps; the jobs
+report no step records and GitHub job-log downloads return BlobNotFound.
+Therefore neither regression has been compiled or executed. Keep PR #27 draft
+and do not advance runtime integration until a runner executes the tests.
+
 ## CI retry audit — 2026-11-12
 
 Retried the runner smoke test, host source checks, and Android ARM64 job.
