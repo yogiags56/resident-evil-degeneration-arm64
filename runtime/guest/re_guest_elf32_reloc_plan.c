@@ -5,6 +5,9 @@
 #define RE_GUEST_ELF32_RELOC_MAX 4096u
 #define RE_ELF32_SHN_ABS 0xfff1u
 #define RE_ELF32_STT_TLS 6u
+#define RE_ELF32_STT_NOTYPE 0u
+#define RE_ELF32_STT_OBJECT 1u
+#define RE_ELF32_STT_FUNC 2u
 #define RE_ELF32_DT_VERSYM 0x6ffffff0u
 #define RE_ELF32_DT_VERDEF 0x6ffffffcu
 #define RE_ELF32_DT_VERDEFNUM 0x6ffffffdu
@@ -37,6 +40,12 @@ REGUESTELF32RELOCPLANStatus re_guest_elf32_prepare_relocations(
     if(output_capacity<input_count)
         return RE_GUEST_ELF32_RELOC_PLAN_E_CAPACITY;
     if(dynamic->entry_count>RE_GUEST_ELF32_MAX_DYNAMIC_ENTRIES)
+        return RE_GUEST_ELF32_RELOC_PLAN_E_ARGUMENT;
+    /* Caller-built dynamic metadata must have the same bounded terminator
+     * invariant as records produced by the ELF32 dynamic parser. */
+    if ((dynamic->present && dynamic->entry_count==0u) ||
+        (dynamic->entry_count &&
+         dynamic->entries[dynamic->entry_count-1u].tag!=RE_GUEST_ELF32_DT_NULL))
         return RE_GUEST_ELF32_RELOC_PLAN_E_ARGUMENT;
     if(has_unsupported_version_tags(dynamic))
         return RE_GUEST_ELF32_RELOC_PLAN_E_UNSUPPORTED;
@@ -83,7 +92,9 @@ REGUESTELF32RELOCPLANStatus re_guest_elf32_prepare_relocations(
             if(failed_index)*failed_index=i;
             return RE_GUEST_ELF32_RELOC_PLAN_E_SYMBOL;
         }
-        if(s->type==RE_ELF32_STT_TLS) {
+        if(s->type!=RE_ELF32_STT_NOTYPE &&
+           s->type!=RE_ELF32_STT_OBJECT &&
+           s->type!=RE_ELF32_STT_FUNC) {
             if(failed_index)*failed_index=i;
             return RE_GUEST_ELF32_RELOC_PLAN_E_UNSUPPORTED;
         }
