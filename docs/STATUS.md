@@ -2,6 +2,23 @@
 
 **Current implementation milestone: Stage 123Q — ELF32 provider metadata hardening (implementation committed; validation blocked).** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
 
+## CI retry audit — 2026-11-12
+
+Retried the runner smoke test, host source checks, and Android ARM64 job.
+All three retry attempts again terminated before executing steps. GitHub
+job-log downloads return BlobNotFound, consistent with no runner-produced
+log artifact. This confirms the failure is not limited to one workflow.
+
+A read-only source review of the provider-catalog implementation, its
+regression test, host test registration, and liblog test registration found
+no additional concrete source defect to patch safely without a compiler.
+The bounded SONAME scan and unterminated-name regression are present.
+Do not infer test success from this static review.
+
+Next action: restore GitHub-hosted runner provisioning/account Actions
+availability, then rerun the smoke test first. Only after smoke succeeds
+should host tests and Android ARM64 build be retried on the same HEAD.
+
 ## Recovery audit — 2026-11-12
 
 The working branch is preserved at `stage-120z-dependency-graph-resolution`.
