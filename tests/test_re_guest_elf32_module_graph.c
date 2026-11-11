@@ -36,6 +36,20 @@ int main(void) {
     REGUESTELF32MODULEDESC path[]={{"dir/a.so",NULL,0}};
     assert(re_guest_elf32_build_module_graph(path,1,"dir/a.so",&graph,&failed)==RE_GUEST_ELF32_MODULE_GRAPH_E_ARGUMENT);
     assert(re_guest_elf32_build_module_graph(modules,4,"missing-root.so",&graph,&failed)==RE_GUEST_ELF32_MODULE_GRAPH_E_ROOT);
+
+    /* Fixed-size unterminated SONAME and whitespace must fail closed. */
+    {
+        char bad_soname[RE_GUEST_ELF32_SONAME_CAP];
+        memset(bad_soname,'A',sizeof(bad_soname));
+        REGUESTELF32MODULEDESC bad[]={{bad_soname,NULL,0}};
+        assert(re_guest_elf32_build_module_graph(bad,1,"game.so",&graph,&failed)==RE_GUEST_ELF32_MODULE_GRAPH_E_NAME);
+        assert(failed==0);
+    }
+    {
+        REGUESTELF32MODULEDESC bad[]={{"lib bad.so",NULL,0}};
+        assert(re_guest_elf32_build_module_graph(bad,1,"lib bad.so",&graph,&failed)==RE_GUEST_ELF32_MODULE_GRAPH_E_NAME);
+        assert(failed==0);
+    }
     puts("Guest ELF32 module graph tests: PASS");
     return 0;
 }
