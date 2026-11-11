@@ -64,6 +64,14 @@ int main(void) {
     modules[0].soname="lib bad.so";
     assert(re_guest_elf32_collect_providers(modules,2,out,8,&count,&fm,&fs)==RE_GUEST_ELF32_PROVIDER_E_NAME);
     assert(fm==0&&count==0&&memcmp(out,before,sizeof(out))==0);
-    puts("Guest ELF32 provider catalog tests: PASS");
+    /* A SONAME without a terminator in its bounded field must be rejected. */
+    {
+        char unterminated_soname[RE_GUEST_ELF32_DYNAMIC_STRING_CAP];
+        memset(unterminated_soname, 'A', sizeof(unterminated_soname));
+        modules[0].soname = unterminated_soname;
+        assert(re_guest_elf32_collect_providers(modules,2,out,8,&count,&fm,&fs)==RE_GUEST_ELF32_PROVIDER_E_NAME);
+        assert(fm==0&&count==0&&memcmp(out,before,sizeof(out))==0);
+    }
+        puts("Guest ELF32 provider catalog tests: PASS");
     return 0;
 }
