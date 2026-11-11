@@ -42,6 +42,7 @@ int main(void){
  assert(re_guest_elf32_parse_dynamic(b,sizeof b,&im,&d,&failed)==RE_GUEST_ELF32_DYNAMIC_OK);
  assert(re_guest_elf32_parse_link_metadata(b,sizeof b,&im,&d,&info,syms,4,rels,4,&failed)==RE_GUEST_ELF32_LINK_OK);
  assert(info.has_sysv_hash&&info.has_symbols&&info.symbol_count==3);
+ assert(syms[0].name[0]=='\0'); /* ELF null symbol has an empty name. */
  assert(strcmp(syms[1].name,"foo")==0&&syms[1].value==0x1000&&syms[1].binding==1);
  assert(strcmp(syms[2].name,"bar")==0&&syms[2].size==8);
  assert(info.has_rel&&info.relocation_count==1&&rels[0].offset==0x1300);
