@@ -1,0 +1,26 @@
+name: Runner provisioning smoke test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [stage-120z-dependency-graph-resolution]
+    paths:
+      - ".github/workflows/runner-smoke.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  runner-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - name: Confirm hosted runner allocation
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Hosted runner allocated successfully."
+          uname -a
+          clang --version || true
+          cmake --version || true
+          git --version
