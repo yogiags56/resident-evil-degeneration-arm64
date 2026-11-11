@@ -1,6 +1,26 @@
 # Current Status
 
-**Current implementation milestone: Stage 123Q — ELF32 provider metadata hardening (implementation committed; validation blocked).** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
+**Current implementation milestone: Stage 123T — ELF32 module-graph and relocation-boundary hardening (source committed; build validation blocked).** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
+
+## Stage 123T — module graph and relocation API hardening (2026-11-12)
+
+The module graph's SONAME validator now uses a bounded printable-name scan
+rather than unbounded strlen. It rejects whitespace, path separators, and
+fixed-size names without a NUL terminator. Regression coverage includes an
+unterminated 256-byte SONAME and a whitespace-containing name.
+
+The relocation planner now validates caller-constructed dynamic metadata:
+a present PT_DYNAMIC record cannot be empty, and any non-empty entry list
+must end at DT_NULL within its declared count. It also accepts only ELF symbol
+types STT_NOTYPE, STT_OBJECT, and STT_FUNC for symbol-based relocations;
+section/file/TLS/other kinds are rejected. Regression coverage verifies
+missing DT_NULL and STT_SECTION fail closed without modifying output.
+
+The existing host test runner already compiles and runs both the module graph
+and relocation planner regression executables. These changes are committed
+but not executed: the latest Source checks and Android ARM64 Actions runs
+still terminate before runner allocation (runner_id=0, empty steps). No
+compile or test pass is claimed. PR #27 remains open and draft.
 
 ## Stage 123S — ELF32 string-table boundary regression (2026-11-12)
 
