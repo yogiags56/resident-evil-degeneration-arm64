@@ -343,7 +343,7 @@ static REGUESTIMPORTStatus log_print_handler(
     if (!read_guest_string(bus, frame->r[1], tag, sizeof(tag)) ||
         !read_guest_string(bus, frame->r[2], format, sizeof(format)) ||
         !format_guest_message(frame, bus, format, message, sizeof(message))) {
-        result->r0 = (uint32_t)-22;
+        result->r0 = (uint32_t)-EINVAL;
         result->r1 = 0;
         return RE_IMPORT_OK;
     }
