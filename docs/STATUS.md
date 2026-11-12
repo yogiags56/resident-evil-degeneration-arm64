@@ -22,6 +22,26 @@ but not executed: the latest Source checks and Android ARM64 Actions runs
 still terminate before runner allocation (runner_id=0, empty steps). No
 compile or test pass is claimed. PR #27 remains open and draft.
 
+## Stage 123U — executable mapping for init/fini hooks (2026-11-12)
+
+The ELF32 dynamic parser previously accepted DT_INIT/DT_FINI when the
+address was merely file-backed by a PT_LOAD. It now requires the function
+pointer to lie in exactly one executable (PF_X), file-backed PT_LOAD range.
+This rejects metadata that points an initialization/finalization hook into
+read-only data or writable non-executable memory. A zero-valued hook remains
+treated as absent.
+
+Regression coverage mutates the PT_LOAD flags to R|W and points DT_INIT or
+DT_FINI into that non-executable segment; both must return
+RE_GUEST_ELF32_DYNAMIC_E_RANGE. The original executable fixture continues to
+cover valid init/fini and init/fini-array metadata.
+
+Source commit: e6cf8901a77c5700731f5624905ba72e67b18e12.
+Test commit: 2318803ac25a83aa51323ab1cb01dc403c546147.
+This work is source-committed only. CI runner provisioning has not yet
+produced compiler/test output; do not mark Stage 123U validated until host
+tests and Android ARM64 build execute successfully.
+
 ## Stage 123T — PT_DYNAMIC mapping consistency (2026-11-12)
 
 The ELF32 dynamic parser now verifies that PT_DYNAMIC's p_offset and
