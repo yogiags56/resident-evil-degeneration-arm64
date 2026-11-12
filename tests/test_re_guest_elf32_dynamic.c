@@ -77,9 +77,11 @@ int main(void){
 
   /* Init/fini pointers must land in executable file-backed PT_LOAD bytes. */
   init_fixture(init_bytes);dyn(init_bytes+160,RE_GUEST_ELF32_DT_INIT,0x1190);
+  p32(init_bytes+52+24,RE_GUEST_ELF32_PF_R|RE_GUEST_ELF32_PF_W);
   assert(re_guest_elf32_parse_image(init_bytes,sizeof init_bytes,&image,&failed)==RE_GUEST_ELF32_OK);
   assert(re_guest_elf32_parse_dynamic(init_bytes,sizeof init_bytes,&image,&d,&failed)==RE_GUEST_ELF32_DYNAMIC_E_RANGE);
   init_fixture(init_bytes);dyn(init_bytes+168,RE_GUEST_ELF32_DT_FINI,0x1194);
+  p32(init_bytes+52+24,RE_GUEST_ELF32_PF_R|RE_GUEST_ELF32_PF_W);
   assert(re_guest_elf32_parse_image(init_bytes,sizeof init_bytes,&image,&failed)==RE_GUEST_ELF32_OK);
   assert(re_guest_elf32_parse_dynamic(init_bytes,sizeof init_bytes,&image,&d,&failed)==RE_GUEST_ELF32_DYNAMIC_E_RANGE);
  }
