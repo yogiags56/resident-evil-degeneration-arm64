@@ -64,6 +64,14 @@ static REGUESTELF32BATCHStatus preflight(REGUESTMEMORY *memory,
     HOST_RANGE host_ranges[RE_GUEST_MEMORY_MAX_REGIONS];
     HOST_RANGE source_ranges[RE_GUEST_ELF32_MAX_BATCH_MODULES];
     size_t range_count=0;
+    /* Capture all source ranges before validating any destination. */
+    for(size_t i=0;i<count;i++) {
+        const REGUESTELF32LOADREQUEST *q=items[i].request;
+        if(!q||!q->elf_bytes||!make_host_range(q->elf_bytes,q->elf_size,&source_ranges[i])) {
+            if(failed)*failed=i;
+            return RE_GUEST_ELF32_BATCH_E_ARGUMENT;
+        }
+    }
     for(size_t i=0;i<count;i++) {
         const REGUESTELF32LOADREQUEST *q=items[i].request;
         REGUESTELF32IMAGE image;
@@ -72,9 +80,6 @@ static REGUESTELF32BATCHStatus preflight(REGUESTMEMORY *memory,
            (!q->relocations&&q->relocation_count)||
            q->buffer_count>RE_GUEST_ELF32_MAX_LOAD_SEGMENTS||
            q->relocation_count>RE_GUEST_ELF32_MAX_RELOCATIONS) {
-            if(failed)*failed=i;return RE_GUEST_ELF32_BATCH_E_ARGUMENT;
-        }
-        if(!make_host_range(q->elf_bytes,q->elf_size,&source_ranges[i])) {
             if(failed)*failed=i;return RE_GUEST_ELF32_BATCH_E_ARGUMENT;
         }
         if(re_guest_elf32_parse_image(q->elf_bytes,q->elf_size,&image,NULL)!=RE_GUEST_ELF32_OK||
@@ -102,10 +107,13 @@ static REGUESTELF32BATCHStatus preflight(REGUESTMEMORY *memory,
                !q->buffers[buffer_index].host_buffer||
                q->buffers[buffer_index].capacity<ph->memory_size||
                !make_host_range(q->buffers[buffer_index].host_buffer,
-                   ph->memory_size,&destination)||
-               host_ranges_overlap(destination,source_ranges[i])) {
+                   ph->memory_size,&destination)) {
                 if(failed)*failed=i;return RE_GUEST_ELF32_BATCH_E_LAYOUT;
             }
+            for(size_t k=0;k<count;k++)
+                if(host_ranges_overlap(destination,source_ranges[k])) {
+                    if(failed)*failed=i;return RE_GUEST_ELF32_BATCH_E_LAYOUT;
+                }
             for(size_t k=0;k<range_count;k++)
                 if(host_ranges_overlap(destination,host_ranges[k])) {
                     if(failed)*failed=i;return RE_GUEST_ELF32_BATCH_E_LAYOUT;
