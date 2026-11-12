@@ -74,6 +74,14 @@ int main(void){
   init_fixture(init_bytes);dyn(init_bytes+208,RE_GUEST_ELF32_DT_INIT_ARRAY,0x1198);
   assert(re_guest_elf32_parse_image(init_bytes,sizeof init_bytes,&image,&failed)==RE_GUEST_ELF32_OK);
   assert(re_guest_elf32_parse_dynamic(init_bytes,sizeof init_bytes,&image,&d,&failed)==RE_GUEST_ELF32_DYNAMIC_E_DUPLICATE_TAG);
+
+  /* Init/fini pointers must land in executable file-backed PT_LOAD bytes. */
+  init_fixture(init_bytes);dyn(init_bytes+160,RE_GUEST_ELF32_DT_INIT,0x1190);
+  assert(re_guest_elf32_parse_image(init_bytes,sizeof init_bytes,&image,&failed)==RE_GUEST_ELF32_OK);
+  assert(re_guest_elf32_parse_dynamic(init_bytes,sizeof init_bytes,&image,&d,&failed)==RE_GUEST_ELF32_DYNAMIC_E_RANGE);
+  init_fixture(init_bytes);dyn(init_bytes+168,RE_GUEST_ELF32_DT_FINI,0x1194);
+  assert(re_guest_elf32_parse_image(init_bytes,sizeof init_bytes,&image,&failed)==RE_GUEST_ELF32_OK);
+  assert(re_guest_elf32_parse_dynamic(init_bytes,sizeof init_bytes,&image,&d,&failed)==RE_GUEST_ELF32_DYNAMIC_E_RANGE);
  }
  puts("Guest ELF32 PT_DYNAMIC parser tests: PASS");return 0;
 }
