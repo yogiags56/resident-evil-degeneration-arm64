@@ -1,6 +1,6 @@
 # Current Status
 
-**Current implementation milestone: Stage 123X — ELF32 batch-loader memory-state validation (source committed; build validation blocked).** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
+**Current implementation milestone: Stage 123Y — ELF32 batch-loader host-buffer alias protection (source committed; build validation blocked).** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
 
 ## Stage 123T — module graph and relocation API hardening (2026-11-12)
 
@@ -21,6 +21,31 @@ and relocation planner regression executables. These changes are committed
 but not executed: the latest Source checks and Android ARM64 Actions runs
 still terminate before runner allocation (runner_id=0, empty steps). No
 compile or test pass is claimed. PR #27 remains open and draft.
+
+## Stage 123Y — batch-loader host-buffer alias protection (2026-11-12)
+
+Batch preflight now validates host address ranges for each ELF source and
+each PT_LOAD destination before any mapping or materialization. It rejects:
+- destination storage overlapping any batch member's ELF source bytes,
+  including sources belonging to modules loaded later;
+- destination storage overlapping another destination segment;
+- destination storage overlapping an already-mapped region's host backing.
+
+The source ranges for every module are captured in a first pass so an early
+module cannot overwrite a later module's ELF bytes before that module is
+parsed. Host pointer range arithmetic is checked for uintptr_t overflow.
+This protects the batch operation without globally forbidding intentional
+host aliases in the generic guest memory API.
+
+Regression tests cover a destination aliasing a later module's ELF source
+and two PT_LOAD segments aliasing the same host storage. Both must fail in
+preflight without adding guest mappings.
+
+Source commits: 76092e8cf8bcbfb9d922c59d6632e51e5fb07831 and
+df707a41af55ec7745889ff9df70d97f7c37c88b.
+Test commit: 0c381c372e4a36d605d0174d2a54449758d22879.
+Source committed; host and Android ARM64 validation remain blocked until
+GitHub Actions allocates a runner. Do not treat source-only checks as passing.
 
 ## Stage 123X — batch-loader memory-state validation (2026-11-12)
 
