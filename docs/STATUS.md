@@ -22,6 +22,24 @@ but not executed: the latest Source checks and Android ARM64 Actions runs
 still terminate before runner allocation (runner_id=0, empty steps). No
 compile or test pass is claimed. PR #27 remains open and draft.
 
+## Stage 123W — relocation planner target alignment (2026-11-12)
+
+The relocation apply engine requires every 32-bit target word to be
+4-byte aligned. The ELF32 relocation planner previously deferred this check
+until application, allowing a caller to receive a plan that was guaranteed
+to fail later. The planner now rejects an unaligned target after load-bias
+addition and before publishing output, with
+RE_GUEST_ELF32_RELOC_PLAN_E_ALIGNMENT (-666).
+
+A regression uses an otherwise valid R_ARM_RELATIVE relocation whose target
+has a one-byte alignment offset. It verifies the dedicated error, failed
+index, and unchanged output buffer.
+
+Source commit: 73eab0392c12f2e43b9e625cf71e2a8b4cc2788f.
+Test commit: 4ac1765756c90c52a501c161e7bf6c1b10f70846.
+The change is source-committed only. Host and Android ARM64 CI continue to
+fail before runner allocation; no compiler or test execution is claimed.
+
 ## Stage 123V — ARM32 init/fini array alignment (2026-11-12)
 
 The dynamic parser already required DT_INIT_ARRAYSZ and DT_FINI_ARRAYSZ
