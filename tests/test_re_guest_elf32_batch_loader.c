@@ -57,6 +57,13 @@ int main(void){
  assert(re_guest_memory_region_count(&memory)==0);
  ba[1].host_buffer=data_a;
 
+ /* New destinations must not alias backing storage of existing mappings. */
+ assert(re_guest_memory_map(&memory,0x400000u,sizeof(code_a),code_a,
+     RE_GUEST_MEM_READ|RE_GUEST_MEM_WRITE)==RE_GUEST_MEM_OK);
+ assert(re_guest_elf32_load_batch(&memory,items,2,&result,&fm,&fs,&fr,&inner)==RE_GUEST_ELF32_BATCH_E_LAYOUT);
+ assert(re_guest_memory_region_count(&memory)==1);
+ assert(re_guest_memory_unmap(&memory,0x400000u)==RE_GUEST_MEM_OK);
+
  assert(re_guest_elf32_load_batch(&memory,items,2,&result,&fm,&fs,&fr,&inner)==RE_GUEST_ELF32_BATCH_OK);
  assert(result.module_count==2&&result.total_segments==4&&fm==2);
  assert(re_guest_memory_region_count(&memory)==4);
