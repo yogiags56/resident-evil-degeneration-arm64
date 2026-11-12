@@ -22,6 +22,23 @@ static int map_file_backed(const REGUESTELF32IMAGE *image,uint32_t address,
  if(matches!=1u)return 0;
  *file_offset=result;return 1;
 }
+static int map_executable_file_backed(const REGUESTELF32IMAGE *image,
+ size_t file_size,uint32_t address,uint32_t length) {
+ size_t matches=0u;
+ uint64_t requested_end=(uint64_t)address+length;
+ if(requested_end>0x100000000ULL)return 0;
+ for(size_t i=0;i<image->program_header_count;i++) {
+  const REGUESTELF32PROGRAMHEADER *p=&image->program_headers[i];
+  uint64_t start=p->virtual_address,end=start+p->file_size;
+  uint64_t offset;
+  if(p->type!=RE_GUEST_ELF32_PT_LOAD || !(p->flags&RE_GUEST_ELF32_PF_X))continue;
+  if((uint64_t)address<start || requested_end>end)continue;
+  offset=(uint64_t)p->offset+(address-p->virtual_address);
+  if(offset>file_size || length>file_size-(size_t)offset)continue;
+  matches++;
+ }
+ return matches==1u;
+}
 static REGUESTELF32DYNAMICStatus copy_string(const uint8_t *bytes,size_t size,
  uint32_t table_offset,uint32_t table_size,uint32_t string_offset,
  char out[RE_GUEST_ELF32_DYNAMIC_STRING_CAP]) {
@@ -116,9 +133,9 @@ REGUESTELF32DYNAMICStatus re_guest_elf32_parse_dynamic(
  if(has_ia!=has_iasz||has_fa!=has_fasz||
     (has_iasz&&(iasz%4u)!=0u)||(has_fasz&&(fasz%4u)!=0u))
   return RE_GUEST_ELF32_DYNAMIC_E_SIZE;
- if(has_init&&init&&!map_file_backed(image,init,1u,&file_check))
+ if(has_init&&init&&!map_executable_file_backed(image,size,init,1u))
   return RE_GUEST_ELF32_DYNAMIC_E_RANGE;
- if(has_fini&&fini&&!map_file_backed(image,fini,1u,&file_check))
+ if(has_fini&&fini&&!map_executable_file_backed(image,size,fini,1u))
   return RE_GUEST_ELF32_DYNAMIC_E_RANGE;
  if(has_ia&&iasz&&!map_file_backed(image,ia,iasz,&file_check))
   return RE_GUEST_ELF32_DYNAMIC_E_RANGE;
