@@ -133,6 +133,8 @@ REGUESTELF32DYNAMICStatus re_guest_elf32_parse_dynamic(
  if(has_ia!=has_iasz||has_fa!=has_fasz||
     (has_iasz&&(iasz%4u)!=0u)||(has_fasz&&(fasz%4u)!=0u))
   return RE_GUEST_ELF32_DYNAMIC_E_SIZE;
+ if((has_ia&&iasz&&(ia%4u)!=0u)||(has_fa&&fasz&&(fa%4u)!=0u))
+  return RE_GUEST_ELF32_DYNAMIC_E_ALIGNMENT;
  if(has_init&&init&&!map_executable_file_backed(image,size,init,1u))
   return RE_GUEST_ELF32_DYNAMIC_E_RANGE;
  if(has_fini&&fini&&!map_executable_file_backed(image,size,fini,1u))
