@@ -6,6 +6,51 @@ typedef struct { uint32_t base; uint64_t size; } RANGE;
 static int overlaps(uint64_t a,uint64_t as,uint64_t b,uint64_t bs) {
     return a < b+bs && b < a+as;
 }
+
+static REGUESTELF32BATCHStatus validate_memory_state(const REGUESTMEMORY *memory) {
+    size_t active_count=0u;
+    if(memory->count>RE_GUEST_MEMORY_MAX_REGIONS)
+        return RE_GUEST_ELF32_BATCH_E_MEMORY_STATE;
+    for(size_t i=0;i<RE_GUEST_MEMORY_MAX_REGIONS;i++) {
+        const REGUESTMEMRegion *r=&memory->regions[i];
+        uint64_t end;
+        uintptr_t host_start,host_end;
+        if(r->active>1u)
+            return RE_GUEST_ELF32_BATCH_E_MEMORY_STATE;
+        if(!r->active) continue;
+        active_count++;
+        if(!r->host||!r->size||r->size>(uint64_t)SIZE_MAX||
+           (r->permissions&~(uint32_t)(RE_GUEST_MEM_READ|RE_GUEST_MEM_WRITE|RE_GUEST_MEM_EXEC))||
+           !r->permissions||r->memory_type<RE_GUEST_MEM_TYPE_UNKNOWN||
+           r->memory_type>RE_GUEST_MEM_TYPE_STRONGLY_ORDERED)
+            return RE_GUEST_ELF32_BATCH_E_MEMORY_STATE;
+        end=(uint64_t)r->base+r->size;
+        if(end>ADDRESS_LIMIT)
+            return RE_GUEST_ELF32_BATCH_E_MEMORY_STATE;
+        host_start=(uintptr_t)r->host;
+        if(r->size>(uint64_t)(UINTPTR_MAX-host_start))
+            return RE_GUEST_ELF32_BATCH_E_MEMORY_STATE;
+        host_end=host_start+(uintptr_t)r->size;
+        for(size_t j=0;j<i;j++) {
+            const REGUESTMEMRegion *p=&memory->regions[j];
+            uint64_t p_end;
+            uintptr_t p_start,p_host_end;
+            if(!p->active) continue;
+            p_end=(uint64_t)p->base+p->size;
+            if((uint64_t)r->base<p_end&&(uint64_t)p->base<end)
+                return RE_GUEST_ELF32_BATCH_E_MEMORY_STATE;
+            p_start=(uintptr_t)p->host;
+            if(p->size>(uint64_t)(UINTPTR_MAX-p_start))
+                return RE_GUEST_ELF32_BATCH_E_MEMORY_STATE;
+            p_host_end=p_start+(uintptr_t)p->size;
+            if(host_start<p_host_end&&p_start<host_end)
+                return RE_GUEST_ELF32_BATCH_E_MEMORY_STATE;
+        }
+    }
+    if(active_count!=memory->count)
+        return RE_GUEST_ELF32_BATCH_E_MEMORY_STATE;
+    return RE_GUEST_ELF32_BATCH_OK;
+}
 static REGUESTELF32BATCHStatus preflight(REGUESTMEMORY *memory,
     const REGUESTELF32BATCHITEM *items,size_t count,size_t *segments,
     size_t *failed) {
@@ -88,7 +133,9 @@ REGUESTELF32BATCHStatus re_guest_elf32_load_batch(
     memset(&pending,0,sizeof(pending));
     if(!memory||!items||!count||count>RE_GUEST_ELF32_MAX_BATCH_MODULES||!result)
         return RE_GUEST_ELF32_BATCH_E_ARGUMENT;
-    REGUESTELF32BATCHStatus ps=preflight(memory,items,count,&total,failed_module);
+    REGUESTELF32BATCHStatus ps=validate_memory_state(memory);
+    if(ps!=RE_GUEST_ELF32_BATCH_OK)return ps;
+    ps=preflight(memory,items,count,&total,failed_module);
     if(ps!=RE_GUEST_ELF32_BATCH_OK)return ps;
     snapshot=*memory;
     for(size_t i=0;i<count;i++) {
