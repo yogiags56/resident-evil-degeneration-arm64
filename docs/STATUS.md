@@ -43,7 +43,7 @@ preflight without adding guest mappings.
 
 Source commits: 76092e8cf8bcbfb9d922c59d6632e51e5fb07831 and
 df707a41af55ec7745889ff9df70d97f7c37c88b.
-Test commit: 0c381c372e4a36d605d0174d2a54449758d22879.
+Test commits: 0c381c372e4a36d605d0174d2a54449758d22879 and\n542ff6beb31b97d52cc43bfe373827153a76491f.
 Source committed; host and Android ARM64 validation remain blocked until
 GitHub Actions allocates a runner. Do not treat source-only checks as passing.
 
