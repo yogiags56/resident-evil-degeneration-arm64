@@ -7,6 +7,20 @@ static int overlaps(uint64_t a,uint64_t as,uint64_t b,uint64_t bs) {
     return a < b+bs && b < a+as;
 }
 
+typedef struct { uintptr_t begin; uintptr_t end; } HOST_RANGE;
+static int make_host_range(const void *pointer,uint64_t size,HOST_RANGE *range) {
+    uintptr_t begin;
+    if(!pointer||!size||size>(uint64_t)SIZE_MAX) return 0;
+    begin=(uintptr_t)pointer;
+    if(size>(uint64_t)(UINTPTR_MAX-begin)) return 0;
+    range->begin=begin;
+    range->end=begin+(uintptr_t)size;
+    return 1;
+}
+static int host_ranges_overlap(HOST_RANGE a,HOST_RANGE b) {
+    return a.begin<b.end&&b.begin<a.end;
+}
+
 static REGUESTELF32BATCHStatus validate_memory_state(const REGUESTMEMORY *memory) {
     size_t active_count=0u;
     if(memory->count>RE_GUEST_MEMORY_MAX_REGIONS)
@@ -47,6 +61,8 @@ static REGUESTELF32BATCHStatus preflight(REGUESTMEMORY *memory,
     const REGUESTELF32BATCHITEM *items,size_t count,size_t *segments,
     size_t *failed) {
     RANGE ranges[RE_GUEST_MEMORY_MAX_REGIONS];
+    HOST_RANGE host_ranges[RE_GUEST_MEMORY_MAX_REGIONS];
+    HOST_RANGE source_ranges[RE_GUEST_ELF32_MAX_BATCH_MODULES];
     size_t range_count=0;
     for(size_t i=0;i<count;i++) {
         const REGUESTELF32LOADREQUEST *q=items[i].request;
@@ -56,6 +72,9 @@ static REGUESTELF32BATCHStatus preflight(REGUESTMEMORY *memory,
            (!q->relocations&&q->relocation_count)||
            q->buffer_count>RE_GUEST_ELF32_MAX_LOAD_SEGMENTS||
            q->relocation_count>RE_GUEST_ELF32_MAX_RELOCATIONS) {
+            if(failed)*failed=i;return RE_GUEST_ELF32_BATCH_E_ARGUMENT;
+        }
+        if(!make_host_range(q->elf_bytes,q->elf_size,&source_ranges[i])) {
             if(failed)*failed=i;return RE_GUEST_ELF32_BATCH_E_ARGUMENT;
         }
         if(re_guest_elf32_parse_image(q->elf_bytes,q->elf_size,&image,NULL)!=RE_GUEST_ELF32_OK||
@@ -78,11 +97,29 @@ static REGUESTELF32BATCHStatus preflight(REGUESTMEMORY *memory,
             }
             base=(uint64_t)ph->virtual_address+q->load_bias;
             end=base+ph->memory_size;
+            HOST_RANGE destination;
             if(base>UINT32_MAX||end>ADDRESS_LIMIT||
                !q->buffers[buffer_index].host_buffer||
-               q->buffers[buffer_index].capacity<ph->memory_size) {
+               q->buffers[buffer_index].capacity<ph->memory_size||
+               !make_host_range(q->buffers[buffer_index].host_buffer,
+                   ph->memory_size,&destination)||
+               host_ranges_overlap(destination,source_ranges[i])) {
                 if(failed)*failed=i;return RE_GUEST_ELF32_BATCH_E_LAYOUT;
             }
+            for(size_t k=0;k<range_count;k++)
+                if(host_ranges_overlap(destination,host_ranges[k])) {
+                    if(failed)*failed=i;return RE_GUEST_ELF32_BATCH_E_LAYOUT;
+                }
+            for(size_t k=0;k<RE_GUEST_MEMORY_MAX_REGIONS;k++) {
+                const REGUESTMEMRegion *r=&memory->regions[k];
+                HOST_RANGE existing;
+                if(!r->active)continue;
+                if(!make_host_range(r->host,r->size,&existing)||
+                   host_ranges_overlap(destination,existing)) {
+                    if(failed)*failed=i;return RE_GUEST_ELF32_BATCH_E_LAYOUT;
+                }
+            }
+            host_ranges[range_count]=destination;
             flags=ph->flags;
             if((flags&~(uint32_t)(RE_GUEST_ELF32_PF_R|RE_GUEST_ELF32_PF_W|RE_GUEST_ELF32_PF_X))||
                !(flags&(RE_GUEST_ELF32_PF_R|RE_GUEST_ELF32_PF_W|RE_GUEST_ELF32_PF_X))||
