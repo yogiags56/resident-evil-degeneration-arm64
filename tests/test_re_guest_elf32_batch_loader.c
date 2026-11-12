@@ -36,6 +36,15 @@ int main(void){
  REGUESTELF32BATCHRESULT result;REGUESTMEMORY memory;
  size_t fm=99,fs=99,fr=99;int inner=0;
  make_elf(elf_a);make_elf(elf_b);re_guest_memory_init(&memory);
+
+ /* Corrupt caller-owned map metadata must fail before capacity arithmetic. */
+ memory.count=RE_GUEST_MEMORY_MAX_REGIONS+1u;
+ assert(re_guest_elf32_load_batch(&memory,items,2,&result,&fm,&fs,&fr,&inner)==RE_GUEST_ELF32_BATCH_E_MEMORY_STATE);
+ assert(re_guest_memory_region_count(&memory)==RE_GUEST_MEMORY_MAX_REGIONS+1u);
+ re_guest_memory_init(&memory);memory.count=1u;
+ assert(re_guest_elf32_load_batch(&memory,items,2,&result,&fm,&fs,&fr,&inner)==RE_GUEST_ELF32_BATCH_E_MEMORY_STATE);
+ re_guest_memory_init(&memory);
+
  assert(re_guest_elf32_load_batch(&memory,items,2,&result,&fm,&fs,&fr,&inner)==RE_GUEST_ELF32_BATCH_OK);
  assert(result.module_count==2&&result.total_segments==4&&fm==2);
  assert(re_guest_memory_region_count(&memory)==4);
