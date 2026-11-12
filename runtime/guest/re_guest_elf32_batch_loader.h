@@ -20,7 +20,8 @@ typedef enum {
     RE_GUEST_ELF32_BATCH_E_IMAGE=-742,
     RE_GUEST_ELF32_BATCH_E_LAYOUT=-743,
     RE_GUEST_ELF32_BATCH_E_LOAD=-744,
-    RE_GUEST_ELF32_BATCH_E_ROLLBACK=-745
+    RE_GUEST_ELF32_BATCH_E_ROLLBACK=-745,
+    RE_GUEST_ELF32_BATCH_E_MEMORY_STATE=-746
 } REGUESTELF32BATCHStatus;
 /* Caller supplies modules in dependency-first order and fully prepared
  * relocations/provider addresses. The whole guest mapping table is restored
