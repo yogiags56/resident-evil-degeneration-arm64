@@ -1,6 +1,6 @@
 # Current Status
 
-**Current implementation milestone: Stage 123T — ELF32 module-graph and relocation-boundary hardening (source committed; build validation blocked).** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
+**Current implementation milestone: Stage 123X — ELF32 batch-loader memory-state validation (source committed; build validation blocked).** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
 
 ## Stage 123T — module graph and relocation API hardening (2026-11-12)
 
@@ -21,6 +21,33 @@ and relocation planner regression executables. These changes are committed
 but not executed: the latest Source checks and Android ARM64 Actions runs
 still terminate before runner allocation (runner_id=0, empty steps). No
 compile or test pass is claimed. PR #27 remains open and draft.
+
+## Stage 123X — batch-loader memory-state validation (2026-11-12)
+
+The batch loader used
+`RE_GUEST_MEMORY_MAX_REGIONS - memory->count` during capacity preflight
+without first validating the caller-owned mapping table. A corrupted count
+greater than the fixed region capacity could underflow that subtraction and
+make the capacity check meaningless.
+
+The loader now validates the mapping table before preflight: count must be
+within capacity and match the number of active slots; active flags, host
+pointers, sizes, guest address ranges, permission bits, memory types, and
+guest-range overlap are checked. It also rejects host pointer ranges whose
+end would overflow uintptr_t. Existing intentional host-buffer aliases are
+not rejected by this validation.
+
+A dedicated batch error,
+`RE_GUEST_ELF32_BATCH_E_MEMORY_STATE (-746)`, identifies an invalid
+caller-supplied memory table. Regression cases cover count above capacity
+and a count/active-slot mismatch, and verify rejection before batch mapping.
+
+Source commits: d77ebed776e5af749ef6c36d66c2254bc0b91431 and
+243da95c8e06888c3766717f6dd1868beef14295.
+Test commit: 8d5473a5b16df7ca0d7765e8b84137f64a223ad3.
+This is source-committed only. No host compiler/test or Android ARM64 build
+result is available because GitHub Actions jobs continue to fail before
+runner allocation. Do not mark this stage validated.
 
 ## Stage 123W — relocation planner target alignment (2026-11-12)
 
