@@ -84,6 +84,14 @@ int main(void){
   p32(init_bytes+52+24,RE_GUEST_ELF32_PF_R|RE_GUEST_ELF32_PF_W);
   assert(re_guest_elf32_parse_image(init_bytes,sizeof init_bytes,&image,&failed)==RE_GUEST_ELF32_OK);
   assert(re_guest_elf32_parse_dynamic(init_bytes,sizeof init_bytes,&image,&d,&failed)==RE_GUEST_ELF32_DYNAMIC_E_RANGE);
+
+  /* Non-empty ARM32 init/fini pointer arrays require 4-byte alignment. */
+  init_fixture(init_bytes);dyn(init_bytes+176,RE_GUEST_ELF32_DT_INIT_ARRAY,0x1191);
+  assert(re_guest_elf32_parse_image(init_bytes,sizeof init_bytes,&image,&failed)==RE_GUEST_ELF32_OK);
+  assert(re_guest_elf32_parse_dynamic(init_bytes,sizeof init_bytes,&image,&d,&failed)==RE_GUEST_ELF32_DYNAMIC_E_ALIGNMENT);
+  init_fixture(init_bytes);dyn(init_bytes+192,RE_GUEST_ELF32_DT_FINI_ARRAY,0x1195);
+  assert(re_guest_elf32_parse_image(init_bytes,sizeof init_bytes,&image,&failed)==RE_GUEST_ELF32_OK);
+  assert(re_guest_elf32_parse_dynamic(init_bytes,sizeof init_bytes,&image,&d,&failed)==RE_GUEST_ELF32_DYNAMIC_E_ALIGNMENT);
  }
  puts("Guest ELF32 PT_DYNAMIC parser tests: PASS");return 0;
 }
