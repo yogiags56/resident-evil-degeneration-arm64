@@ -14,7 +14,7 @@ static REGUESTELF32BATCHStatus validate_memory_state(const REGUESTMEMORY *memory
     for(size_t i=0;i<RE_GUEST_MEMORY_MAX_REGIONS;i++) {
         const REGUESTMEMRegion *r=&memory->regions[i];
         uint64_t end;
-        uintptr_t host_start,host_end;
+        uintptr_t host_start;
         if(r->active>1u)
             return RE_GUEST_ELF32_BATCH_E_MEMORY_STATE;
         if(!r->active) continue;
@@ -30,20 +30,12 @@ static REGUESTELF32BATCHStatus validate_memory_state(const REGUESTMEMORY *memory
         host_start=(uintptr_t)r->host;
         if(r->size>(uint64_t)(UINTPTR_MAX-host_start))
             return RE_GUEST_ELF32_BATCH_E_MEMORY_STATE;
-        host_end=host_start+(uintptr_t)r->size;
         for(size_t j=0;j<i;j++) {
             const REGUESTMEMRegion *p=&memory->regions[j];
             uint64_t p_end;
-            uintptr_t p_start,p_host_end;
             if(!p->active) continue;
             p_end=(uint64_t)p->base+p->size;
             if((uint64_t)r->base<p_end&&(uint64_t)p->base<end)
-                return RE_GUEST_ELF32_BATCH_E_MEMORY_STATE;
-            p_start=(uintptr_t)p->host;
-            if(p->size>(uint64_t)(UINTPTR_MAX-p_start))
-                return RE_GUEST_ELF32_BATCH_E_MEMORY_STATE;
-            p_host_end=p_start+(uintptr_t)p->size;
-            if(host_start<p_host_end&&p_start<host_end)
                 return RE_GUEST_ELF32_BATCH_E_MEMORY_STATE;
         }
     }
