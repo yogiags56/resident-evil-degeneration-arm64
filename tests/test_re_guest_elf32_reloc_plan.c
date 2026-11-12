@@ -46,6 +46,12 @@ int main(void) {
     assert(re_guest_elf32_prepare_relocations(&dynamic,symbols,4,input,1,
         providers,1,0x100000,output,4,&failed)==RE_GUEST_ELF32_RELOC_PLAN_E_RANGE);
     assert(memcmp(output,before,sizeof(output))==0);
+
+    /* Planner rejects targets the relocation engine cannot safely write. */
+    input[0].offset=0x2001;input[0].symbol_index=0;
+    assert(re_guest_elf32_prepare_relocations(&dynamic,symbols,4,input,1,
+        providers,1,0x100000,output,4,&failed)==RE_GUEST_ELF32_RELOC_PLAN_E_ALIGNMENT);
+    assert(failed==0&&memcmp(output,before,sizeof(output))==0);
     input[0].offset=0x2000;input[0].symbol_index=1;
     assert(re_guest_elf32_prepare_relocations(&dynamic,symbols,4,input,1,
         providers,1,0x100000,output,4,&failed)==RE_GUEST_ELF32_RELOC_PLAN_E_SYMBOL);
