@@ -22,6 +22,24 @@ but not executed: the latest Source checks and Android ARM64 Actions runs
 still terminate before runner allocation (runner_id=0, empty steps). No
 compile or test pass is claimed. PR #27 remains open and draft.
 
+## Stage 123V — ARM32 init/fini array alignment (2026-11-12)
+
+The dynamic parser already required DT_INIT_ARRAYSZ and DT_FINI_ARRAYSZ
+to be multiples of four, but did not require the corresponding non-empty
+array addresses to be four-byte aligned. It now rejects misaligned
+DT_INIT_ARRAY and DT_FINI_ARRAY addresses with the new
+RE_GUEST_ELF32_DYNAMIC_E_ALIGNMENT status. Zero-sized arrays are not
+subject to this address-alignment check.
+
+Added regression cases for an init-array address ending in 1 and a fini-array
+address ending in 5. Both expect the dedicated alignment status. Valid aligned
+array metadata remains covered by the existing fixture.
+
+Source commits: 5c8e9a93 and 726df9cd.
+Test commit: 287abdbe98ed26731ca6d16f54257a2746c7ef73.
+This is source-level only. CI has not executed the host suite or Android
+ARM64 build; do not mark the stage validated until those jobs run.
+
 ## Stage 123U — executable mapping for init/fini hooks (2026-11-12)
 
 The ELF32 dynamic parser previously accepted DT_INIT/DT_FINI when the
