@@ -59,6 +59,10 @@ REGUESTELF32RELOCPLANStatus re_guest_elf32_prepare_relocations(
             if(failed_index)*failed_index=i;
             return RE_GUEST_ELF32_RELOC_PLAN_E_RANGE;
         }
+        if((target&3u)!=0u) {
+            if(failed_index)*failed_index=i;
+            return RE_GUEST_ELF32_RELOC_PLAN_E_ALIGNMENT;
+        }
         out->target=(uint32_t)target;
         out->type=in->type;
         out->load_bias=bias;
