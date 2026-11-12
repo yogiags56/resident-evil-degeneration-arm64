@@ -45,6 +45,18 @@ int main(void){
  assert(re_guest_elf32_load_batch(&memory,items,2,&result,&fm,&fs,&fr,&inner)==RE_GUEST_ELF32_BATCH_E_MEMORY_STATE);
  re_guest_memory_init(&memory);
 
+ /* A destination must not overwrite any module's ELF source bytes. */
+ ba[0].host_buffer=elf_b;
+ assert(re_guest_elf32_load_batch(&memory,items,2,&result,&fm,&fs,&fr,&inner)==RE_GUEST_ELF32_BATCH_E_LAYOUT);
+ assert(re_guest_memory_region_count(&memory)==0);
+ ba[0].host_buffer=code_a;
+
+ /* Distinct guest segments must not alias the same host storage. */
+ ba[1].host_buffer=code_a;
+ assert(re_guest_elf32_load_batch(&memory,items,2,&result,&fm,&fs,&fr,&inner)==RE_GUEST_ELF32_BATCH_E_LAYOUT);
+ assert(re_guest_memory_region_count(&memory)==0);
+ ba[1].host_buffer=data_a;
+
  assert(re_guest_elf32_load_batch(&memory,items,2,&result,&fm,&fs,&fr,&inner)==RE_GUEST_ELF32_BATCH_OK);
  assert(result.module_count==2&&result.total_segments==4&&fm==2);
  assert(re_guest_memory_region_count(&memory)==4);
