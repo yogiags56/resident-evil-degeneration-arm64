@@ -1,12 +1,12 @@
 # Project Roadmap
 
-## Active milestone update — Stage 123Q (Android NDK liblog callback integration)
+## Active milestone update — Stage 123R (guest libz ABI provider)
 
-Stage 123Q connects the Stage 123P virtual liblog.so provider to Android NDK logging. The native probe supplies a __android_log_write callback and exercises both exact guest Thumb import trampolines through synthetic mapped guest memory. Guest pointers are never forwarded as host pointers. Host and Android ARM64 CI validation are pending. Physical-device logcat validation and production module-loader lifecycle installation remain future work. See docs/STAGE123Q_ANDROID_LIBLOG_NDK_INTEGRATION.md.
+Stage 123R adds a bounded guest libz provider for the four relocation-backed imports inflate, inflateEnd, inflateInit2_, and inflateInit_. It models the 56-byte ARM32 z_stream, tracks native host streams behind opaque guest tokens, and copies input/output through validated guest memory before calling native zlib. Host regression passed; Android ARM64 build validation is pending. Guest allocator callbacks, native msg pointers, exact original zlib minor-version parity, and production module-loader integration remain out of scope. See docs/STAGE123R_GUEST_LIBZ_ABI_PROVIDER.md.
 
 Stage 123P introduced the callback-driven guest liblog.so provider for __android_log_print and __android_log_write, with bounded guest-string copying, an AAPCS32 variadic formatter subset, exact symbol-index binding, and transactional rollback. See docs/STAGE123P_LIBLOG_GUEST_ABI_PROVIDER.md.
 
-## Active milestone update — Stage 123O (original ELF32 DSO dependency evidence)
+## Completed milestone — Stage 123Q (Android NDK liblog callback integration)\n\nStage 123Q connects the Stage 123P virtual liblog.so provider to Android NDK logging. The native probe supplies a __android_log_write callback and exercises both exact guest Thumb import trampolines through synthetic mapped guest memory. Guest pointers are never forwarded as host pointers. Host and Android ARM64 CI validation are pending. Physical-device logcat validation and production module-loader lifecycle installation remain future work. See docs/STAGE123Q_ANDROID_LIBLOG_NDK_INTEGRATION.md.\n\n## Active milestone update — Stage 123O (original ELF32 DSO dependency evidence)
 
 A fresh readelf inspection of the uploaded APK's `lib/armeabi/libjirobiodg.so` is recorded with both APK/ELF SHA-256 provenance and a machine-readable manifest. It confirms six direct DT_NEEDED entries, 4,057 dynamic relocations (3,920 RELATIVE, 135 JUMP_SLOT, 2 ABS32), and 137 symbol-backed references across 136 unique undefined names. Runtime GLES fallback SONAMEs are recorded separately from DT_NEEDED. This is static evidence only; no provider ABI compatibility or game boot is claimed. See `docs/STAGE123O_ORIGINAL_DSO_DEPENDENCY_EVIDENCE.md` and `reports/STAGE123O_LIBJIROBIODG_PROVIDER_MANIFEST.json`.
 
