@@ -1,6 +1,10 @@
 # Project Roadmap
 
-## Active milestone update — Stage 123S (guest C++ new/delete heap provider)
+## Active milestone update — Stage 123T (ARM EABI compiler-helper provider)
+
+Stage 123T adds guest adapters for the 21 exact relocation-backed __aeabi_* imports in the original ELF32 manifest. It covers double/float arithmetic and comparisons, integer conversions, 32-bit signed/unsigned division and divmod, 64-bit multiplication, and __aeabi_ldivmod. The import dispatcher now supports four-register results (r0-r3). Host CI passed in run 43415885622; Android ARM64 build/ELF verification is pending. No libgcc.so SONAME is inferred. See docs/STAGE123T_ARM_EABI_COMPILER_HELPERS.md.
+
+## Completed milestone — Stage 123S (guest C++ new/delete heap provider)
 
 Stage 123S adds guest ARM32 adapters for the four relocation-backed C++ allocation imports _Znwj, _Znaj, _ZdlPv, and _ZdaPv. It uses a dedicated guest RW arena, bounded host-side allocation records, 8-byte-aligned first-fit allocation, exact-address release, and guest-address-only pointers. Host CI and Android ARM64 build/ELF verification both passed (runs `43413952682` and `43413952565`). It does not implement C malloc/free, C++ exceptions, std::bad_alloc, sized/aligned/nothrow new/delete, or production heap lifecycle integration. See docs/STAGE123S_GUEST_CXX_HEAP_PROVIDER.md.
 Stage 123P introduced the callback-driven guest liblog.so provider for __android_log_print and __android_log_write, with bounded guest-string copying, an AAPCS32 variadic formatter subset, exact symbol-index binding, and transactional rollback. See docs/STAGE123P_LIBLOG_GUEST_ABI_PROVIDER.md.
