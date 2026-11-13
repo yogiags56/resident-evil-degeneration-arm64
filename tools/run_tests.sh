@@ -262,8 +262,9 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
   runtime/guest/re_guest_memory_bus.c runtime/guest/re_guest_cpu_bus_adapter.c \
   -o build/host-tests/test_re_guest_libc_string_provider
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_libc_stdio_provider.c \
-  runtime/guest/re_guest_libc_stdio_provider.c runtime/guest/re_guest_imports.c \
-  runtime/guest/re_guest_runtime.c runtime/guest/s3e_aapcs32.c \
+  runtime/guest/re_guest_libc_stdio_provider.c runtime/guest/re_guest_format.c \
+  runtime/guest/re_guest_imports.c runtime/guest/re_guest_runtime.c \
+  runtime/guest/s3e_aapcs32.c \
   runtime/guest/re_guest_cpu.c runtime/guest/re_guest_memory.c \
   runtime/guest/re_guest_memory_bus.c runtime/guest/re_guest_cpu_bus_adapter.c \
   -o build/host-tests/test_re_guest_libc_stdio_provider
