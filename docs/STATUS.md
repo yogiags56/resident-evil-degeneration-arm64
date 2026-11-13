@@ -154,3 +154,14 @@ stream bookkeeping. Android ARM64 build validation is running. Exact original
 SDK layout/version parity, guest custom allocator callbacks, and production
 module-loader integration remain open. See
 [Stage 123R](STAGE123R_GUEST_LIBZ_ABI_PROVIDER.md).
+
+
+## Stage 123R validation update — 2026-11-13
+
+Host CI passed in run `43413431936`: 312 Python tests, native C
+mock-header syntax checks, and all compiled host regressions, including
+`Guest libz provider tests: PASS`. Android ARM64 NDK build and ELF
+verification passed in run `43413417668`, including native zlib linkage and
+artifact upload. The provider has not yet been exercised by the original
+game on a physical device. The original game's full DSO dependency closure
+and boot remain unverified.
