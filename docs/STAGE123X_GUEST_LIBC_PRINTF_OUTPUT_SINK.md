@@ -43,7 +43,8 @@ test.
 
 Host regression CI passed in run `43419274585`, including the new guest
 `printf` callback assertion and the existing `snprintf`/`sprintf` regressions.
-Android ARM64 build and ELF verification passed in run `43419241484`,\nincluding native app build and artifact upload. The
+Android ARM64 build and ELF verification passed in run `43419241484`,
+including native app build and artifact upload. The
 provider is compiled into the native target, but production module-loader
 installation, a real Android stdout/log destination, original-game execution,
 and device boot are not claimed.
