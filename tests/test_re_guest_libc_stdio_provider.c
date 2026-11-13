@@ -219,6 +219,13 @@ int main(void) {
     assert((int32_t)*(uint32_t *)(void *)(guest + 0x940u) == 123);
     assert(strcmp((char *)guest + 0x960u, "cats") == 0);
 
+    call_import(&runtime, exports[8].value, base + 0xdcu,
+        handle, 0u, 0u, 0u);
+    assert(runtime.cpu.r[0] == 1u);
+    call_import(&runtime, exports[4].value, base + 0xdeu,
+        handle, 0u, 0u, 0u);
+    assert((int32_t)runtime.cpu.r[0] == 0);
+
     /* fflush and stream status imports use the same opaque FILE token. */
     call_import(&runtime, exports[10].value, base + 0xd8u,
         handle, 0u, 0u, 0u);
