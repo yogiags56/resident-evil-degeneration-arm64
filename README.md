@@ -1,6 +1,6 @@
 # Resident Evil: Degeneration — Native ARM64 Port Research
 
-[![Stage](https://img.shields.io/badge/stage-123U-blue)](#project-status)
+[![Stage](https://img.shields.io/badge/stage-123V-blue)](#project-status)
 [![Platform](https://img.shields.io/badge/platform-Android%20ARM64-green)](#build-the-android-probe)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
@@ -664,3 +664,17 @@ reallocation, and page-overlap regressions. Android ARM64 build and ELF
 verification passed in run `43416621992`, including artifact upload. The
 heap arena is not yet reserved by the production module loader. See
 [Stage 123U report](docs/STAGE123U_SHARED_GUEST_HEAP_LIBC_ALLOC.md).
+
+
+## Stage 123V — Guest libc memory and string provider
+
+Added bounded guest adapters for 15 exact relocation-backed `libc.so`
+symbols: `memcpy`, `memmove`, `memset`, string length/comparison/copy/
+concatenation/search functions, `atoi`, and `strtok`. Bulk memory calls
+validate guest permissions and contiguous ranges; string scans are capped
+at 64 KiB and use checked guest-address arithmetic. `strtok` stores its
+continuation in stable provider-owned state. Host CI passed in run
+`43417968172`, including `Guest libc memory/string provider tests: PASS`.
+Android ARM64 build and ELF verification passed in run `43417396929`.
+The provider is not yet installed in the production module loader. See
+[Stage 123V report](docs/STAGE123V_GUEST_LIBC_MEMORY_STRING.md).
