@@ -1,6 +1,6 @@
 # Resident Evil: Degeneration — Native ARM64 Port Research
 
-[![Stage](https://img.shields.io/badge/stage-123T-blue)](#project-status)
+[![Stage](https://img.shields.io/badge/stage-123U-blue)](#project-status)
 [![Platform](https://img.shields.io/badge/platform-Android%20ARM64-green)](#build-the-android-probe)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
@@ -648,3 +648,19 @@ mock-header syntax checks, and all compiled host regressions, including
 `Guest ARM EABI provider tests: PASS`. Android ARM64 build and ELF
 verification passed in run `43415890966`, including artifact upload. No
 original-game runtime or device boot is claimed.
+
+
+## Stage 123U — Shared guest heap and libc allocation provider
+
+Added a bounded guest heap shared by C++ `new/delete` and libc
+`malloc/free/realloc/valloc`. This eliminates separate allocator ownership
+for these two families: either family can release the other's exact guest
+allocation address. The arena is a caller-reserved contiguous guest RW mapping
+with 512 host-side allocation records, 8-byte normal alignment, and
+4096-byte `valloc` alignment. `realloc` preserves old data and leaves the old
+block intact on failure. Guest pointers never become host allocator pointers.
+Host CI passed in run `43416640694`, including the new cross-family,
+reallocation, and page-overlap regressions. Android ARM64 build and ELF
+verification passed in run `43416621992`, including artifact upload. The
+heap arena is not yet reserved by the production module loader. See
+[Stage 123U report](docs/STAGE123U_SHARED_GUEST_HEAP_LIBC_ALLOC.md).
