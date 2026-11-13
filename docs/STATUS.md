@@ -1,6 +1,6 @@
 # Current Status
 
-**Current implementation milestone: Stage 123X — guest libc printf output sink.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
+**Current implementation milestone: Stage 123Y — guest libc stdio and file I/O foundation.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
 
 Stage 123L adds a bounded guest DSO provider catalog for the Stage 123I/123K dynamic-loader bridge. It validates unique basename-only SONAMEs, resolves symbols only within the opened provider, tracks open references, and returns caller-supplied guest addresses without exposing host pointers. The standalone regression is wired into host tests and the Android CMake target. CI validation is pending; earlier failed GitHub Actions attempts did not expose downloadable logs or artifacts, so their failure cannot yet be attributed to source code. See [Stage 123L](STAGE123L_GUEST_DSO_PROVIDER_REGISTRY.md).
 
@@ -258,3 +258,19 @@ bytes and the return count. Host regression CI passed in run `43419274585`. Andr
 Production module-loader installation and a real Android stdout/log sink
 remain open. See
 [Stage 123X](STAGE123X_GUEST_LIBC_PRINTF_OUTPUT_SINK.md).
+
+
+## Stage 123Y — Guest libc stdio and file I/O foundation
+
+Added a guest-owned opaque FILE-token provider for seven relocation-backed
+`libc.so` imports: `fopen`, `fclose`, `fread`, `fwrite`, `fseek`,
+`ftell`, and `fgets`. A bounded 32-slot stream table maps guest tokens
+to backend-owned opaque streams; host FILE pointers are never exposed.
+Guest path normalization rejects absolute paths and parent traversal.
+The backend is an explicit read/write/seek/tell/close vtable. A host
+regression exercises the provider through the guest import dispatcher and
+is registered in the host test runner; the provider is included in the
+Android ARM64 CMake target. Final-head host and Android CI validation is
+pending. Production module-loader wiring, a writable Android backend,
+`fprintf`, and original-game file access remain outstanding. See
+[Stage 123Y](STAGE123Y_GUEST_LIBC_STDIO_FILE_IO.md).
