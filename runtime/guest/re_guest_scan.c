@@ -174,11 +174,12 @@ int re_guest_scan_guest_sscanf(const S3EAAPCS32Frame *frame,
         if (conv == 'c' || conv == 's' || conv == '[') {
             uint8_t set[256];
             size_t n = 0u, max = width;
-            char temp[RE_GUEST_SCAN_TOKEN_CAP];
+            char temp[RE_GUEST_SCAN_TOKEN_CAP + 1u];
             if (conv == '[') {
                 if (!scanset_build(&fp, set)) return 0;
             }
             if (conv == 'c' && width == SIZE_MAX) max = 1u;
+            if (max > RE_GUEST_SCAN_TOKEN_CAP) return 0;
             if ((conv == 's' || conv == '[') && max == SIZE_MAX)
                 max = sizeof(temp) - 1u;
             if (conv == 'c' && length != SCAN_LEN_NONE) return 0;
@@ -211,6 +212,7 @@ int re_guest_scan_guest_sscanf(const S3EAAPCS32Frame *frame,
                        (conv == 'i' ? 0 : 10));
             int sign = conv == 'd' || conv == 'i';
             size_t max = width == SIZE_MAX ? RE_GUEST_SCAN_TOKEN_CAP - 1u : width;
+            if (max > RE_GUEST_SCAN_TOKEN_CAP - 1u) return 0;
             if (length == SCAN_LEN_L || length == SCAN_LEN_Z ||
                 length == SCAN_LEN_T || length == SCAN_LEN_J) {
                 /* ARM32 long/size_t/ptrdiff_t remain 32-bit; intmax_t is 64-bit. */
@@ -232,6 +234,7 @@ int re_guest_scan_guest_sscanf(const S3EAAPCS32Frame *frame,
         if (strchr("fFeEgGaA", conv)) {
             char token[RE_GUEST_SCAN_TOKEN_CAP], *end = NULL;
             size_t n = 0u, max = width == SIZE_MAX ? sizeof(token) - 1u : width;
+            if (max > sizeof(token) - 1u) return 0;
             double value;
             while (n < max && n + 1u < sizeof(token) && in[n] &&
                    !scan_space((unsigned char)in[n])) {
@@ -249,7 +252,8 @@ int re_guest_scan_guest_sscanf(const S3EAAPCS32Frame *frame,
             if (!suppress) {
                 uint32_t dst;
                 if (!get_arg(frame, &arg_index, &dst)) return 0;
-                if (length == SCAN_LEN_L || length == SCAN_LEN_LL) {
+                if (length == SCAN_LEN_LL || length == SCAN_LEN_J) return 0;
+                if (length == SCAN_LEN_L) {
                     uint64_t bits; memcpy(&bits, &value, sizeof(bits));
                     if (!guest_write(bus, dst, &bits, sizeof(bits))) return 0;
                 } else {
