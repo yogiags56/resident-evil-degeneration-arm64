@@ -27,13 +27,13 @@ static int guest_cstring(const REGUESTMEMBUS *bus, uint32_t address,
 static int normalize_path(const char *input, char output[RE_GUEST_LIBC_STDIO_MAX_PATH]) {
     size_t i = 0u, out = 0u;
     if (!input || !output || !input[0] ||
-        input[0] == '/' || input[0] == '\\\\') return 0;
+        input[0] == '/' || input[0] == '\\') return 0;
     while (input[i]) {
         size_t start, length;
-        while (input[i] == '/' || input[i] == '\\\\') ++i;
+        while (input[i] == '/' || input[i] == '\\') ++i;
         if (!input[i]) break;
         start = i;
-        while (input[i] && input[i] != '/' && input[i] != '\\\\') {
+        while (input[i] && input[i] != '/' && input[i] != '\\') {
             if (input[i] == ':') return 0;
             ++i;
         }
@@ -50,7 +50,7 @@ static int normalize_path(const char *input, char output[RE_GUEST_LIBC_STDIO_MAX
         out += length;
     }
     if (!out) return 0;
-    output[out] = '\\0';
+    output[out] = '\0';
     return 1;
 }
 
