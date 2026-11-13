@@ -170,11 +170,6 @@ static REGUESTIMPORTStatus init_handler_common(
     if (!frame || !bus || !provider || !result) return RE_IMPORT_E_HANDLER;
     if (has_window_bits) {
         window_bits = (int32_t)frame->r[1];
-        if (!read_guest_string(bus, frame->r[2], (char[16]){0}, 16u)) {
-            result->r0 = (uint32_t)Z_VERSION_ERROR;
-            result->r1 = 0u;
-            return RE_IMPORT_OK;
-        }
         stream_size = frame->r[3];
     } else {
         stream_size = frame->r[2];
@@ -246,7 +241,7 @@ static REGUESTIMPORTStatus inflate_handler(
         ? RE_GUEST_ZLIB_IO_CHUNK_CAP : avail_out;
     if (in_count) {
         uint64_t end = (uint64_t)next_in + in_count;
-        if (!next_in || end > (uint64_t)UINT32_MAX + 1u ||
+        if (!next_in || end > (uint64_t)UINT32_MAX ||
             re_guest_memory_resolve(bus->memory, next_in, in_count,
                 RE_GUEST_MEM_READ, &guest_input) != RE_GUEST_MEM_OK) {
             result->r0 = (uint32_t)Z_STREAM_ERROR;
@@ -263,7 +258,7 @@ static REGUESTIMPORTStatus inflate_handler(
     }
     if (out_count) {
         uint64_t end = (uint64_t)next_out + out_count;
-        if (!next_out || end > (uint64_t)UINT32_MAX + 1u ||
+        if (!next_out || end > (uint64_t)UINT32_MAX ||
             re_guest_memory_resolve(bus->memory, next_out, out_count,
                 RE_GUEST_MEM_WRITE, &guest_output) != RE_GUEST_MEM_OK) {
             free(input_copy);
@@ -330,10 +325,11 @@ static REGUESTIMPORTStatus inflate_end_handler(
     REGUESTZLIBProvider *provider = (REGUESTZLIBProvider *)user;
     REGUESTZLIBStreamSlot *slot;
     REGUESTMEMBUS writable_bus;
+    void *mapped_stream = NULL;
     uint32_t token = 0u;
     int status;
     if (!frame || !bus || !provider || !result) return RE_IMPORT_E_HANDLER;
-    if (!guest_stream_access(bus, frame->r[0], (void **)&writable_bus.memory) ||
+    if (!guest_stream_access(bus, frame->r[0], &mapped_stream) ||
         !read_word(bus, frame->r[0], ZS_STATE, &token)) {
         result->r0 = (uint32_t)Z_STREAM_ERROR;
         result->r1 = 0u;
@@ -385,7 +381,7 @@ static int find_undefined_symbol(
 
 REGUESTZLIBStatus re_guest_zlib_provider_init(
     REGUESTZLIBProvider *provider, uint32_t token_base) {
-    if (!provider || (token_base & 3u) ||
+    if (!provider || !token_base || (token_base & 3u) ||
         token_base > UINT32_MAX -
             (uint32_t)((RE_GUEST_ZLIB_MAX_STREAMS - 1u) * 4u))
         return RE_GUEST_ZLIB_E_ARGUMENT;
@@ -412,7 +408,7 @@ REGUESTZLIBStatus re_guest_zlib_provider_bind_elf_symbols(
     };
     REGUESTIMPORTTable backup;
     REGUESTSYMBOL pending[4];
-    size_t indices[4];
+    size_t indices[4] = {symbol_count, symbol_count, symbol_count, symbol_count};
     uint32_t pointers[4] = {0u, 0u, 0u, 0u};
     REGUESTIMPORTStatus status;
 
