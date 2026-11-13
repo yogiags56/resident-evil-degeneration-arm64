@@ -88,7 +88,9 @@ static REGUESTIMPORTStatus compare_strings(
     uint32_t limit, int insensitive, uint32_t *result) {
     uint32_t max = limit ? limit : RE_GUEST_LIBC_STRING_MAX_BYTES;
     uint8_t a, b;
-    if (!left || !right || !result) return RE_IMPORT_E_HANDLER;
+    if (!left || !right || !result ||
+        (limit > RE_GUEST_LIBC_STRING_MAX_BYTES))
+        return RE_IMPORT_E_HANDLER;
     for (uint32_t i = 0; i < max; ++i) {
         if (!read_byte(bus, left, i, &a) || !read_byte(bus, right, i, &b))
             return RE_IMPORT_E_HANDLER;
@@ -264,6 +266,10 @@ static REGUESTIMPORTStatus libc_string_handler(
             uint64_t value = 0u;
             if (!dst || !cstring_length(bus, dst, &length))
                 return RE_IMPORT_E_HANDLER;
+            if (!length) {
+                result->r0 = 0u;
+                break;
+            }
             for (; i < length; ++i) {
                 if (!read_byte(bus, dst, i, &a)) return RE_IMPORT_E_HANDLER;
                 if (!is_ascii_space(a)) break;
@@ -294,36 +300,47 @@ static REGUESTIMPORTStatus libc_string_handler(
                 result->r0 = 0u;
                 break;
             }
-            for (;;) {
-                if (!read_byte(bus, cursor, 0u, &a)) return RE_IMPORT_E_HANDLER;
-                if (!a) {
-                    provider->strtok_next = 0u;
-                    result->r0 = 0u;
-                    return RE_IMPORT_OK;
+            {
+                uint32_t scanned = 0u;
+                for (; scanned < RE_GUEST_LIBC_STRING_MAX_BYTES; ++scanned) {
+                    int delim_match;
+                    if (!read_byte(bus, cursor, 0u, &a)) return RE_IMPORT_E_HANDLER;
+                    if (!a) {
+                        provider->strtok_next = 0u;
+                        result->r0 = 0u;
+                        return RE_IMPORT_OK;
+                    }
+                    delim_match = is_delimiter(bus, src, a);
+                    if (delim_match < 0) return RE_IMPORT_E_HANDLER;
+                    if (!delim_match) break;
+                    if (!add_address(cursor, 1u, &cursor)) return RE_IMPORT_E_HANDLER;
                 }
-                out = (uint32_t)is_delimiter(bus, src, a);
-                if ((int32_t)out < 0) return RE_IMPORT_E_HANDLER;
-                if (!out) break;
-                if (!add_address(cursor, 1u, &cursor)) return RE_IMPORT_E_HANDLER;
+                if (scanned == RE_GUEST_LIBC_STRING_MAX_BYTES)
+                    return RE_IMPORT_E_HANDLER;
             }
             start = cursor;
-            for (;;) {
-                if (!read_byte(bus, cursor, 0u, &a)) return RE_IMPORT_E_HANDLER;
-                if (!a) {
-                    provider->strtok_next = 0u;
-                    result->r0 = start;
-                    return RE_IMPORT_OK;
+            {
+                uint32_t scanned = 0u;
+                for (; scanned < RE_GUEST_LIBC_STRING_MAX_BYTES; ++scanned) {
+                    int delim_match;
+                    if (!read_byte(bus, cursor, 0u, &a)) return RE_IMPORT_E_HANDLER;
+                    if (!a) {
+                        provider->strtok_next = 0u;
+                        result->r0 = start;
+                        return RE_IMPORT_OK;
+                    }
+                    delim_match = is_delimiter(bus, src, a);
+                    if (delim_match < 0) return RE_IMPORT_E_HANDLER;
+                    if (delim_match) {
+                        if (!write_byte(bus, cursor, 0u, 0u) ||
+                            !add_address(cursor, 1u, &provider->strtok_next))
+                            return RE_IMPORT_E_HANDLER;
+                        result->r0 = start;
+                        return RE_IMPORT_OK;
+                    }
+                    if (!add_address(cursor, 1u, &cursor)) return RE_IMPORT_E_HANDLER;
                 }
-                out = (uint32_t)is_delimiter(bus, src, a);
-                if ((int32_t)out < 0) return RE_IMPORT_E_HANDLER;
-                if (out) {
-                    if (!write_byte(bus, cursor, 0u, 0u) ||
-                        !add_address(cursor, 1u, &provider->strtok_next))
-                        return RE_IMPORT_E_HANDLER;
-                    result->r0 = start;
-                    return RE_IMPORT_OK;
-                }
-                if (!add_address(cursor, 1u, &cursor)) return RE_IMPORT_E_HANDLER;
+                return RE_IMPORT_E_HANDLER;
             }
         }
         default:
