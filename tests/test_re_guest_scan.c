@@ -148,6 +148,16 @@ int main(void) {
     memcpy(&signed_value, guest + 0x240u, sizeof(signed_value));
     assert(signed_value == 12);
 
+    /* Values outside the guest destination type fail without a write. */
+    memset(&frame, 0, sizeof(frame));
+    frame.r[2] = base + 0x250u;
+    assert(re_guest_scan_guest_sscanf(&frame, &bus, 2u,
+        "256", "%hhu", &assigned, &consumed, &input_failure));
+    assert(assigned == 0u && !input_failure);
+    assert(re_guest_scan_guest_sscanf(&frame, &bus, 2u,
+        "2147483648", "%d", &assigned, &consumed, &input_failure));
+    assert(assigned == 0u && !input_failure);
+
     /* A zero field width is a malformed format, not a matching failure. */
     assert(!re_guest_scan_guest_sscanf(&frame, &bus, 2u,
         "12", "%0d", &assigned, &consumed, &input_failure));
