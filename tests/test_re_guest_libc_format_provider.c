@@ -6,6 +6,17 @@
 #include <stdio.h>
 #include <string.h>
 
+typedef struct { char bytes[256]; size_t length; unsigned calls; } TestSink;
+static int test_output_sink(const char *bytes, size_t length, void *user) {
+    TestSink *sink = (TestSink *)user;
+    if (!sink || length >= sizeof(sink->bytes)) return -1;
+    memcpy(sink->bytes, bytes, length);
+    sink->bytes[length] = '\\0';
+    sink->length = length;
+    ++sink->calls;
+    return (int)length;
+}
+
 static void put_string(uint8_t *guest, size_t offset, const char *value) {
     memcpy(guest + offset, value, strlen(value) + 1u);
 }
@@ -34,20 +45,21 @@ int main(void) {
     static uint8_t guest[0x4000];
     const uint32_t base = 0x10000000u;
     static const char *const names[RE_GUEST_LIBC_FORMAT_SYMBOL_COUNT] = {
-        "snprintf", "sprintf"
+        "snprintf", "sprintf", "printf"
     };
     REGUESTMEMORY memory;
     REGUESTMEMBUS bus;
     REGUESTIMPORTTable imports;
     REGUESTRuntime runtime;
     REGUESTLIBCFormatProvider provider;
-    REGUESTELF32LINKSYMBOL symbols[3] = {0};
-    REGUESTSYMBOL exports[2];
+    REGUESTELF32LINKSYMBOL symbols[4] = {0};
+    REGUESTSYMBOL exports[3];
+    TestSink sink = {{0}, 0u, 0u};
     size_t export_count = 0u, failed = 0u;
 
     (void)strcpy(symbols[1].name, names[0]);
     (void)strcpy(symbols[2].name, names[1]);
-    for (size_t i = 1u; i <= 2u; ++i) {
+    for (size_t i = 1u; i <= 3u; ++i) {
         symbols[i].section_index = 0u;
         symbols[i].binding = RE_GUEST_STB_GLOBAL;
         symbols[i].type = 2u;
@@ -60,23 +72,27 @@ int main(void) {
     put_string(guest, 0x220u, "%s/%u");
     put_string(guest, 0x240u, "%lld");
     put_string(guest, 0x260u, "%*d");
+    put_string(guest, 0x2a0u, "%s:%d");
 
     assert(re_guest_libc_format_provider_init(&provider) ==
            RE_GUEST_LIBC_FORMAT_OK);
+    assert(re_guest_libc_format_provider_set_output(&provider,
+        test_output_sink, &sink) == RE_GUEST_LIBC_FORMAT_OK);
     assert(re_guest_import_table_init(&imports, 0x30000000u) == RE_IMPORT_OK);
     assert(re_guest_libc_format_provider_bind_elf_symbols(&provider, &imports,
-        symbols, 3u, exports, 2u, &export_count, &failed) ==
+        symbols, 4u, exports, 3u, &export_count, &failed) ==
         RE_GUEST_LIBC_FORMAT_OK);
-    assert(export_count == 2u && failed == 3u);
+    assert(export_count == 3u && failed == 4u);
     assert(strcmp(exports[0].name, "snprintf") == 0);
     assert(strcmp(exports[1].name, "sprintf") == 0);
+    assert(strcmp(exports[2].name, "printf") == 0);
     assert(strcmp(exports[0].version_library, "libc.so") == 0);
 
     /* Missing/ambiguous symbol diagnostics must be deterministic and atomic. */
     {
-        REGUESTELF32LINKSYMBOL incomplete[2] = {0};
+        REGUESTELF32LINKSYMBOL incomplete[3] = {0};
         REGUESTIMPORTTable rejected;
-        REGUESTSYMBOL before[2];
+        REGUESTSYMBOL before[3];
         size_t rejected_count = 99u;
         size_t rejected_index = 99u;
         memcpy(before, exports, sizeof(before));
@@ -87,10 +103,10 @@ int main(void) {
         incomplete[1].visibility = RE_GUEST_STV_DEFAULT;
         assert(re_guest_import_table_init(&rejected, 0x31000000u) == RE_IMPORT_OK);
         assert(re_guest_libc_format_provider_bind_elf_symbols(&provider,
-            &rejected, incomplete, 2u, exports, 2u, &rejected_count,
+            &rejected, incomplete, 3u, exports, 3u, &rejected_count,
             &rejected_index) == RE_GUEST_LIBC_FORMAT_E_SYMBOL);
         assert(rejected.count == 0u && rejected_count == 0u);
-        assert(rejected_index == 2u);
+        assert(rejected_index == 3u);
         assert(memcmp(exports, before, sizeof(before)) == 0);
 
         (void)strcpy(incomplete[0].name, "snprintf");
@@ -101,7 +117,7 @@ int main(void) {
         /* Duplicate the exact requested name at two distinct ELF indices. */
         (void)strcpy(incomplete[1].name, "snprintf");
         assert(re_guest_libc_format_provider_bind_elf_symbols(&provider,
-            &rejected, incomplete, 2u, exports, 2u, &rejected_count,
+            &rejected, incomplete, 3u, exports, 3u, &rejected_count,
             &rejected_index) == RE_GUEST_LIBC_FORMAT_E_SYMBOL);
         assert(rejected.count == 0u && rejected_count == 0u);
         assert(rejected_index == 2u);
@@ -152,6 +168,13 @@ int main(void) {
         base + 0x800u, 16u, base + 0x260u, 4u);
     assert(runtime.cpu.r[0] == 4u);
     assert(strcmp((char *)guest + 0x800u, "   7") == 0);
+
+    /* printf routes the bounded output through an explicit host sink. */
+    call_import(&runtime, exports[2].value, base + 0xe0u,
+        base + 0x2a0u, base + 0x100u, 42u, 0u);
+    assert(runtime.cpu.r[0] == 5u);
+    assert(sink.calls == 1u && sink.length == 5u);
+    assert(strcmp(sink.bytes, "hi:42") == 0);
 
     puts("Guest libc formatted-output provider tests: PASS");
     return 0;
