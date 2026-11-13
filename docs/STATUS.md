@@ -1,6 +1,6 @@
 # Current Status
 
-**Current implementation milestone: Stage 123L — ELF32 undefined-symbol family manifest and provider triage.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
+**Current implementation milestone: Stage 123Q — Android NDK liblog callback integration.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
 
 Stage 123L adds a bounded guest DSO provider catalog for the Stage 123I/123K dynamic-loader bridge. It validates unique basename-only SONAMEs, resolves symbols only within the opened provider, tracks open references, and returns caller-supplied guest addresses without exposing host pointers. The standalone regression is wired into host tests and the Android CMake target. CI validation is pending; earlier failed GitHub Actions attempts did not expose downloadable logs or artifacts, so their failure cannot yet be attributed to source code. See [Stage 123L](STAGE123L_GUEST_DSO_PROVIDER_REGISTRY.md).
 
@@ -118,3 +118,18 @@ Added tools/guest_arm_pt_dynamic_audit.py for ELF32 EM_ARM program-header parsin
 ## Stage 120D update
 
 Added tools/guest_arm_dynamic_relocation_segment_audit.py to parse ELF32 EM_ARM DT_REL, DT_RELA, and DT_JMPREL through PT_DYNAMIC/PT_LOAD without section headers. Symbol names are correlated only when SysV DT_HASH safely bounds the dynamic symbol table; otherwise identity remains unresolved. Tests and CI pending. No relocation is applied.
+
+
+## Stage 123Q — Android NDK liblog callback integration
+
+The native Android probe now supplies a callback backed by NDK
+`__android_log_write` to the Stage 123P guest `liblog.so` provider. Its
+synthetic guest runtime path dispatches both exact relocation-indexed
+`__android_log_write` and `__android_log_print` trampolines and checks return
+flow. Guest strings are copied through the permission-checked memory bus;
+guest pointers are never forwarded as host pointers. The host mock Android
+logging header keeps source syntax checks portable. Host suite and Android
+ARM64 CI validation are pending for this branch. Physical-device logcat
+verification, installation into the real module-load lifecycle, the remaining
+Bionic dependency providers, and original game boot remain outstanding. See
+[Stage 123Q](STAGE123Q_ANDROID_LIBLOG_NDK_INTEGRATION.md).
