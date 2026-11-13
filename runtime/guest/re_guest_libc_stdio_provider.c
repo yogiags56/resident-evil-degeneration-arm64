@@ -83,6 +83,32 @@ static uint32_t file_token(size_t index, uint16_t generation) {
            ((uint32_t)generation << 5) | (uint32_t)(index + 1u);
 }
 
+static int64_t file_read(REGUESTLIBCStdioProvider *p,
+                         REGUESTLIBCStdioFile *f, void *dst,
+                         uint64_t bytes) {
+    uint8_t *out = (uint8_t *)dst;
+    uint64_t copied = 0u;
+    if (!p || !f || (!dst && bytes)) return -1;
+    if (bytes == 0u) return 0;
+    if (f->buffered_size) {
+        size_t take = bytes < f->buffered_size ?
+                      (size_t)bytes : f->buffered_size;
+        memcpy(out, f->buffered, take);
+        memmove(f->buffered, f->buffered + take,
+                (size_t)f->buffered_size - take);
+        f->buffered_size = (uint16_t)(f->buffered_size - take);
+        copied = take;
+    }
+    if (copied < bytes) {
+        int64_t got = p->backend.read(p->backend_user, f->stream,
+                                      out + copied, bytes - copied);
+        if (got < 0 || (uint64_t)got > bytes - copied) return -1;
+        copied += (uint64_t)got;
+    }
+    if (copied < bytes) f->eof = 1u;
+    return (int64_t)copied;
+}
+
 static REGUESTLIBCStdioFile *resolve_file(REGUESTLIBCStdioProvider *p,
                                            uint32_t token) {
     uint32_t low, generation;
@@ -172,7 +198,7 @@ static REGUESTIMPORTStatus stdio_handler(
                 ctx->kind == STDIO_FREAD ? RE_GUEST_MEM_WRITE : RE_GUEST_MEM_READ,
                 &host) != RE_GUEST_MEM_OK) return RE_IMPORT_E_HANDLER;
         if (ctx->kind == STDIO_FREAD)
-            transferred = p->backend.read(p->backend_user, f->stream, host, total);
+            transferred = file_read(p, f, host, total);
         else
             transferred = p->backend.write(p->backend_user, f->stream, host, total);
         if (transferred < 0 || (uint64_t)transferred > total) {
@@ -187,19 +213,22 @@ static REGUESTIMPORTStatus stdio_handler(
     case STDIO_FSEEK: {
         int64_t offset = (int32_t)b;
         f = resolve_file(p, a);
-        if (!f || p->backend.seek(p->backend_user, f->stream, offset,
-                                  (int32_t)c) != 0)
+        if (!f || !p->backend.seek ||
+            p->backend.seek(p->backend_user, f->stream, offset,
+                            (int32_t)c) != 0)
             result->r0 = (uint32_t)-1;
-        else { f->eof = 0u; }
+        else { f->eof = 0u; f->buffered_size = 0u; }
         break;
     }
     case STDIO_FTELL: {
         int64_t position;
         f = resolve_file(p, a);
         if (!f) return RE_IMPORT_E_HANDLER;
+        if (!p->backend.tell) { result->r0 = (uint32_t)-1; break; }
         position = p->backend.tell(p->backend_user, f->stream);
-        if (position < 0 || position > INT32_MAX) result->r0 = (uint32_t)-1;
-        else result->r0 = (uint32_t)position;
+        if (position < (int64_t)f->buffered_size || position > INT32_MAX)
+            result->r0 = (uint32_t)-1;
+        else result->r0 = (uint32_t)(position - f->buffered_size);
         break;
     }
     case STDIO_FGETS: {
@@ -219,7 +248,7 @@ static REGUESTIMPORTStatus stdio_handler(
             break;
         }
         while (written + 1u < count) {
-            int64_t got = p->backend.read(p->backend_user, f->stream, &byte, 1u);
+            int64_t got = file_read(p, f, &byte, 1u);
             if (got < 0 || got > 1) { f->error = 1u; return RE_IMPORT_E_HANDLER; }
             if (got == 0) { f->eof = 1u; break; }
             ((char *)host)[written++] = (char)byte;
@@ -273,27 +302,20 @@ static REGUESTIMPORTStatus stdio_handler(
         } else {
             f = resolve_file(p, a);
             if (!f || !f->readable) return RE_IMPORT_E_HANDLER;
-            {
-                int64_t pos = p->backend.tell(p->backend_user, f->stream);
-                size_t n = 0u;
-                if (pos < 0) { f->error = 1u; return RE_IMPORT_E_HANDLER; }
-                start_position = (uint64_t)pos;
-                while (n + 1u < sizeof(input)) {
-                    int64_t got = p->backend.read(p->backend_user, f->stream,
-                                                  input + n, 1u);
-                    if (got < 0 || got > 1) {
-                        f->error = 1u;
-                        (void)p->backend.seek(p->backend_user, f->stream,
-                                              (int64_t)start_position, 0);
-                        return RE_IMPORT_E_HANDLER;
-                    }
-                    if (got == 0) { f->eof = 1u; break; }
-                    if (input[n++] == '\n' && n > 0u) {
-                        /* Continue: scanf whitespace may span lines. */
-                    }
+            while (f->buffered_size < sizeof(input) - 1u) {
+                int64_t got = p->backend.read(p->backend_user, f->stream,
+                    f->buffered + f->buffered_size,
+                    sizeof(input) - 1u - f->buffered_size);
+                if (got < 0 || (uint64_t)got >
+                    sizeof(input) - 1u - f->buffered_size) {
+                    f->error = 1u;
+                    return RE_IMPORT_E_HANDLER;
                 }
-                input[n] = '\0';
+                if (got == 0) break;
+                f->buffered_size = (uint16_t)(f->buffered_size + got);
             }
+            memcpy(input, f->buffered, f->buffered_size);
+            input[f->buffered_size] = '\0';
         }
         ok = re_guest_scan_guest_sscanf(frame, (REGUESTMEMBUS *)bus, 2u,
                 input, format, &assignments, &consumed, &input_failure);
@@ -306,15 +328,10 @@ static REGUESTIMPORTStatus stdio_handler(
             return RE_IMPORT_E_HANDLER;
         }
         if (f) {
-            if (start_position > (uint64_t)INT64_MAX ||
-                consumed > (size_t)((uint64_t)INT64_MAX - start_position) ||
-                p->backend.seek(p->backend_user, f->stream,
-                    (int64_t)(start_position + consumed), 0) != 0) {
-                f->error = 1u;
-                return RE_IMPORT_E_HANDLER;
-            }
-            /* Snapshot lookahead may observe EOF beyond the matched input.
-             * Preserve EOF only when the scanf conversion itself hit EOF. */
+            if (consumed > f->buffered_size) return RE_IMPORT_E_HANDLER;
+            memmove(f->buffered, f->buffered + consumed,
+                    (size_t)f->buffered_size - consumed);
+            f->buffered_size = (uint16_t)(f->buffered_size - consumed);
             f->eof = input_failure ? 1u : 0u;
         }
         result->r0 = assignments ? assignments :
