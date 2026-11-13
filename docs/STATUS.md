@@ -1,6 +1,6 @@
 # Current Status
 
-**Current implementation milestone: Stage 124B — guest libc scanf compatibility hardening.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
+**Current implementation milestone: Stage 124C — guest libc non-seekable stream support.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
 
 Stage 123L adds a bounded guest DSO provider catalog for the Stage 123I/123K dynamic-loader bridge. It validates unique basename-only SONAMEs, resolves symbols only within the opened provider, tracks open references, and returns caller-supplied guest addresses without exposing host pointers. The standalone regression is wired into host tests and the Android CMake target. CI validation is pending; earlier failed GitHub Actions attempts did not expose downloadable logs or artifacts, so their failure cannot yet be attributed to source code. See [Stage 123L](STAGE123L_GUEST_DSO_PROVIDER_REGISTRY.md).
 
@@ -309,3 +309,14 @@ suppressed fields, inverted scansets, partial matching failures, malformed
 widths, integer overflow, and stream EOF behavior. Latest host and Android
 ARM64 CI validation is pending. See
 [Stage 124B](STAGE124B_SCANF_COMPATIBILITY_HARDENING.md).
+
+
+## Stage 124C — Non-seekable stdio streams
+
+Added a bounded per-file unread buffer. `fscanf` now reads ahead sequentially,
+preserves unconsumed bytes, and no longer requires backend seek/tell callbacks.
+`fread` and `fgets` drain pending bytes first. Seek/tell remain optional and
+return failure when absent; relative seek accounts for buffered lookahead.
+A regression backend with NULL seek/tell verifies integer scanning followed
+by reading the preserved suffix. CI validation is pending. See
+[Stage 124C](STAGE124C_NONSEEKABLE_STREAMS.md).
