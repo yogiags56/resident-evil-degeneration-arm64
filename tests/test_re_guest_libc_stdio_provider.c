@@ -111,7 +111,9 @@ int main(void) {
     REGUESTMEMBUS bus;
     REGUESTIMPORTTable imports;
     REGUESTRuntime runtime;
-    REGUESTLIBCStdioProvider provider;
+    REGUESTLIBCStdioProvider provider, nonseek_provider;
+    REGUESTLIBCStdioBackend nonseek_backend;
+    REGUESTSYMBOL nonseek_exports[RE_GUEST_LIBC_STDIO_SYMBOL_COUNT];
     REGUESTLIBCStdioBackend backend = {
         fake_open, fake_read, fake_write, fake_seek, fake_tell, fake_close, fake_flush
     };
@@ -262,6 +264,47 @@ int main(void) {
     call_import(&runtime, exports[1].value, base + 0xe0u,
         handle, 0u, 0u, 0u);
     assert(runtime.cpu.r[0] == 0u && !stream.opened);
+
+    /* A backend with no seek/tell still supports fscanf and preserves unread
+     * lookahead bytes for subsequent fread calls. */
+    {
+        FakeStream pipe_stream = {{'1','2','3','X','Y','Z'}, 6u, 0u, 0u};
+        REGUESTSYMBOL pipe_exports[RE_GUEST_LIBC_STDIO_SYMBOL_COUNT];
+        nonseek_backend = (REGUESTLIBCStdioBackend){
+            fake_open, fake_read, fake_write, NULL, NULL, fake_close, fake_flush
+        };
+        assert(re_guest_libc_stdio_provider_init(&nonseek_provider,
+            &nonseek_backend, &pipe_stream) == RE_GUEST_LIBC_STDIO_OK);
+        assert(re_guest_import_table_init(&imports, 0x30000000u) == RE_IMPORT_OK);
+        assert(re_guest_libc_stdio_provider_bind_elf_symbols(&nonseek_provider,
+            &imports, symbols, 14u, pipe_exports,
+            RE_GUEST_LIBC_STDIO_SYMBOL_COUNT, &export_count, &failed) ==
+            RE_GUEST_LIBC_STDIO_OK);
+        re_guest_runtime_init_mapped(&runtime, &bus, &imports, 0x40000000u,
+                                     base, 1);
+        strcpy((char *)guest + 0x7a0u, "%d");
+        call_import(&runtime, pipe_exports[0].value, base + 0xf2u,
+            base + 0x100u, base + 0x120u, 0u, 0u);
+        handle = runtime.cpu.r[0];
+        assert(handle != 0u && pipe_stream.opened);
+        call_import(&runtime, pipe_exports[12].value, base + 0xf4u,
+            handle, base + 0x7a0u, base + 0x940u, 0u);
+        assert(runtime.cpu.r[0] == 1u);
+        assert((int32_t)*(uint32_t *)(void *)(guest + 0x940u) == 123);
+        call_import(&runtime, pipe_exports[2].value, base + 0xf6u,
+            base + 0x980u, 1u, 3u, handle);
+        assert(runtime.cpu.r[0] == 3u);
+        assert(memcmp(guest + 0x980u, "XYZ", 3u) == 0);
+        call_import(&runtime, pipe_exports[5].value, base + 0xf8u,
+            handle, 0u, 0u, 0u);
+        assert(runtime.cpu.r[0] == (uint32_t)-1);
+        call_import(&runtime, pipe_exports[4].value, base + 0xfau,
+            handle, 0u, 0u, 0u);
+        assert(runtime.cpu.r[0] == (uint32_t)-1);
+        call_import(&runtime, pipe_exports[1].value, base + 0xfcu,
+            handle, 0u, 0u, 0u);
+        assert(runtime.cpu.r[0] == 0u && !pipe_stream.opened);
+    }
     assert(re_guest_import_table_init(&imports, 0x30000000u) == RE_IMPORT_OK);
     puts("Guest libc stdio provider tests: PASS");
     return 0;
