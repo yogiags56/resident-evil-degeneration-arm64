@@ -1,12 +1,16 @@
 #include <jni.h>
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
+#include <android/log.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include "re_android_asset_backend.h"
 #include "re_android_jni_assets.h"
 #include "re_guest_runtime.h"
+#include "re_guest_log_provider.h"
+#include "re_guest_memory.h"
+#include "re_guest_memory_bus.h"
 #include "re_guest_map_transaction.h"
 #include "re_guest_elf_materialize.h"
 #include "re_guest_permission_finalize.h"
@@ -104,6 +108,102 @@ static int probe_elf32_dynamic_parser(char *report, size_t cap) {
     return 0;
 }
 
+
+static int probe_android_log_write(int priority, const char *tag,
+                                   const char *message, void *user) {
+    int *calls = (int *)user;
+    if (!calls) return -1;
+    ++*calls;
+    return __android_log_write(priority, tag, message);
+}
+
+static int probe_guest_liblog_provider(char *report, size_t cap) {
+    uint8_t guest_bytes[0x1000] = {0};
+    REGUESTMEMORY memory;
+    REGUESTMEMBUS bus;
+    REGUESTIMPORTTable imports;
+    REGUESTRuntime runtime;
+    REGUESTLOGProvider provider;
+    REGUESTELF32LINKSYMBOL symbols[3] = {0};
+    REGUESTSYMBOL exports[2];
+    size_t export_count = 0u, failed_index = 0u;
+    int callback_calls = 0;
+    const uint32_t guest_base = 0x10000000u;
+    const uint32_t return_write = guest_base + 0x20u;
+    const uint32_t return_print = guest_base + 0x40u;
+
+    (void)strcpy(symbols[1].name, "__android_log_print");
+    symbols[1].section_index = 0u;
+    symbols[1].binding = RE_GUEST_STB_GLOBAL;
+    symbols[1].type = 2u;
+    symbols[1].visibility = RE_GUEST_STV_DEFAULT;
+    (void)strcpy(symbols[2].name, "__android_log_write");
+    symbols[2].section_index = 0u;
+    symbols[2].binding = RE_GUEST_STB_GLOBAL;
+    symbols[2].type = 2u;
+    symbols[2].visibility = RE_GUEST_STV_DEFAULT;
+
+    provider.write_callback = probe_android_log_write;
+    provider.user = &callback_calls;
+    re_guest_memory_init(&memory);
+    if (re_guest_memory_map_ex(&memory, guest_base, sizeof(guest_bytes),
+            guest_bytes, RE_GUEST_MEM_READ | RE_GUEST_MEM_WRITE |
+            RE_GUEST_MEM_EXEC, RE_GUEST_MEM_TYPE_NORMAL) != RE_GUEST_MEM_OK) {
+        append(report, cap, "FAIL: Stage 123Q guest memory setup for liblog");
+        return 1;
+    }
+    re_guest_memory_bus_init(&bus, &memory);
+    if (re_guest_import_table_init(&imports, 0x60000000u) != RE_IMPORT_OK ||
+        re_guest_log_provider_bind_elf_symbols(&provider, &imports, symbols,
+            3u, exports, 2u, &export_count, &failed_index) != RE_GUEST_LOG_OK ||
+        export_count != 2u || failed_index != 3u) {
+        append(report, cap, "FAIL: Stage 123Q Android liblog provider binding");
+        return 1;
+    }
+
+    (void)memcpy(guest_bytes + 0x100u, "Degeneration", sizeof("Degeneration"));
+    (void)memcpy(guest_bytes + 0x180u, "native NDK log_write", sizeof("native NDK log_write"));
+    (void)memcpy(guest_bytes + 0x240u, "%s:%d", sizeof("%s:%d"));
+    (void)memcpy(guest_bytes + 0x280u, "guest printf", sizeof("guest printf"));
+    probe_put_u32le(guest_bytes + 0x800u, 73u);
+
+    re_guest_runtime_init_mapped(&runtime, &bus, &imports, 0x6000F000u,
+                                 guest_base, 1);
+
+    runtime.cpu.r[15] = exports[1].value & ~1u;
+    runtime.cpu.thumb = 1u;
+    runtime.cpu.r[14] = return_write | 1u;
+    runtime.cpu.r[13] = guest_base + 0x800u;
+    runtime.cpu.r[0] = ANDROID_LOG_INFO;
+    runtime.cpu.r[1] = guest_base + 0x100u;
+    runtime.cpu.r[2] = guest_base + 0x180u;
+    if (re_guest_runtime_step(&runtime) != RE_RUNTIME_OK ||
+        runtime.cpu.r[15] != return_write ||
+        runtime.dispatched_imports != 1u || callback_calls != 1) {
+        append(report, cap, "FAIL: Stage 123Q NDK __android_log_write dispatch");
+        return 1;
+    }
+
+    runtime.cpu.r[15] = exports[0].value & ~1u;
+    runtime.cpu.thumb = 1u;
+    runtime.cpu.r[14] = return_print | 1u;
+    runtime.cpu.r[13] = guest_base + 0x800u;
+    runtime.cpu.r[0] = ANDROID_LOG_INFO;
+    runtime.cpu.r[1] = guest_base + 0x100u;
+    runtime.cpu.r[2] = guest_base + 0x240u;
+    runtime.cpu.r[3] = guest_base + 0x280u;
+    if (re_guest_runtime_step(&runtime) != RE_RUNTIME_OK ||
+        runtime.cpu.r[15] != return_print ||
+        runtime.dispatched_imports != 2u || callback_calls != 2) {
+        append(report, cap, "FAIL: Stage 123Q NDK __android_log_print dispatch");
+        return 1;
+    }
+
+    append(report, cap,
+        "PASS: guest liblog imports dispatched through Android NDK logging callback");
+    return 0;
+}
+
 JNIEXPORT jstring JNICALL
 Java_org_example_redstage_MainActivity_nativeProbe(JNIEnv *env, jobject self,
                                                        jobject java_manager) {
@@ -175,6 +275,8 @@ Java_org_example_redstage_MainActivity_nativeProbe(JNIEnv *env, jobject self,
     failures += probe_elf32_program_header_parser(report, sizeof(report));
 
     failures += probe_elf32_dynamic_parser(report, sizeof(report));
+
+    failures += probe_guest_liblog_provider(report, sizeof(report));
 
     /*
      * Exercise the Stage 120 guest ELF primitives as one bounded transaction.
