@@ -2,8 +2,6 @@
 
 ## Active milestone update — Stage 123S (guest C++ new/delete heap provider)
 
-Stage 123R adds a bounded guest libz provider for the four relocation-backed imports inflate, inflateEnd, inflateInit2_, and inflateInit_. It models the 56-byte ARM32 z_stream, tracks native host streams behind opaque guest tokens, and copies input/output through validated guest memory before calling native zlib. Host regression and Android ARM64 build both passed (runs `43413431936` and `43413417668`). Device-side zlib calls and original-game boot remain unverified. Guest allocator callbacks, native msg pointers, exact original zlib minor-version parity, and production module-loader integration remain out of scope. See docs/STAGE123R_GUEST_LIBZ_ABI_PROVIDER.md.
-
 Stage 123S adds guest ARM32 adapters for the four relocation-backed C++ allocation imports _Znwj, _Znaj, _ZdlPv, and _ZdaPv. It uses a dedicated guest RW arena, bounded host-side allocation records, 8-byte-aligned first-fit allocation, exact-address release, and guest-address-only pointers. Host regression passed; Android ARM64 build validation is pending. It does not implement C malloc/free, C++ exceptions, std::bad_alloc, sized/aligned/nothrow new/delete, or production heap lifecycle integration. See docs/STAGE123S_GUEST_CXX_HEAP_PROVIDER.md.
 Stage 123P introduced the callback-driven guest liblog.so provider for __android_log_print and __android_log_write, with bounded guest-string copying, an AAPCS32 variadic formatter subset, exact symbol-index binding, and transactional rollback. See docs/STAGE123P_LIBLOG_GUEST_ABI_PROVIDER.md.
 
