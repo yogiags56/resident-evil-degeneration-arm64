@@ -1,6 +1,6 @@
 # Current Status
 
-**Current implementation milestone: Stage 123T — ARM EABI compiler-helper provider.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
+**Current implementation milestone: Stage 123U — shared guest heap and libc allocation provider.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
 
 Stage 123L adds a bounded guest DSO provider catalog for the Stage 123I/123K dynamic-loader bridge. It validates unique basename-only SONAMEs, resolves symbols only within the opened provider, tracks open references, and returns caller-supplied guest addresses without exposing host pointers. The standalone regression is wired into host tests and the Android CMake target. CI validation is pending; earlier failed GitHub Actions attempts did not expose downloadable logs or artifacts, so their failure cannot yet be attributed to source code. See [Stage 123L](STAGE123L_GUEST_DSO_PROVIDER_REGISTRY.md).
 
@@ -196,3 +196,18 @@ including artifact upload.
 Invalid float-to-int operands use a deterministic saturating policy; exact
 original-runtime behavior remains unverified. See
 [Stage 123T](STAGE123T_ARM_EABI_COMPILER_HELPERS.md).
+
+
+## Stage 123U — Shared guest heap and libc allocation provider
+
+Introduced a bounded shared guest heap and moved the Stage 123S C++ new/delete
+provider onto it. Added exact ELF32 symbol-index adapters for libc
+`malloc`, `free`, `realloc`, and `valloc` from the direct `libc.so`
+dependency. Both families now use the same host-side allocation records and
+guest RW arena; cross-family free/reuse is tested. The allocator supports 512
+records, 8-byte normal alignment, page-aligned valloc, safe realloc data
+preservation, and no host-pointer exposure. Host CI passed in run
+`43416640694`; Android ARM64 build and ELF verification passed in run
+`43416621992`, including artifact upload. Production heap reservation and
+lifetime integration remain open. See
+[Stage 123U](STAGE123U_SHARED_GUEST_HEAP_LIBC_ALLOC.md).
