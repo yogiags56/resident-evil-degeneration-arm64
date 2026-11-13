@@ -263,15 +263,12 @@ int re_guest_scan_guest_sscanf(const S3EAAPCS32Frame *frame,
             size_t n = 0u, max = width == SIZE_MAX ? sizeof(token) - 1u : width;
             if (max > sizeof(token) - 1u) return 0;
             double value;
+            /* Collect the bounded non-whitespace input item. strtod then
+             * determines the longest numeric prefix (including infinity/NaN). */
             while (n < max && n + 1u < sizeof(token) && in[n] &&
                    !scan_space((unsigned char)in[n])) {
-                unsigned char ch = (unsigned char)in[n];
-                if (!(ch == '+' || ch == '-' || ch == '.' || ch == 'e' ||
-                      ch == 'E' || ch == 'p' || ch == 'P' || ch == 'x' ||
-                      ch == 'X' || ch == 'i' || ch == 'I' || ch == 'n' ||
-                      ch == 'N' || ch == 'f' || ch == 'F' || ch == 'a' ||
-                      ch == 'A' || (ch >= '0' && ch <= '9'))) break;
-                token[n] = (char)ch; ++n;
+                token[n] = in[n];
+                ++n;
             }
             if (!n) { failed_input = (*in == '\0'); break; }
             token[n] = '\0'; errno = 0; value = strtod(token, &end);
