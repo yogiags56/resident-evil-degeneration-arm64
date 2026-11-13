@@ -1,6 +1,6 @@
 # Resident Evil: Degeneration — Native ARM64 Port Research
 
-[![Stage](https://img.shields.io/badge/stage-123P-blue)](#project-status)
+[![Stage](https://img.shields.io/badge/stage-123Q-blue)](#project-status)
 [![Platform](https://img.shields.io/badge/platform-Android%20ARM64-green)](#build-the-android-probe)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
@@ -584,3 +584,17 @@ The PT_DYNAMIC audit now exposes the bounded dynamic symbol inventory and ordere
 ## Stage 120Z — DT_NEEDED dependency graph
 
 Added `tools/guest_arm_dependency_graph.py` to build an explicit dependency graph from supplied Stage 120Y adapter inventories. It rejects duplicate SONAME providers, reports unresolved DT_NEEDED names, detects cycles, and emits dependency-first order only for complete acyclic graphs. It performs no filesystem search or library loading. See `docs/STAGE120Z_DEPENDENCY_GRAPH.md`.
+
+
+## Stage 123Q — Android NDK liblog callback integration
+
+The Android ARM64 native probe now supplies a real NDK `__android_log_write`
+callback to the Stage 123P guest `liblog.so` provider. A synthetic mapped-guest
+smoke path binds the exact `__android_log_print` and `__android_log_write`
+undefined-symbol indices and dispatches both Thumb trampolines through the
+runtime coordinator. Guest strings are copied by the bounded Stage 123P
+adapter; guest pointers are never passed to Android as host pointers. A host
+mock header keeps translation-unit syntax checks independent of the Android
+SDK. This is bootstrap integration and synthetic dispatch coverage, not proof
+of the original APK's full DSO closure or game boot. See
+[Stage 123Q report](docs/STAGE123Q_ANDROID_LIBLOG_NDK_INTEGRATION.md).
