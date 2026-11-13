@@ -606,3 +606,16 @@ Host CI passed: 312 Python tests, native C mock-header syntax checks, and all
 compiled host-test executables including the guest liblog provider regression.
 The Android ARM64 NDK build is running for this branch. This does not yet prove
 a device-side logcat result or original-game boot.
+
+
+## Stage 123R — Guest libz ABI provider
+
+The guest runtime now has a bounded provider for the four relocation-backed
+libz imports: `inflate`, `inflateEnd`, `inflateInit2_`, and
+`inflateInit_`. It models the 56-byte ARM32 `z_stream` layout, uses
+opaque guest state tokens, copies input/output through validated guest memory,
+and delegates decompression to the native Android ARM64 zlib implementation
+without passing guest pointers to it. The host regression exercises the
+guest import trampolines and validates decompressed bytes and stream
+bookkeeping. Host CI passed; Android ARM64 validation is pending. See
+[Stage 123R report](docs/STAGE123R_GUEST_LIBZ_ABI_PROVIDER.md).
