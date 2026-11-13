@@ -176,7 +176,6 @@ int re_guest_scan_guest_sscanf(const S3EAAPCS32Frame *frame,
             size_t n = 0u, max = width;
             char temp[RE_GUEST_SCAN_TOKEN_CAP];
             if (conv == '[') {
-                --fp;
                 if (!scanset_build(&fp, set)) return 0;
             }
             if (conv == 'c' && width == SIZE_MAX) max = 1u;
