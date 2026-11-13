@@ -1,6 +1,6 @@
 # Current Status
 
-**Current implementation milestone: Stage 123Z — guest libc formatted file output and stream status.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
+**Current implementation milestone: Stage 124A — guest libc bounded scanf parser.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
 
 Stage 123L adds a bounded guest DSO provider catalog for the Stage 123I/123K dynamic-loader bridge. It validates unique basename-only SONAMEs, resolves symbols only within the opened provider, tracks open references, and returns caller-supplied guest addresses without exposing host pointers. The standalone regression is wired into host tests and the Android CMake target. CI validation is pending; earlier failed GitHub Actions attempts did not expose downloadable logs or artifacts, so their failure cannot yet be attributed to source code. See [Stage 123L](STAGE123L_GUEST_DSO_PROVIDER_REGISTRY.md).
 
@@ -287,3 +287,13 @@ formatted file output and stream state transitions through the real guest
 import dispatcher. Host and Android ARM64 CI for this revision are pending.
 `fscanf` and `sscanf` are explicitly deferred for a dedicated bounded
 scanf parser. See [Stage 123Z](STAGE123Z_GUEST_LIBC_FORMATTED_FILE_IO.md).
+
+
+## Stage 124A — Guest libc bounded scanf parser
+
+Added a standalone bounded parser for integer, floating-point, string,
+character, scanset, suppression, width, and `%n` conversions. The stdio
+provider now binds `sscanf` and seek-restored `fscanf` with ARM32 guest
+destination validation. A dedicated parser regression and dispatcher
+coverage are included. CI validation is pending. See
+[Stage 124A](STAGE124A_GUEST_LIBC_SCANF_PARSER.md).
