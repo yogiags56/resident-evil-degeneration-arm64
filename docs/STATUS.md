@@ -1,6 +1,6 @@
 # Current Status
 
-**Current implementation milestone: Stage 123Q — Android NDK liblog callback integration.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
+**Current implementation milestone: Stage 123R — guest libz ABI provider.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
 
 Stage 123L adds a bounded guest DSO provider catalog for the Stage 123I/123K dynamic-loader bridge. It validates unique basename-only SONAMEs, resolves symbols only within the opened provider, tracks open references, and returns caller-supplied guest addresses without exposing host pointers. The standalone regression is wired into host tests and the Android CMake target. CI validation is pending; earlier failed GitHub Actions attempts did not expose downloadable logs or artifacts, so their failure cannot yet be attributed to source code. See [Stage 123L](STAGE123L_GUEST_DSO_PROVIDER_REGISTRY.md).
 
@@ -142,3 +142,15 @@ tests, native C translation-unit mock-header syntax checks, and the full
 compiled host-test executable suite, including the guest liblog provider
 regression. The Android ARM64 NDK build has been triggered for this stage and
 is still running. No Android APK build or device logcat result is claimed yet.
+
+
+## Stage 123R — guest libz ABI provider
+
+Added the bounded guest provider for the four relocation-backed libz imports.
+The adapter tracks host zlib streams behind guest-only opaque tokens, uses the
+56-byte ARM32 z_stream layout, and copies buffers through validated guest
+memory. The host regression passed, including decompression output and guest
+stream bookkeeping. Android ARM64 build validation is running. Exact original
+SDK layout/version parity, guest custom allocator callbacks, and production
+module-loader integration remain open. See
+[Stage 123R](STAGE123R_GUEST_LIBZ_ABI_PROVIDER.md).
