@@ -32,6 +32,9 @@ Android APIs.
 
 ## Validation
 
+- GitHub Actions host validation passed on 2026-11-13: 312 Python tests passed, native C translation-unit mock-header syntax checks passed, and the complete compiled host-test executable suite passed, including `test_re_guest_log_provider`.
+- Android ARM64 NDK build was started on the same Stage 123Q branch and is still pending at the time of this report.
+
 The existing Stage 123P host regression remains the primary test for provider
 binding, formatter behavior, guest memory access, and transactional rollback.
 The Android ARM64 workflow must compile and link the new NDK callback. A
