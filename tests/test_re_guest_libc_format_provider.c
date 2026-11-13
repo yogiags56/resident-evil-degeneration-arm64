@@ -122,7 +122,7 @@ int main(void) {
         /* Duplicate the exact requested name at two distinct ELF indices. */
         (void)strcpy(incomplete[1].name, "snprintf");
         assert(re_guest_libc_format_provider_bind_elf_symbols(&provider,
-            &rejected, incomplete, 2u, exports, 2u, &rejected_count,
+            &rejected, incomplete, 2u, exports, 3u, &rejected_count,
             &rejected_index) == RE_GUEST_LIBC_FORMAT_E_SYMBOL);
         assert(rejected.count == 0u && rejected_count == 0u);
         assert(rejected_index == 2u);
