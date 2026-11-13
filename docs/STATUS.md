@@ -191,7 +191,8 @@ now supports r0-r3 return values; this is necessary because RTABI32
 provider leaves SONAME/version-library identity unspecified rather than
 guessing `libgcc.so`. Host CI passed in run `43415885622` with 312 Python
 tests and all native regressions, including the new EABI provider test.
-Android ARM64 build and ELF verification are running on this branch.
+Android ARM64 build and ELF verification passed in run `43415890966`,
+including artifact upload.
 Invalid float-to-int operands use a deterministic saturating policy; exact
 original-runtime behavior remains unverified. See
 [Stage 123T](STAGE123T_ARM_EABI_COMPILER_HELPERS.md).
