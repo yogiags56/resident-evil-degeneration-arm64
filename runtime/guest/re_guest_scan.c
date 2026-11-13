@@ -116,6 +116,13 @@ int re_guest_scan_guest_sscanf(const S3EAAPCS32Frame *frame,
     if (input_consumed) *input_consumed = 0u;
     if (input_failure) *input_failure = 0;
     if (!frame || !bus || !bus->memory || !input || !format) return 0;
+    {
+        size_t input_len = 0u, format_len = 0u;
+        while (input_len < RE_GUEST_SCAN_FORMAT_CAP && input[input_len]) ++input_len;
+        while (format_len < RE_GUEST_SCAN_FORMAT_CAP && format[format_len]) ++format_len;
+        if (input_len == RE_GUEST_SCAN_FORMAT_CAP ||
+            format_len == RE_GUEST_SCAN_FORMAT_CAP) return 0;
+    }
     in = input; fp = format;
 
     while (*fp) {
