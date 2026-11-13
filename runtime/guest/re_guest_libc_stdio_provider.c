@@ -288,11 +288,11 @@ static REGUESTIMPORTStatus stdio_handler(
                         return RE_IMPORT_E_HANDLER;
                     }
                     if (got == 0) { f->eof = 1u; break; }
-                    if (input[n++] == '\\n' && n > 0u) {
+                    if (input[n++] == '\n' && n > 0u) {
                         /* Continue: scanf whitespace may span lines. */
                     }
                 }
-                input[n] = '\\0';
+                input[n] = '\0';
             }
         }
         ok = re_guest_scan_guest_sscanf(frame, (REGUESTMEMBUS *)bus, 2u,
@@ -306,7 +306,8 @@ static REGUESTIMPORTStatus stdio_handler(
             return RE_IMPORT_E_HANDLER;
         }
         if (f) {
-            if (consumed > (size_t)INT64_MAX || start_position > (uint64_t)INT64_MAX ||
+            if (start_position > (uint64_t)INT64_MAX ||
+                consumed > (size_t)((uint64_t)INT64_MAX - start_position) ||
                 p->backend.seek(p->backend_user, f->stream,
                     (int64_t)(start_position + consumed), 0) != 0) {
                 f->error = 1u;
