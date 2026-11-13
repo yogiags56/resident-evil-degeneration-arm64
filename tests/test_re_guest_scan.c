@@ -91,6 +91,67 @@ int main(void) {
     assert(!re_guest_scan_guest_sscanf(&frame, &bus, 2u,
         "1234", "%d", &assigned, &consumed, &input_failure));
 
+    /* Integer bases, prefixes, and unsigned destination widths. */
+    memset(&frame, 0, sizeof(frame));
+    frame.r[2] = base + 0x200u;
+    frame.r[3] = base + 0x204u;
+    assert(re_guest_scan_guest_sscanf(&frame, &bus, 2u,
+        "0x2a 052", "%i %o", &assigned, &consumed, &input_failure));
+    assert(assigned == 2u && consumed == 8u);
+    memcpy(&signed_value, guest + 0x200u, sizeof(signed_value));
+    assert(signed_value == 42);
+    memcpy(&unsigned_value, guest + 0x204u, sizeof(unsigned_value));
+    assert(unsigned_value == 42u);
+
+    /* Narrow integer stores follow the ARM32 C destination width. */
+    memset(&frame, 0, sizeof(frame));
+    frame.r[2] = base + 0x208u;
+    assert(re_guest_scan_guest_sscanf(&frame, &bus, 2u,
+        "255", "%hhu", &assigned, &consumed, &input_failure));
+    assert(assigned == 1u && guest[0x208u] == 255u);
+
+    /* Floating conversions consume only the successfully parsed prefix. */
+    memset(&frame, 0, sizeof(frame));
+    frame.r[2] = base + 0x210u;
+    assert(re_guest_scan_guest_sscanf(&frame, &bus, 2u,
+        "3.25tail", "%f", &assigned, &consumed, &input_failure));
+    {
+        float parsed = 0.0f;
+        memcpy(&parsed, guest + 0x210u, sizeof(parsed));
+        assert(parsed > 3.249f && parsed < 3.251f);
+    }
+    assert(assigned == 1u && consumed == 4u);
+
+    /* Suppressed bounded strings still consume input but no argument word. */
+    memset(&frame, 0, sizeof(frame));
+    frame.r[2] = base + 0x220u;
+    assert(re_guest_scan_guest_sscanf(&frame, &bus, 2u,
+        "abcdef 17", "%*3s %d", &assigned, &consumed, &input_failure));
+    assert(assigned == 1u && consumed == 9u);
+    memcpy(&signed_value, guest + 0x220u, sizeof(signed_value));
+    assert(signed_value == 17);
+
+    /* Inverted scanset stops at the first excluded byte. */
+    memset(&frame, 0, sizeof(frame));
+    frame.r[2] = base + 0x230u;
+    assert(re_guest_scan_guest_sscanf(&frame, &bus, 2u,
+        "hello,world", "%8[^,]", &assigned, &consumed, &input_failure));
+    assert(assigned == 1u && consumed == 5u);
+    assert(strcmp((char *)guest + 0x230u, "hello") == 0);
+
+    /* Partial matching failure preserves earlier successful assignments. */
+    memset(&frame, 0, sizeof(frame));
+    frame.r[2] = base + 0x240u;
+    assert(re_guest_scan_guest_sscanf(&frame, &bus, 2u,
+        "12 nope", "%d %d", &assigned, &consumed, &input_failure));
+    assert(assigned == 1u && consumed == 3u && !input_failure);
+    memcpy(&signed_value, guest + 0x240u, sizeof(signed_value));
+    assert(signed_value == 12);
+
+    /* A zero field width is a malformed format, not a matching failure. */
+    assert(!re_guest_scan_guest_sscanf(&frame, &bus, 2u,
+        "12", "%0d", &assigned, &consumed, &input_failure));
+
     (void)text;
     (void)chars;
     puts("Guest scanf parser tests: PASS");
