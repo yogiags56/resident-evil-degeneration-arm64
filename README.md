@@ -1,6 +1,6 @@
 # Resident Evil: Degeneration — Native ARM64 Port Research
 
-[![Stage](https://img.shields.io/badge/stage-123W-blue)](#project-status)
+[![Stage](https://img.shields.io/badge/stage-124D-blue)](#project-status)
 [![Platform](https://img.shields.io/badge/platform-Android%20ARM64-green)](#build-the-android-probe)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
@@ -45,6 +45,12 @@ Current confirmed foundations:
 - `s3eFileRead` argument capture/validation plus a backend-backed Stage 98 bridge and Stage 99 dispatcher integration; Stage 97 establishes its return unit as complete items, while exact partial-read/error semantics remain quarantined.
 - Python DTRZ attribute/location parser and LZMA-alone verifier/extractor for the observed profile.
 - Native C DTRZ metadata parser and read-only VFS, with optional `liblzma` LZMA-alone callback implementation.
+
+
+
+### Stage 124D — Guest `ungetc` pushback
+
+The guest libc stdio provider now exports `ungetc` through its exact ELF32 symbol index. A successful call prepends one byte to the bounded per-file unread buffer and clears EOF; subsequent reads consume it before backend data. The host regression exercises the guest Thumb trampoline, byte order, and EOF rejection. Production loader installation and original-game boot remain outstanding. See [Stage 124D report](docs/STAGE124D_UNGETC_PUSHBACK.md).
 
 ## Repository layout
 
