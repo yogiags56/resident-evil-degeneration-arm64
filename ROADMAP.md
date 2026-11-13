@@ -2,7 +2,7 @@
 
 ## Active milestone update — Stage 123T (ARM EABI compiler-helper provider)
 
-Stage 123T adds guest adapters for the 21 exact relocation-backed __aeabi_* imports in the original ELF32 manifest. It covers double/float arithmetic and comparisons, integer conversions, 32-bit signed/unsigned division and divmod, 64-bit multiplication, and __aeabi_ldivmod. The import dispatcher now supports four-register results (r0-r3). Host CI passed in run 43415885622; Android ARM64 build/ELF verification is pending. No libgcc.so SONAME is inferred. See docs/STAGE123T_ARM_EABI_COMPILER_HELPERS.md.
+Stage 123T adds guest adapters for the 21 exact relocation-backed __aeabi_* imports in the original ELF32 manifest. It covers double/float arithmetic and comparisons, integer conversions, 32-bit signed/unsigned division and divmod, 64-bit multiplication, and __aeabi_ldivmod. The import dispatcher now supports four-register results (r0-r3). Host CI passed in run 43415885622; Android ARM64 build and ELF verification passed in run 43415890966, including artifact upload. No libgcc.so SONAME is inferred. See docs/STAGE123T_ARM_EABI_COMPILER_HELPERS.md.
 
 ## Completed milestone — Stage 123S (guest C++ new/delete heap provider)
 
