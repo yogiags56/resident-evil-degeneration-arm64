@@ -1,6 +1,10 @@
 # Project Roadmap
 
-## Active milestone update — Stage 123V (guest libc memory and string provider)
+## Active milestone update — Stage 123W (guest libc formatted output)
+
+Stage 123W adds guest-callable snprintf and sprintf adapters and extracts a reusable AAPCS32 variadic formatter shared with the liblog provider. Register/stack argument ordering, even-word 64-bit alignment, truncation, zero-size output, dynamic width, and bounded destination writes are covered. Host CI passed in run 43418862945; Android ARM64 build and ELF verification passed in run 43418672203. Production loader installation and original Bionic output parity remain open. See docs/STAGE123W_GUEST_LIBC_FORMATTED_OUTPUT.md.
+
+## Completed milestone — Stage 123V (guest libc memory and string provider)
 
 Stage 123V adds 15 exact relocation-backed libc.so adapters for memcpy/memmove/memset, string length/comparison/copy/concatenation/search, atoi, and strtok. Bulk memory ranges are permission-checked and string scans are bounded. Host CI passed in run 43417968172; Android ARM64 build and ELF verification passed in run 43417396929. Production module-loader installation remains open. See docs/STAGE123V_GUEST_LIBC_MEMORY_STRING.md.
 
