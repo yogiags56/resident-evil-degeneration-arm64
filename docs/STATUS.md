@@ -1,6 +1,6 @@
 # Current Status
 
-**Current implementation milestone: Stage 123U — shared guest heap and libc allocation provider.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
+**Current implementation milestone: Stage 123V — guest libc memory and string provider.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
 
 Stage 123L adds a bounded guest DSO provider catalog for the Stage 123I/123K dynamic-loader bridge. It validates unique basename-only SONAMEs, resolves symbols only within the opened provider, tracks open references, and returns caller-supplied guest addresses without exposing host pointers. The standalone regression is wired into host tests and the Android CMake target. CI validation is pending; earlier failed GitHub Actions attempts did not expose downloadable logs or artifacts, so their failure cannot yet be attributed to source code. See [Stage 123L](STAGE123L_GUEST_DSO_PROVIDER_REGISTRY.md).
 
@@ -211,3 +211,18 @@ preservation, and no host-pointer exposure. Host CI passed in run
 `43416621992`, including artifact upload. Production heap reservation and
 lifetime integration remain open. See
 [Stage 123U](STAGE123U_SHARED_GUEST_HEAP_LIBC_ALLOC.md).
+
+
+## Stage 123V — Guest libc memory and string provider
+
+Added 15 exact relocation-backed `libc.so` adapters covering bulk
+`memcpy/memmove/memset`, string length/comparison/copy/concatenation/search,
+`atoi`, and stateful `strtok`. Bulk operations validate guest permissions
+and contiguous mappings; byte-oriented operations use the guest memory bus
+with checked 32-bit addresses and a 64 KiB scan cap. ASCII case folding,
+bounded integer parsing, and one continuation slot per provider define the
+compatibility policy. Host CI passed in run `43417968172` with 312 Python
+tests and all native regressions, including the new libc string provider
+test. Android ARM64 build and ELF verification passed in run
+`43417396929`. The production module loader does not yet install this
+provider. See [Stage 123V](STAGE123V_GUEST_LIBC_MEMORY_STRING.md).
