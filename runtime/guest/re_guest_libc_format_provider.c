@@ -4,10 +4,10 @@
 
 #include "re_guest_format.h"
 
-enum { FORMAT_SNPRINTF = 0u, FORMAT_SPRINTF = 1u };
+enum { FORMAT_SNPRINTF = 0u, FORMAT_SPRINTF = 1u, FORMAT_PRINTF = 2u };
 
 static const char *const k_names[RE_GUEST_LIBC_FORMAT_SYMBOL_COUNT] = {
-    "snprintf", "sprintf"
+    "snprintf", "sprintf", "printf"
 };
 
 static int read_guest_format(const REGUESTMEMBUS *bus, uint32_t address,
@@ -55,6 +55,11 @@ static REGUESTIMPORTStatus format_handler(
         size = UINT32_MAX;
         format_address = frame->r[1];
         first_word_index = 2u;
+    } else if (context->kind == FORMAT_PRINTF) {
+        destination = 0u;
+        size = 0u;
+        format_address = frame->r[0];
+        first_word_index = 1u;
     } else {
         return RE_IMPORT_E_HANDLER;
     }
@@ -63,6 +68,18 @@ static REGUESTIMPORTStatus format_handler(
         !re_guest_format_guest_printf(frame, bus, first_word_index, format,
             output, sizeof(output), &output_length))
         return RE_IMPORT_E_HANDLER;
+
+    if (context->kind == FORMAT_PRINTF) {
+        int written;
+        if (!provider->output || output_length > (size_t)INT32_MAX)
+            return RE_IMPORT_E_HANDLER;
+        written = provider->output(output, output_length, provider->output_user);
+        if (written < 0 || (size_t)written != output_length)
+            return RE_IMPORT_E_HANDLER;
+        result->r0 = (uint32_t)written;
+        result->r1 = result->r2 = result->r3 = 0u;
+        return RE_IMPORT_OK;
+    }
 
     if (context->kind == FORMAT_SPRINTF) {
         if (output_length >= UINT32_MAX) return RE_IMPORT_E_HANDLER;
@@ -119,6 +136,16 @@ REGUESTLIBCFormatStatus re_guest_libc_format_provider_init(
     for (size_t i = 0; i < RE_GUEST_LIBC_FORMAT_SYMBOL_COUNT; ++i)
         provider->contexts[i].provider = provider;
     provider->initialized = 1u;
+    return RE_GUEST_LIBC_FORMAT_OK;
+}
+
+REGUESTLIBCFormatStatus re_guest_libc_format_provider_set_output(
+    REGUESTLIBCFormatProvider *provider, REGUESTLIBCFormatOutput output,
+    void *user) {
+    if (!provider || !provider->initialized)
+        return RE_GUEST_LIBC_FORMAT_E_ARGUMENT;
+    provider->output = output;
+    provider->output_user = user;
     return RE_GUEST_LIBC_FORMAT_OK;
 }
 
