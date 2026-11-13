@@ -1,8 +1,6 @@
 #include "re_guest_libc_sscanf_provider.h"
 
 #include <ctype.h>
-#include <errno.h>
-#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -70,16 +68,6 @@ static int parse_width(const char **format, uint32_t *width, int *specified) {
     }
     *width = value;
     return 1;
-}
-
-static size_t integer_store_size(ScanLength length) {
-    switch (length) {
-        case SCAN_LEN_HH: return sizeof(int8_t);
-        case SCAN_LEN_H: return sizeof(int16_t);
-        case SCAN_LEN_LL: case SCAN_LEN_J: return sizeof(int64_t);
-        case SCAN_LEN_CAP_L: return 0u;
-        default: return sizeof(int32_t); /* ARM32 long/size_t are 32-bit. */
-    }
 }
 
 static int store_signed(const REGUESTMEMBUS *bus, uint32_t address,
@@ -231,7 +219,6 @@ static REGUESTIMPORTStatus sscanf_handler(
             if (!available) { input_failure = 1; break; }
             memcpy(token, input + in_pos, available);
             token[available] = '\0';
-            errno = 0;
             if (conversion == 'd' || conversion == 'i') {
                 long long value = strtoll(token, &end, base);
                 token_length = (size_t)(end - token);
