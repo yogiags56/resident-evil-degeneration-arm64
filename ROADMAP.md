@@ -1,6 +1,10 @@
 # Project Roadmap
 
-## Active milestone update — Stage 123U (shared guest heap and libc allocation provider)
+## Active milestone update — Stage 123V (guest libc memory and string provider)
+
+Stage 123V adds 15 exact relocation-backed libc.so adapters for memcpy/memmove/memset, string length/comparison/copy/concatenation/search, atoi, and strtok. Bulk memory ranges are permission-checked and string scans are bounded. Host CI passed in run 43417968172; Android ARM64 build and ELF verification passed in run 43417396929. Production module-loader installation remains open. See docs/STAGE123V_GUEST_LIBC_MEMORY_STRING.md.
+
+## Completed milestone — Stage 123U (shared guest heap and libc allocation provider)
 
 Stage 123U adds a bounded shared guest heap used by both the Stage 123S C++ new/delete provider and exact relocation-backed libc malloc/free/realloc/valloc imports. The heap tracks 512 allocations in host metadata, returns guest addresses only, supports 8-byte normal alignment and 4096-byte valloc alignment, and preserves old realloc blocks on failure. Cross-family free/reuse is covered by regression. Host CI passed in run 43416640694; Android ARM64 build and ELF verification passed in run 43416621992. Production heap arena reservation/lifetime remains open. See docs/STAGE123U_SHARED_GUEST_HEAP_LIBC_ALLOC.md.
 
