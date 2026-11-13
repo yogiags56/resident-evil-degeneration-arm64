@@ -48,6 +48,23 @@ static int store_integer(REGUESTMEMBUS *bus, uint32_t address,
     return guest_write(bus, address, out, n);
 }
 
+static int integer_fits_guest_destination(uint64_t bits,
+                                         ScanLength length,
+                                         int is_signed) {
+    unsigned width = 32u;
+    if (length == SCAN_LEN_HH) width = 8u;
+    else if (length == SCAN_LEN_H) width = 16u;
+    else if (length == SCAN_LEN_LL || length == SCAN_LEN_J) width = 64u;
+    if (width == 64u) return 1;
+    if (is_signed) {
+        int64_t value = (int64_t)bits;
+        int64_t min = -((int64_t)1 << (width - 1u));
+        int64_t max = ((int64_t)1 << (width - 1u)) - 1;
+        return value >= min && value <= max;
+    }
+    return (bits >> width) == 0u;
+}
+
 static int scanset_build(const char **format, uint8_t set[256]) {
     const unsigned char *p = (const unsigned char *)*format;
     int invert = 0, any = 0;
@@ -226,6 +243,10 @@ int re_guest_scan_guest_sscanf(const S3EAAPCS32Frame *frame,
             }
             if (!parse_integer(in, max, base, sign, &value, &used)) {
                 failed_input = (*in == '\0'); break;
+            }
+            if (!integer_fits_guest_destination(value, length, sign)) {
+                failed_input = 0;
+                break;
             }
             if (!suppress) {
                 uint32_t dst;
