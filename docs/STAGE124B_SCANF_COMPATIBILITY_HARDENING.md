@@ -15,8 +15,12 @@ regression coverage without changing the ARM32 guest ABI contract.
 - Reject out-of-range values as matching failures and do not write a truncated
   value into guest memory.
 - Extend tests for base-autodetect `%i`, octal `%o`, narrow unsigned stores,
-  floating-prefix conversion, suppressed string width, inverted scansets,
-  partial matching failure, malformed zero width, and integer overflow.
+  floating-prefix and `infinity` input, `%lf` double storage, suppressed
+  string width, inverted scansets, partial matching failure, malformed zero
+  width, and integer overflow.
+- Restore the correct guest EOF indicator after `fscanf` speculative lookahead:
+  reaching EOF beyond a complete match does not leave EOF set, while an actual
+  input failure during conversion does. Regression tests cover both cases.
 
 ## Important implementation contract
 
