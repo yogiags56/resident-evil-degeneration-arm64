@@ -24,7 +24,7 @@ static void call_import(REGUESTRuntime *runtime, uint32_t pointer,
 int main(void) {
     static uint8_t guest[0x10000];
     const uint32_t guest_base = 0x10000000u;
-    const uint32_t heap_base = guest_base + 0x4000u;
+    const uint32_t heap_base = guest_base + 0x4008u;
     REGUESTMEMORY memory;
     REGUESTMEMBUS bus;
     REGUESTIMPORTTable imports;
@@ -108,12 +108,18 @@ int main(void) {
     call_import(&runtime, cxx_exports[2].value, guest_base + 0xe0u,
                 grown_ptr, 0u);
 
-    /* valloc returns page-aligned guest memory; realloc(NULL,n) is malloc. */
-    call_import(&runtime, libc_exports[3].value, guest_base + 0x100u, 32u, 0u);
+    /* valloc must skip a live block that crosses its first page boundary. */
+    call_import(&runtime, libc_exports[0].value, guest_base + 0x100u, 4096u, 0u);
+    const uint32_t page_guard = runtime.cpu.r[0];
+    assert(page_guard == heap_base);
+    call_import(&runtime, libc_exports[3].value, guest_base + 0x120u, 32u, 0u);
     const uint32_t page_ptr = runtime.cpu.r[0];
     assert(page_ptr != 0u && (page_ptr & (RE_GUEST_HEAP_PAGE_ALIGNMENT - 1u)) == 0u);
-    call_import(&runtime, cxx_exports[3].value, guest_base + 0x120u,
+    assert(page_ptr >= page_guard + 4096u);
+    call_import(&runtime, cxx_exports[3].value, guest_base + 0x140u,
                 page_ptr, 0u);
+    call_import(&runtime, libc_exports[1].value, guest_base + 0x160u,
+                page_guard, 0u);
 
     call_import(&runtime, libc_exports[2].value, guest_base + 0x140u, 0u, 48u);
     const uint32_t realloc_null = runtime.cpu.r[0];
