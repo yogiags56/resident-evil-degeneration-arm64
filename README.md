@@ -598,3 +598,11 @@ mock header keeps translation-unit syntax checks independent of the Android
 SDK. This is bootstrap integration and synthetic dispatch coverage, not proof
 of the original APK's full DSO closure or game boot. See
 [Stage 123Q report](docs/STAGE123Q_ANDROID_LIBLOG_NDK_INTEGRATION.md).
+
+
+### Stage 123Q validation update — 2026-11-13
+
+Host CI passed: 312 Python tests, native C mock-header syntax checks, and all
+compiled host-test executables including the guest liblog provider regression.
+The Android ARM64 NDK build is running for this branch. This does not yet prove
+a device-side logcat result or original-game boot.
