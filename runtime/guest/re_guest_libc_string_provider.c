@@ -116,21 +116,26 @@ static REGUESTIMPORTStatus libc_string_handler(
     const S3EAAPCS32Frame *frame, const REGUESTMEMBUS *bus, void *user,
     REGUESTIMPORTResult *result) {
     REGUESTLIBCStringProvider *provider = NULL;
-    const LIBCStringContext *context = (const LIBCStringContext *)user;
+    const REGUESTLIBCStringContext *binding =
+        (const REGUESTLIBCStringContext *)user;
+    LIBCStringContext local_context;
+    const LIBCStringContext *context = &local_context;
+    LIBCStringKind kind;
     uint32_t dst, src, count, length, other_length, out;
     uint8_t a, b;
     void *host_dst = NULL, *host_src = NULL;
 
-    if (!frame || !bus || !bus->memory || !context || !result)
+    if (!frame || !bus || !bus->memory || !binding || !result)
         return RE_IMPORT_E_HANDLER;
-    /* The provider is supplied separately for strtok's saved continuation. */
-    provider = (REGUESTLIBCStringProvider *)((void **)context)[1];
+    kind = (LIBCStringKind)binding->kind;
+    local_context.kind = kind;
+    provider = binding->provider;
     result->r0 = result->r1 = result->r2 = result->r3 = 0u;
     dst = frame->r[0];
     src = frame->r[1];
     count = frame->r[2];
 
-    switch (context->kind) {
+    switch (kind) {
         case LIBC_MEMCPY:
         case LIBC_MEMMOVE:
             if (count) {
@@ -163,6 +168,11 @@ static REGUESTIMPORTStatus libc_string_handler(
         case LIBC_STRNCMP:
         case LIBC_STRCASECMP:
         case LIBC_STRNCASECMP:
+            if ((kind == LIBC_STRNCMP || kind == LIBC_STRNCASECMP) &&
+                count == 0u) {
+                result->r0 = 0u;
+                break;
+            }
             if (compare_strings(bus, dst, src,
                     (context->kind == LIBC_STRNCMP ||
                      context->kind == LIBC_STRNCASECMP) ? count : 0u,
@@ -252,8 +262,9 @@ static REGUESTIMPORTStatus libc_string_handler(
             uint32_t i = 0u;
             int negative = 0, have_digit = 0;
             uint64_t value = 0u;
-            if (!dst) return RE_IMPORT_E_HANDLER;
-            for (; i < RE_GUEST_LIBC_STRING_MAX_BYTES; ++i) {
+            if (!dst || !cstring_length(bus, dst, &length))
+                return RE_IMPORT_E_HANDLER;
+            for (; i < length; ++i) {
                 if (!read_byte(bus, dst, i, &a)) return RE_IMPORT_E_HANDLER;
                 if (!is_ascii_space(a)) break;
             }
@@ -261,7 +272,7 @@ static REGUESTIMPORTStatus libc_string_handler(
                 negative = (a == '-');
                 ++i;
             }
-            for (; i < RE_GUEST_LIBC_STRING_MAX_BYTES; ++i) {
+            for (; i < length; ++i) {
                 if (!read_byte(bus, dst, i, &a)) return RE_IMPORT_E_HANDLER;
                 if (a < '0' || a > '9') break;
                 have_digit = 1;
@@ -379,12 +390,10 @@ REGUESTLIBCStringStatus re_guest_libc_string_provider_bind_elf_symbols(
 
     backup = *imports;
     for (size_t i = 0; i < RE_GUEST_LIBC_STRING_SYMBOL_COUNT; ++i) {
-        /* Context includes a pointer to provider for strtok's continuation. */
-        void *handler_context[2] = {
-            (void *)&k_contexts[i], (void *)provider
-        };
+        provider->contexts[i].kind = (uint32_t)k_contexts[i].kind;
+        provider->contexts[i].provider = provider;
         if (re_guest_import_bind_mapped(imports, (uint32_t)indices[i],
-                libc_string_handler, handler_context, &pointers[i]) != RE_IMPORT_OK) {
+                libc_string_handler, &provider->contexts[i], &pointers[i]) != RE_IMPORT_OK) {
             *imports = backup;
             return RE_GUEST_LIBC_STRING_E_IMPORT;
         }
