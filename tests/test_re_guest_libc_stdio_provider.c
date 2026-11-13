@@ -66,6 +66,11 @@ static int64_t fake_tell(void *user, void *stream) {
     (void)user;
     return s && s->opened ? (int64_t)s->position : -1;
 }
+static int fake_flush(void *user, void *stream) {
+    FakeStream *s = (FakeStream *)stream;
+    (void)user;
+    return s && s->opened ? 0 : -1;
+}
 static int fake_close(void *user, void *stream) {
     FakeStream *s = (FakeStream *)stream;
     (void)user;
@@ -95,7 +100,8 @@ int main(void) {
     static uint8_t guest[0x4000];
     const uint32_t base = 0x10000000u;
     static const char *const names[RE_GUEST_LIBC_STDIO_SYMBOL_COUNT] = {
-        "fopen", "fclose", "fread", "fwrite", "fseek", "ftell", "fgets"
+        "fopen", "fclose", "fread", "fwrite", "fseek", "ftell", "fgets",
+        "fprintf", "feof", "ferror", "fflush"
     };
     REGUESTMEMORY memory;
     REGUESTMEMBUS bus;
@@ -103,9 +109,9 @@ int main(void) {
     REGUESTRuntime runtime;
     REGUESTLIBCStdioProvider provider;
     REGUESTLIBCStdioBackend backend = {
-        fake_open, fake_read, fake_write, fake_seek, fake_tell, fake_close
+        fake_open, fake_read, fake_write, fake_seek, fake_tell, fake_close, fake_flush
     };
-    REGUESTELF32LINKSYMBOL symbols[8] = {0};
+    REGUESTELF32LINKSYMBOL symbols[12] = {0};
     REGUESTSYMBOL exports[RE_GUEST_LIBC_STDIO_SYMBOL_COUNT];
     FakeStream stream = {{'a','b','c','d','e','f'}, 6u, 0u, 0u};
     size_t export_count = 0u, failed = 0u;
@@ -121,14 +127,16 @@ int main(void) {
     put_string(guest, 0x100u, "data.bin");
     put_string(guest, 0x120u, "r+");
     put_string(guest, 0x600u, "XY");
+    put_string(guest, 0x700u, "id=%d name=%s\\n");
+    put_string(guest, 0x740u, "guest");
 
     assert(re_guest_libc_stdio_provider_init(&provider, &backend, &stream) ==
            RE_GUEST_LIBC_STDIO_OK);
     assert(re_guest_import_table_init(&imports, 0x30000000u) == RE_IMPORT_OK);
     assert(re_guest_libc_stdio_provider_bind_elf_symbols(&provider, &imports,
-        symbols, 8u, exports, RE_GUEST_LIBC_STDIO_SYMBOL_COUNT,
+        symbols, 12u, exports, RE_GUEST_LIBC_STDIO_SYMBOL_COUNT,
         &export_count, &failed) == RE_GUEST_LIBC_STDIO_OK);
-    assert(export_count == RE_GUEST_LIBC_STDIO_SYMBOL_COUNT && failed == 8u);
+    assert(export_count == RE_GUEST_LIBC_STDIO_SYMBOL_COUNT && failed == 12u);
 
     re_guest_memory_init(&memory);
     assert(re_guest_memory_map_ex(&memory, base, sizeof(guest), guest,
@@ -168,6 +176,23 @@ int main(void) {
         base + 0x600u, 1u, 2u, handle);
     assert(runtime.cpu.r[0] == 2u);
     assert(memcmp(stream.bytes, "abcdXY", 6u) == 0);
+
+    /* fprintf uses the shared AAPCS32 formatter and writes through backend. */
+    call_import(&runtime, exports[7].value, base + 0xd0u,
+        handle, base + 0x700u, 17u, base + 0x740u);
+    assert(runtime.cpu.r[0] == 15u);
+    assert(memcmp(stream.bytes + 6u, "id=17 name=guest\\n", 15u) == 0);
+
+    /* fflush and stream status imports use the same opaque FILE token. */
+    call_import(&runtime, exports[10].value, base + 0xd8u,
+        handle, 0u, 0u, 0u);
+    assert(runtime.cpu.r[0] == 0u);
+    call_import(&runtime, exports[8].value, base + 0xdau,
+        handle, 0u, 0u, 0u);
+    assert(runtime.cpu.r[0] == 0u);
+    call_import(&runtime, exports[9].value, base + 0xdcu,
+        handle, 0u, 0u, 0u);
+    assert(runtime.cpu.r[0] == 0u);
 
     call_import(&runtime, exports[1].value, base + 0xe0u,
         handle, 0u, 0u, 0u);
