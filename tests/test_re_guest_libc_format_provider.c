@@ -11,7 +11,7 @@ static int test_output_sink(const char *bytes, size_t length, void *user) {
     TestSink *sink = (TestSink *)user;
     if (!sink || length >= sizeof(sink->bytes)) return -1;
     memcpy(sink->bytes, bytes, length);
-    sink->bytes[length] = '\\0';
+    sink->bytes[length] = '\0';
     sink->length = length;
     ++sink->calls;
     return (int)length;
