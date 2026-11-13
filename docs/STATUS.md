@@ -1,6 +1,6 @@
 # Current Status
 
-**Current implementation milestone: Stage 123V — guest libc memory and string provider.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
+**Current implementation milestone: Stage 123W — guest libc formatted output provider.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
 
 Stage 123L adds a bounded guest DSO provider catalog for the Stage 123I/123K dynamic-loader bridge. It validates unique basename-only SONAMEs, resolves symbols only within the opened provider, tracks open references, and returns caller-supplied guest addresses without exposing host pointers. The standalone regression is wired into host tests and the Android CMake target. CI validation is pending; earlier failed GitHub Actions attempts did not expose downloadable logs or artifacts, so their failure cannot yet be attributed to source code. See [Stage 123L](STAGE123L_GUEST_DSO_PROVIDER_REGISTRY.md).
 
@@ -211,6 +211,24 @@ preservation, and no host-pointer exposure. Host CI passed in run
 `43416621992`, including artifact upload. Production heap reservation and
 lifetime integration remain open. See
 [Stage 123U](STAGE123U_SHARED_GUEST_HEAP_LIBC_ALLOC.md).
+
+
+## Stage 123W — Guest libc formatted output
+
+Added bounded guest `libc.so` adapters for the exact relocation-backed
+`snprintf` and `sprintf` imports. The formatter reads guest strings through
+the checked memory bus, follows AAPCS32 variadic register/stack ordering,
+aligns 64-bit arguments to even word indices, and uses a fixed 2 KiB scratch
+buffer. `snprintf` preserves standard truncation and full-length return
+semantics; unsupported conversions, invalid pointers, unterminated inputs,
+and output overflow fail closed. The provider is included in the Android
+ARM64 CMake target and host regression runner. Tests cover register/stack
+arguments, truncation, zero-size output, 64-bit alignment, dynamic width,
+and missing/duplicate ELF symbol handling. Current Stage 123W host and
+Android ARM64 workflow validation must pass before this stage is marked
+validated. Production module-loader installation and original-game boot
+remain outstanding. See
+[Stage 123W](STAGE123W_GUEST_LIBC_FORMATTED_OUTPUT.md).
 
 
 ## Stage 123V — Guest libc memory and string provider
