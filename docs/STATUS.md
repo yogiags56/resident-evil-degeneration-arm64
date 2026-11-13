@@ -1,6 +1,6 @@
 # Current Status
 
-**Current implementation milestone: Stage 123S — guest C++ new/delete heap provider.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
+**Current implementation milestone: Stage 123T — ARM EABI compiler-helper provider.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
 
 Stage 123L adds a bounded guest DSO provider catalog for the Stage 123I/123K dynamic-loader bridge. It validates unique basename-only SONAMEs, resolves symbols only within the opened provider, tracks open references, and returns caller-supplied guest addresses without exposing host pointers. The standalone regression is wired into host tests and the Android CMake target. CI validation is pending; earlier failed GitHub Actions attempts did not expose downloadable logs or artifacts, so their failure cannot yet be attributed to source code. See [Stage 123L](STAGE123L_GUEST_DSO_PROVIDER_REGISTRY.md).
 
@@ -177,3 +177,21 @@ allocation, non-overlap, free/reuse, and out-of-space behavior. Android ARM64
 build and ELF verification also passed in run `43413952565`. C++ exception semantics, C malloc/free, and
 production heap lifecycle integration remain open. See
 [Stage 123S](STAGE123S_GUEST_CXX_HEAP_PROVIDER.md).
+
+
+## Stage 123T — ARM EABI compiler-helper provider
+
+Added a bounded guest provider for the 21 relocation-backed `__aeabi_*`
+symbols in the original ELF32 import manifest. It implements the audited
+base-standard/core-register calling convention for double/float arithmetic,
+comparisons, conversions, signed/unsigned 32-bit division and divmod, 64-bit
+multiplication, and 64-bit signed divmod. The shared import result/dispatcher
+now supports r0-r3 return values; this is necessary because RTABI32
+`__aeabi_ldivmod` returns quotient in r0/r1 and remainder in r2/r3. The
+provider leaves SONAME/version-library identity unspecified rather than
+guessing `libgcc.so`. Host CI passed in run `43415885622` with 312 Python
+tests and all native regressions, including the new EABI provider test.
+Android ARM64 build and ELF verification are running on this branch.
+Invalid float-to-int operands use a deterministic saturating policy; exact
+original-runtime behavior remains unverified. See
+[Stage 123T](STAGE123T_ARM_EABI_COMPILER_HELPERS.md).
