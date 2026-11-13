@@ -24,6 +24,36 @@ static int guest_cstring(const REGUESTMEMBUS *bus, uint32_t address,
     return 0;
 }
 
+static int normalize_path(const char *input, char output[RE_GUEST_LIBC_STDIO_MAX_PATH]) {
+    size_t i = 0u, out = 0u;
+    if (!input || !output || !input[0] ||
+        input[0] == '/' || input[0] == '\\\\') return 0;
+    while (input[i]) {
+        size_t start, length;
+        while (input[i] == '/' || input[i] == '\\\\') ++i;
+        if (!input[i]) break;
+        start = i;
+        while (input[i] && input[i] != '/' && input[i] != '\\\\') {
+            if (input[i] == ':') return 0;
+            ++i;
+        }
+        length = i - start;
+        if (!length || (length == 1u && input[start] == '.')) continue;
+        if (length == 2u && input[start] == '.' && input[start + 1u] == '.')
+            return 0;
+        if (out) {
+            if (out + 1u >= RE_GUEST_LIBC_STDIO_MAX_PATH) return 0;
+            output[out++] = '/';
+        }
+        if (length >= RE_GUEST_LIBC_STDIO_MAX_PATH - out) return 0;
+        memcpy(output + out, input + start, length);
+        out += length;
+    }
+    if (!out) return 0;
+    output[out] = '\\0';
+    return 1;
+}
+
 static int parse_mode(const char *mode, uint8_t *readable,
                       uint8_t *writable, uint8_t *append) {
     size_t n;
@@ -80,17 +110,19 @@ static REGUESTIMPORTStatus stdio_handler(
     switch (ctx->kind) {
     case STDIO_FOPEN: {
         char path[RE_GUEST_LIBC_STDIO_MAX_PATH];
+        char normalized[RE_GUEST_LIBC_STDIO_MAX_PATH];
         char mode[RE_GUEST_LIBC_STDIO_MAX_MODE];
         uint8_t rd, wr, ap;
         size_t i;
         void *stream;
         if (!guest_cstring(bus, a, path, sizeof(path)) ||
             !guest_cstring(bus, b, mode, sizeof(mode)) ||
+            !normalize_path(path, normalized) ||
             !parse_mode(mode, &rd, &wr, &ap)) return RE_IMPORT_E_HANDLER;
         for (i = 0; i < RE_GUEST_LIBC_STDIO_MAX_FILES; ++i)
             if (!p->files[i].active) break;
         if (i == RE_GUEST_LIBC_STDIO_MAX_FILES) return RE_IMPORT_E_HANDLER;
-        stream = p->backend.open(p->backend_user, path, mode);
+        stream = p->backend.open(p->backend_user, normalized, mode);
         if (!stream) return RE_IMPORT_OK;
         {
             uint16_t generation = (uint16_t)(p->next_generation++ & 0x7ffu);
