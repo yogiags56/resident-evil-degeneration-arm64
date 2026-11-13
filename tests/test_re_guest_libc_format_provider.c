@@ -72,6 +72,44 @@ int main(void) {
     assert(strcmp(exports[1].name, "sprintf") == 0);
     assert(strcmp(exports[0].version_library, "libc.so") == 0);
 
+    /* Missing/ambiguous symbol diagnostics must be deterministic and atomic. */
+    {
+        REGUESTELF32LINKSYMBOL incomplete[2] = {0};
+        REGUESTIMPORTTable rejected;
+        REGUESTSYMBOL before[2];
+        size_t rejected_count = 99u;
+        size_t rejected_index = 99u;
+        memcpy(before, exports, sizeof(before));
+        (void)strcpy(incomplete[1].name, "snprintf");
+        incomplete[1].section_index = 0u;
+        incomplete[1].binding = RE_GUEST_STB_GLOBAL;
+        incomplete[1].type = 2u;
+        incomplete[1].visibility = RE_GUEST_STV_DEFAULT;
+        assert(re_guest_import_table_init(&rejected, 0x31000000u) == RE_IMPORT_OK);
+        assert(re_guest_libc_format_provider_bind_elf_symbols(&provider,
+            &rejected, incomplete, 2u, exports, 2u, &rejected_count,
+            &rejected_index) == RE_GUEST_LIBC_FORMAT_E_SYMBOL);
+        assert(rejected.count == 0u && rejected_count == 0u);
+        assert(rejected_index == 2u);
+        assert(memcmp(exports, before, sizeof(before)) == 0);
+
+        incomplete[2 - 1].name[0] = '\\0';
+        (void)strcpy(incomplete[1].name, "sprintf");
+        (void)strcpy(incomplete[0].name, "snprintf");
+        incomplete[0].section_index = 0u;
+        incomplete[0].binding = RE_GUEST_STB_GLOBAL;
+        incomplete[0].type = 2u;
+        incomplete[0].visibility = RE_GUEST_STV_DEFAULT;
+        /* Duplicate the exact requested name at two distinct ELF indices. */
+        (void)strcpy(incomplete[1].name, "snprintf");
+        assert(re_guest_libc_format_provider_bind_elf_symbols(&provider,
+            &rejected, incomplete, 2u, exports, 2u, &rejected_count,
+            &rejected_index) == RE_GUEST_LIBC_FORMAT_E_SYMBOL);
+        assert(rejected.count == 0u && rejected_count == 0u);
+        assert(rejected_index == 2u);
+        assert(memcmp(exports, before, sizeof(before)) == 0);
+    }
+
     re_guest_memory_init(&memory);
     assert(re_guest_memory_map_ex(&memory, base, sizeof(guest), guest,
         RE_GUEST_MEM_READ | RE_GUEST_MEM_WRITE | RE_GUEST_MEM_EXEC,
