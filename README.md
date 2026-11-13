@@ -707,3 +707,16 @@ checks exact emitted bytes and the return count. Host CI passed in run
 `43419241484`. This does not yet provide a production Android stdout
 destination or original-game boot. See
 [Stage 123X report](docs/STAGE123X_GUEST_LIBC_PRINTF_OUTPUT_SINK.md).
+
+
+## Stage 123Y — Guest libc stdio and file I/O foundation
+
+Added a guest-owned opaque FILE-token provider for the original module's
+relocation-backed `fopen`, `fclose`, `fread`, `fwrite`, `fseek`,
+`ftell`, and `fgets` imports. The provider delegates through a bounded
+backend vtable, validates guest memory spans, rejects absolute/traversal
+paths, and never exposes host FILE pointers. A guest-dispatch host regression
+is registered and the provider is included in the Android ARM64 target.
+Final-head CI is pending; production loader wiring, writable Android storage,
+`fprintf`, and game boot are not claimed. See
+[Stage 123Y report](docs/STAGE123Y_GUEST_LIBC_STDIO_FILE_IO.md).
