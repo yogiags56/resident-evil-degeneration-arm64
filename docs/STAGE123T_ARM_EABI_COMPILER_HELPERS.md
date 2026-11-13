@@ -84,6 +84,13 @@ arithmetic and comparisons, integer conversions, signed/unsigned division,
 32-bit divmod, 64-bit multiplication, and 64-bit divmod's r0-r3 return shape.
 It also checks the chosen divide-by-zero behavior.
 
+Host CI passed in run `43415885622`: 312 Python tests, native C mock-header
+syntax checks, and all compiled host regressions, including
+`Guest ARM EABI provider tests: PASS`. Android ARM64 build and ELF
+verification passed in run `43415890966`, including the app build, ELF
+verification, and build-artifact upload. These are compile/regression results;
+no original-game execution or device-side ABI validation is claimed.
+
 Reference: Arm, [Run-time ABI for the Arm Architecture (RTABI32)](https://github.com/ARM-software/abi-aa/blob/main/rtabi32/rtabi32.rst),
 especially sections 5.1, 5.2, and 5.3.1–5.3.2.
 
