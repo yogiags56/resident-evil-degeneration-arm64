@@ -1,6 +1,6 @@
 # Current Status
 
-**Current implementation milestone: Stage 123Y — guest libc stdio and file I/O foundation.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
+**Current implementation milestone: Stage 123Z — guest libc formatted file output and stream status.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
 
 Stage 123L adds a bounded guest DSO provider catalog for the Stage 123I/123K dynamic-loader bridge. It validates unique basename-only SONAMEs, resolves symbols only within the opened provider, tracks open references, and returns caller-supplied guest addresses without exposing host pointers. The standalone regression is wired into host tests and the Android CMake target. CI validation is pending; earlier failed GitHub Actions attempts did not expose downloadable logs or artifacts, so their failure cannot yet be attributed to source code. See [Stage 123L](STAGE123L_GUEST_DSO_PROVIDER_REGISTRY.md).
 
@@ -274,3 +274,16 @@ Android ARM64 CMake target. Host CI passed in run `43420175068`. Android ARM64 a
 verification, artifact collection, and upload passed in run `43420138210`. Production module-loader wiring, a writable Android backend,
 `fprintf`, and original-game file access remain outstanding. See
 [Stage 123Y](STAGE123Y_GUEST_LIBC_STDIO_FILE_IO.md).
+
+
+## Stage 123Z — Guest libc formatted file output and stream status
+
+Extended the guest stdio provider from seven to eleven exact ELF imports.
+Added `fprintf` through the bounded shared AAPCS32 formatter, plus
+`feof`, `ferror`, and `fflush`. Stream state tracks EOF and errors;
+successful seek clears EOF, backend failures set error, and writable close
+flushes when the backend supports it. The host regression now exercises
+formatted file output and stream state transitions through the real guest
+import dispatcher. Host and Android ARM64 CI for this revision are pending.
+`fscanf` and `sscanf` are explicitly deferred for a dedicated bounded
+scanf parser. See [Stage 123Z](STAGE123Z_GUEST_LIBC_FORMATTED_FILE_IO.md).
