@@ -59,6 +59,7 @@ int main(void) {
 
     (void)strcpy(symbols[1].name, names[0]);
     (void)strcpy(symbols[2].name, names[1]);
+    (void)strcpy(symbols[3].name, names[2]);
     for (size_t i = 1u; i <= 3u; ++i) {
         symbols[i].section_index = 0u;
         symbols[i].binding = RE_GUEST_STB_GLOBAL;
@@ -120,7 +121,7 @@ int main(void) {
             &rejected, incomplete, 3u, exports, 3u, &rejected_count,
             &rejected_index) == RE_GUEST_LIBC_FORMAT_E_SYMBOL);
         assert(rejected.count == 0u && rejected_count == 0u);
-        assert(rejected_index == 2u);
+        assert(rejected_index == 3u);
         assert(memcmp(exports, before, sizeof(before)) == 0);
     }
 
