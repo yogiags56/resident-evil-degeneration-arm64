@@ -93,7 +93,11 @@ static void call_import(REGUESTRuntime *runtime, uint32_t pointer,
     runtime->cpu.r[2] = r2;
     runtime->cpu.r[3] = r3;
     assert(re_guest_runtime_step(runtime) == RE_RUNTIME_OK);
-    assert(runtime->cpu.r[15] == return_address);
+    if (runtime->cpu.r[15] != return_address) {
+        fprintf(stderr, "import dispatch mismatch: thunk=%08x expected=%08x actual=%08x r0=%08x\\n",
+                pointer, return_address, runtime->cpu.r[15], runtime->cpu.r[0]);
+        assert(runtime->cpu.r[15] == return_address);
+    }
 }
 
 int main(void) {
