@@ -1,6 +1,6 @@
 # Current Status
 
-**Current implementation milestone: Stage 123R — guest libz ABI provider.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
+**Current implementation milestone: Stage 123S — guest C++ new/delete heap provider.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
 
 Stage 123L adds a bounded guest DSO provider catalog for the Stage 123I/123K dynamic-loader bridge. It validates unique basename-only SONAMEs, resolves symbols only within the opened provider, tracks open references, and returns caller-supplied guest addresses without exposing host pointers. The standalone regression is wired into host tests and the Android CMake target. CI validation is pending; earlier failed GitHub Actions attempts did not expose downloadable logs or artifacts, so their failure cannot yet be attributed to source code. See [Stage 123L](STAGE123L_GUEST_DSO_PROVIDER_REGISTRY.md).
 
@@ -165,3 +165,15 @@ verification passed in run `43413417668`, including native zlib linkage and
 artifact upload. The provider has not yet been exercised by the original
 game on a physical device. The original game's full DSO dependency closure
 and boot remain unverified.
+
+
+## Stage 123S — guest C++ new/delete heap provider
+
+Added exact ELF32 symbol-index bindings for `_Znwj`, `_Znaj`, `_ZdlPv`,
+and `_ZdaPv`. The provider allocates 8-byte-aligned blocks from a dedicated
+guest RW arena using bounded host-side metadata; returned values are guest
+addresses, never host pointers. The host regression passed, including
+allocation, non-overlap, free/reuse, and out-of-space behavior. Android ARM64
+build validation is pending. C++ exception semantics, C malloc/free, and
+production heap lifecycle integration remain open. See
+[Stage 123S](STAGE123S_GUEST_CXX_HEAP_PROVIDER.md).
