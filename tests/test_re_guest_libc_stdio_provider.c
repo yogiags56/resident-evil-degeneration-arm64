@@ -180,8 +180,8 @@ int main(void) {
     /* fprintf uses the shared AAPCS32 formatter and writes through backend. */
     call_import(&runtime, exports[7].value, base + 0xd0u,
         handle, base + 0x700u, 17u, base + 0x740u);
-    assert(runtime.cpu.r[0] == 15u);
-    assert(memcmp(stream.bytes + 6u, "id=17 name=guest\\n", 15u) == 0);
+    assert(runtime.cpu.r[0] == 17u);
+    assert(memcmp(stream.bytes + 6u, "id=17 name=guest\n", 17u) == 0);
 
     /* fflush and stream status imports use the same opaque FILE token. */
     call_import(&runtime, exports[10].value, base + 0xd8u,
