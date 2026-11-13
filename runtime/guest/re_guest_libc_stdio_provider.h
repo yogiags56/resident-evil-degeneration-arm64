@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-#define RE_GUEST_LIBC_STDIO_SYMBOL_COUNT 7u
+#define RE_GUEST_LIBC_STDIO_SYMBOL_COUNT 11u
 #define RE_GUEST_LIBC_STDIO_MAX_FILES 32u
 #define RE_GUEST_LIBC_STDIO_MAX_PATH 512u
 #define RE_GUEST_LIBC_STDIO_MAX_MODE 8u
@@ -25,6 +25,7 @@ typedef struct {
     int (*seek)(void *user, void *stream, int64_t offset, int whence);
     int64_t (*tell)(void *user, void *stream);
     int (*close)(void *user, void *stream);
+    int (*flush)(void *user, void *stream); /* Optional; NULL means unbuffered. */
 } REGUESTLIBCStdioBackend;
 
 typedef struct {
@@ -34,6 +35,8 @@ typedef struct {
     uint8_t readable;
     uint8_t writable;
     uint8_t append;
+    uint8_t eof;
+    uint8_t error;
 } REGUESTLIBCStdioFile;
 
 typedef struct REGUESTLIBCStdioProvider REGUESTLIBCStdioProvider;
