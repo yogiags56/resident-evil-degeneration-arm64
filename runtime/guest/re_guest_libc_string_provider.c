@@ -43,7 +43,7 @@ static int write_byte(const REGUESTMEMBUS *bus, uint32_t base,
                       uint32_t offset, uint8_t value) {
     uint32_t address;
     return add_address(base, offset, &address) &&
-           re_guest_memory_write8(bus, address, value) == RE_GUEST_MEM_OK;
+           re_guest_memory_write8((REGUESTMEMBUS *)bus, address, value) == RE_GUEST_MEM_OK;
 }
 
 static int cstring_length(const REGUESTMEMBUS *bus, uint32_t address,
