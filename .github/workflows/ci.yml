@@ -24,7 +24,7 @@ jobs:
       - name: Install Clang and liblzma
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang liblzma-dev pkg-config
+          sudo apt-get install -y clang liblzma-dev zlib1g-dev pkg-config
 
       - name: Run host tests
         shell: bash
