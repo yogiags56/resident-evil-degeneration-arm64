@@ -301,9 +301,11 @@ coverage are included. CI validation is pending. See
 
 ## Stage 124B — Scanf compatibility hardening
 
-Hardened floating modifier validation and integer destination-width range
-checks. Expanded scanner regression coverage for integer bases, narrow
-unsigned values, floating prefixes, suppressed fields, inverted scansets,
-partial matching failures, malformed widths, and integer overflow. Latest
-host and Android ARM64 CI validation is pending. See
+Hardened floating modifier validation, full infinity/NaN input token
+collection, integer destination-width range checks, and fscanf EOF state
+after speculative lookahead. Expanded regression coverage for integer bases,
+narrow unsigned values, floating prefixes and infinity, %lf double storage,
+suppressed fields, inverted scansets, partial matching failures, malformed
+widths, integer overflow, and stream EOF behavior. Latest host and Android
+ARM64 CI validation is pending. See
 [Stage 124B](STAGE124B_SCANF_COMPATIBILITY_HARDENING.md).
