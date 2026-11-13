@@ -60,7 +60,6 @@ int main(void) {
     REGUESTSYMBOL exports[2];
     MockLog mock = {0};
     size_t export_count = 0, failed = 0;
-    uint32_t print_pointer = 0, write_pointer = 0;
 
     strcpy(elf_symbols[1].name, "__android_log_print");
     elf_symbols[1].section_index = 0u;
