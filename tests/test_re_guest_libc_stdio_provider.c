@@ -203,7 +203,7 @@ int main(void) {
     assert(runtime.cpu.r[0] == 0u);
 
     /* sscanf parses a guest string and writes only to validated guest spans. */
-    call_import(&runtime, exports[11].value, base + 0xdbu,
+    call_import(&runtime, exports[11].value, base + 0xe2u,
         base + 0x780u, base + 0x7a0u, base + 0x900u, base + 0x920u);
     assert(runtime.cpu.r[0] == 2u);
     assert((int32_t)*(uint32_t *)(void *)(guest + 0x900u) == 99);
@@ -213,7 +213,7 @@ int main(void) {
     memcpy(stream.bytes, "123 cats", 8u);
     stream.length = 8u;
     stream.position = 0u;
-    call_import(&runtime, exports[12].value, base + 0xddu,
+    call_import(&runtime, exports[12].value, base + 0xe4u,
         handle, base + 0x7a0u, base + 0x940u, base + 0x960u);
     assert(runtime.cpu.r[0] == 2u);
     assert((int32_t)*(uint32_t *)(void *)(guest + 0x940u) == 123);
