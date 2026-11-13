@@ -267,6 +267,7 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
   -o build/host-tests/test_re_guest_scan
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_libc_stdio_provider.c \
   runtime/guest/re_guest_libc_stdio_provider.c runtime/guest/re_guest_format.c \
+  runtime/guest/re_guest_scan.c \
   runtime/guest/re_guest_imports.c runtime/guest/re_guest_runtime.c \
   runtime/guest/s3e_aapcs32.c \
   runtime/guest/re_guest_cpu.c runtime/guest/re_guest_memory.c \
