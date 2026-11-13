@@ -255,10 +255,10 @@ int re_guest_scan_guest_sscanf(const S3EAAPCS32Frame *frame,
             if (!n) { failed_input = (*in == '\0'); break; }
             token[n] = '\0'; errno = 0; value = strtod(token, &end);
             if (end == token || errno == ERANGE) { failed_input = 0; break; }
+            if (length != SCAN_LEN_NONE && length != SCAN_LEN_L) return 0;
             if (!suppress) {
                 uint32_t dst;
                 if (!get_arg(frame, &arg_index, &dst)) return 0;
-                if (length != SCAN_LEN_NONE && length != SCAN_LEN_L) return 0;
                 if (length == SCAN_LEN_L) {
                     uint64_t bits; memcpy(&bits, &value, sizeof(bits));
                     if (!guest_write(bus, dst, &bits, sizeof(bits))) return 0;
