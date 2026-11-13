@@ -28,6 +28,8 @@ typedef enum {
 typedef struct {
     uint32_t r0;
     uint32_t r1;
+    uint32_t r2;
+    uint32_t r3;
 } REGUESTIMPORTResult;
 
 typedef REGUESTIMPORTStatus (*REGUESTIMPORTHandler)(
@@ -84,7 +86,7 @@ REGUESTIMPORTStatus re_guest_import_patch_slot(const REGUESTIMPORTTable *table,
                                                 uint32_t slot_address);
 
 /* If cpu->r[15] is a registered trampoline address, marshal AAPCS32 args,
- * call its native handler, set r0/r1, and return through guest LR.
+ * call its native handler, set r0-r3, and return through guest LR.
  * Returns RE_IMPORT_E_UNBOUND for unregistered virtual trampoline PCs.
  */
 int re_guest_import_is_trampoline_pc(const REGUESTIMPORTTable *table,
