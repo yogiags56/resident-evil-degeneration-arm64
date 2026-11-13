@@ -83,14 +83,14 @@ guest stream size, and rejects an unknown state token.
 
 Host CI passed on 2026-11-13: 312 Python tests, native C mock-header syntax
 checks, and all compiled host regressions including
-`Guest libz provider tests: PASS`. The Android ARM64 build including this
-provider is running separately; no device-side zlib call or original-game
-boot is claimed by this document.
+`Guest libz provider tests: PASS`. The Android ARM64 build including this provider passed in run
+`43413417668` on source commit `dea7a2b`; host CI passed in run
+`43413431936` on source commit `79680eb`. No device-side zlib call or
+original-game boot is claimed by this document.
 
 ## Next
 
-1. Complete the Android ARM64 build and verify the shared object links to
-   Android's native `libz`.
+1. Perform device-side validation of the linked Android native `libz` adapter.
 2. Validate the exact original zlib ABI/version assumptions against the
    original SDK/runtime evidence.
 3. Add provider installation to the real ELF32 module-load lifecycle only
