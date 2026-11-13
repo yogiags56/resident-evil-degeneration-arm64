@@ -3,10 +3,14 @@
 #include <limits.h>
 #include <string.h>
 
+#include "re_guest_format.h"
+
 enum { STDIO_FOPEN, STDIO_FCLOSE, STDIO_FREAD, STDIO_FWRITE,
-       STDIO_FSEEK, STDIO_FTELL, STDIO_FGETS };
+       STDIO_FSEEK, STDIO_FTELL, STDIO_FGETS, STDIO_FPRINTF,
+       STDIO_FEOF, STDIO_FERROR, STDIO_FFLUSH };
 static const char *const k_names[RE_GUEST_LIBC_STDIO_SYMBOL_COUNT] = {
-    "fopen", "fclose", "fread", "fwrite", "fseek", "ftell", "fgets"
+    "fopen", "fclose", "fread", "fwrite", "fseek", "ftell", "fgets",
+    "fprintf", "feof", "ferror", "fflush"
 };
 
 static int guest_cstring(const REGUESTMEMBUS *bus, uint32_t address,
@@ -165,8 +169,12 @@ static REGUESTIMPORTStatus stdio_handler(
             transferred = p->backend.read(p->backend_user, f->stream, host, total);
         else
             transferred = p->backend.write(p->backend_user, f->stream, host, total);
-        if (transferred < 0 || (uint64_t)transferred > total)
+        if (transferred < 0 || (uint64_t)transferred > total) {
+            f->error = 1u;
             return RE_IMPORT_E_HANDLER;
+        }
+        if (ctx->kind == STDIO_FREAD && (uint64_t)transferred < total)
+            f->eof = 1u;
         result->r0 = (uint32_t)((uint64_t)transferred / b);
         break;
     }
@@ -205,8 +213,8 @@ static REGUESTIMPORTStatus stdio_handler(
         }
         while (written + 1u < count) {
             int64_t got = p->backend.read(p->backend_user, f->stream, &byte, 1u);
-            if (got < 0 || got > 1) return RE_IMPORT_E_HANDLER;
-            if (got == 0) break;
+            if (got < 0 || got > 1) { f->error = 1u; return RE_IMPORT_E_HANDLER; }
+            if (got == 0) { f->eof = 1u; break; }
             ((char *)host)[written++] = (char)byte;
             if (byte == (uint8_t)'\n') break;
         }
@@ -217,6 +225,56 @@ static REGUESTIMPORTStatus stdio_handler(
         }
         break;
     }
+    case STDIO_FPRINTF: {
+        char format[RE_GUEST_FORMAT_STRING_CAP];
+        char output[RE_GUEST_FORMAT_OUTPUT_CAP];
+        size_t length = 0u;
+        int64_t written;
+        f = resolve_file(p, a);
+        if (!f || !f->writable) return RE_IMPORT_E_HANDLER;
+        if (!guest_cstring(bus, b, format, sizeof(format)) ||
+            !re_guest_format_guest_printf(frame, bus, 2u, format,
+                output, sizeof(output), &length)) {
+            f->error = 1u;
+            return RE_IMPORT_E_HANDLER;
+        }
+        if (length) {
+            written = p->backend.write(p->backend_user, f->stream, output, length);
+            if (written < 0 || (uint64_t)written != length) {
+                f->error = 1u;
+                return RE_IMPORT_E_HANDLER;
+            }
+        }
+        result->r0 = (uint32_t)length;
+        break;
+    }
+    case STDIO_FEOF:
+    case STDIO_FERROR:
+        f = resolve_file(p, a);
+        if (!f) return RE_IMPORT_E_HANDLER;
+        result->r0 = ctx->kind == STDIO_FEOF ? (uint32_t)f->eof : (uint32_t)f->error;
+        break;
+    case STDIO_FFLUSH:
+        if (a == 0u) {
+            if (p->backend.flush) {
+                for (size_t i = 0; i < RE_GUEST_LIBC_STDIO_MAX_FILES; ++i) {
+                    REGUESTLIBCStdioFile *open_file = &p->files[i];
+                    if (open_file->active && open_file->stream &&
+                        p->backend.flush(p->backend_user, open_file->stream) != 0) {
+                        open_file->error = 1u;
+                        result->r0 = (uint32_t)-1;
+                    }
+                }
+            }
+        } else {
+            f = resolve_file(p, a);
+            if (!f) return RE_IMPORT_E_HANDLER;
+            if (p->backend.flush && p->backend.flush(p->backend_user, f->stream) != 0) {
+                f->error = 1u;
+                result->r0 = (uint32_t)-1;
+            }
+        }
+        break;
     default:
         return RE_IMPORT_E_HANDLER;
     }
