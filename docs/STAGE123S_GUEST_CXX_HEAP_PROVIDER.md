@@ -29,8 +29,9 @@ the same exact-address release path.
 
 ## Deliberate limitations
 
-- This provider does not implement the C `malloc/free/realloc` family. Those
-  remain separate libc provider work.
+- At the original Stage 123S checkpoint, C `malloc/free/realloc` were not
+  connected. Stage 123U supersedes the separate allocator internals with a
+  shared guest heap and adds libc `malloc/free/realloc/valloc` adapters.
 - On allocation failure, new returns a null guest pointer. It does not throw
   `std::bad_alloc`; the C++ exception/unwind ABI is not implemented here.
 - Sized delete, nothrow new, aligned new/delete, placement new, and other
@@ -61,7 +62,16 @@ runtime or heap lifecycle is compatible.
 
 1. Complete Android ARM64 compilation and ELF verification for this provider.
 2. Establish the guest heap arena's ownership and lifetime in the ELF32 loader.
-3. Reconcile new/delete with the future libc malloc/free provider so allocations
-   cannot be freed by the wrong heap.
+3. Reserve the shared heap arena in the guest runtime and validate its
+   lifetime across DSO constructors/destructors. Stage 123U now makes C++
+   new/delete and libc malloc/free use the same allocation records.
 4. Add exact C++ ABI exception and allocation-failure handling only if the
    original binary demonstrates that those paths are required.
+
+
+## Stage 123U follow-up
+
+The C++ provider now delegates to the shared `REGUESTHEAP` implementation.
+The libc provider uses the same heap records, so `free` and `delete` can
+release allocations from either family. See
+[Stage 123U](STAGE123U_SHARED_GUEST_HEAP_LIBC_ALLOC.md).
