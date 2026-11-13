@@ -693,3 +693,16 @@ regressions. Android ARM64 build and ELF verification passed in run
 `43418672203`. Production module-loader installation and original Bionic
 format parity remain outstanding. See
 [Stage 123W report](docs/STAGE123W_GUEST_LIBC_FORMATTED_OUTPUT.md).
+
+
+## Stage 123X — Guest libc printf output sink
+
+Extended the formatted-output provider with the original DSO's
+relocation-backed `printf` import. The guest format pointer is read from r0;
+variadic arguments begin at r1 and are decoded with the shared AAPCS32
+formatter. Output is delivered to a caller-supplied sink callback, never
+through a guest pointer interpreted as host stdio state. The regression
+checks exact emitted bytes and the return count. CI validation is pending;
+this does not yet provide a production Android stdout destination or
+original-game boot. See
+[Stage 123X report](docs/STAGE123X_GUEST_LIBC_PRINTF_OUTPUT_SINK.md).
