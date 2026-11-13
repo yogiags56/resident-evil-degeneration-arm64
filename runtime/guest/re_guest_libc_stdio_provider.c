@@ -213,11 +213,15 @@ static REGUESTIMPORTStatus stdio_handler(
     case STDIO_FSEEK: {
         int64_t offset = (int32_t)b;
         f = resolve_file(p, a);
-        if (!f || !p->backend.seek ||
-            p->backend.seek(p->backend_user, f->stream, offset,
-                            (int32_t)c) != 0)
+        if (!f || !p->backend.seek) {
             result->r0 = (uint32_t)-1;
-        else { f->eof = 0u; f->buffered_size = 0u; }
+        } else {
+            if ((int32_t)c == 1) offset -= (int64_t)f->buffered_size;
+            if (p->backend.seek(p->backend_user, f->stream, offset,
+                                (int32_t)c) != 0)
+                result->r0 = (uint32_t)-1;
+            else { f->eof = 0u; f->buffered_size = 0u; }
+        }
         break;
     }
     case STDIO_FTELL: {
@@ -292,7 +296,6 @@ static REGUESTIMPORTStatus stdio_handler(
         size_t consumed = 0u;
         int input_failure = 0;
         int ok;
-        uint64_t start_position = 0u;
         f = NULL;
         if (!guest_cstring(bus, b, format, sizeof(format)))
             return RE_IMPORT_E_HANDLER;
@@ -301,7 +304,8 @@ static REGUESTIMPORTStatus stdio_handler(
                 return RE_IMPORT_E_HANDLER;
         } else {
             f = resolve_file(p, a);
-            if (!f || !f->readable) return RE_IMPORT_E_HANDLER;
+            if (!f || !f->readable || sizeof(input) >
+                RE_GUEST_LIBC_STDIO_BUFFER_CAP) return RE_IMPORT_E_HANDLER;
             while (f->buffered_size < sizeof(input) - 1u) {
                 int64_t got = p->backend.read(p->backend_user, f->stream,
                     f->buffered + f->buffered_size,
@@ -320,11 +324,7 @@ static REGUESTIMPORTStatus stdio_handler(
         ok = re_guest_scan_guest_sscanf(frame, (REGUESTMEMBUS *)bus, 2u,
                 input, format, &assignments, &consumed, &input_failure);
         if (!ok) {
-            if (f) {
-                f->error = 1u;
-                (void)p->backend.seek(p->backend_user, f->stream,
-                                      (int64_t)start_position, 0);
-            }
+            if (f) f->error = 1u;
             return RE_IMPORT_E_HANDLER;
         }
         if (f) {
