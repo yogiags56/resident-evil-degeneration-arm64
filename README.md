@@ -1,6 +1,6 @@
 # Resident Evil: Degeneration — Native ARM64 Port Research
 
-[![Stage](https://img.shields.io/badge/stage-123V-blue)](#project-status)
+[![Stage](https://img.shields.io/badge/stage-123W-blue)](#project-status)
 [![Platform](https://img.shields.io/badge/platform-Android%20ARM64-green)](#build-the-android-probe)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
@@ -678,3 +678,18 @@ continuation in stable provider-owned state. Host CI passed in run
 Android ARM64 build and ELF verification passed in run `43417396929`.
 The provider is not yet installed in the production module loader. See
 [Stage 123V report](docs/STAGE123V_GUEST_LIBC_MEMORY_STRING.md).
+
+
+## Stage 123W — Guest libc formatted output
+
+Added guest-callable `snprintf` and `sprintf` adapters and extracted the
+AAPCS32 variadic formatter into a shared module used by both libc formatted
+output and the existing guest liblog provider. It handles register/stack
+variadics, even-word alignment for 64-bit arguments, bounded strings, dynamic
+width/precision, and safe guest destination writes. Output is capped at
+2048 bytes; unsupported conversions fail closed. Host CI passed in run
+`43418862945`, including the new formatted-output and existing liblog
+regressions. Android ARM64 build and ELF verification passed in run
+`43418672203`. Production module-loader installation and original Bionic
+format parity remain outstanding. See
+[Stage 123W report](docs/STAGE123W_GUEST_LIBC_FORMATTED_OUTPUT.md).
