@@ -139,8 +139,8 @@ static REGUESTIMPORTStatus stdio_handler(
         break;
     }
     case STDIO_FSEEK: {
-        int64_t offset = (int32_t)a;
-        f = resolve_file(p, d);
+        int64_t offset = (int32_t)b;
+        f = resolve_file(p, a);
         if (!f || p->backend.seek(p->backend_user, f->stream, offset,
                                   (int32_t)c) != 0)
             result->r0 = (uint32_t)-1;
