@@ -752,3 +752,11 @@ speculative lookahead. Added regression coverage for integer bases, narrow
 stores, floating prefixes and `%lf`, suppressed fields, inverted scansets,
 partial failures, overflow, and stream EOF semantics. See
 [Stage 124B report](docs/STAGE124B_SCANF_COMPATIBILITY_HARDENING.md).
+
+
+## Stage 124C — Non-seekable streams
+
+The stdio provider now supports forward-only stream backends for `fscanf`
+through a bounded per-file unread buffer. Unconsumed lookahead bytes remain
+available to `fread` and `fgets`; seek/tell callbacks are optional.
+See [Stage 124C report](docs/STAGE124C_NONSEEKABLE_STREAMS.md).
