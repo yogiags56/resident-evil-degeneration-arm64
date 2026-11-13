@@ -122,6 +122,30 @@ int main(void) {
     }
     assert(assigned == 1u && consumed == 4u);
 
+    /* Infinity is a valid floating input item, including its full spelling. */
+    memset(&frame, 0, sizeof(frame));
+    frame.r[2] = base + 0x218u;
+    assert(re_guest_scan_guest_sscanf(&frame, &bus, 2u,
+        "infinity!", "%f", &assigned, &consumed, &input_failure));
+    {
+        float parsed = 0.0f;
+        memcpy(&parsed, guest + 0x218u, sizeof(parsed));
+        assert(parsed > 1.0e30f);
+    }
+    assert(assigned == 1u && consumed == 8u);
+
+    /* %lf writes a guest 64-bit double. */
+    memset(&frame, 0, sizeof(frame));
+    frame.r[2] = base + 0x228u;
+    assert(re_guest_scan_guest_sscanf(&frame, &bus, 2u,
+        "2.5", "%lf", &assigned, &consumed, &input_failure));
+    {
+        double parsed = 0.0;
+        memcpy(&parsed, guest + 0x228u, sizeof(parsed));
+        assert(parsed > 2.49 && parsed < 2.51);
+    }
+    assert(assigned == 1u && consumed == 3u);
+
     /* Suppressed bounded strings still consume input but no argument word. */
     memset(&frame, 0, sizeof(frame));
     frame.r[2] = base + 0x220u;
