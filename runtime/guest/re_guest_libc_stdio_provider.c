@@ -313,6 +313,9 @@ static REGUESTIMPORTStatus stdio_handler(
                 f->error = 1u;
                 return RE_IMPORT_E_HANDLER;
             }
+            /* Snapshot lookahead may observe EOF beyond the matched input.
+             * Preserve EOF only when the scanf conversion itself hit EOF. */
+            f->eof = input_failure ? 1u : 0u;
         }
         result->r0 = assignments ? assignments :
                      (input_failure ? (uint32_t)-1 : 0u);
