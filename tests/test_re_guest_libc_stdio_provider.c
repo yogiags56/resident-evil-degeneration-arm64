@@ -101,7 +101,7 @@ int main(void) {
     const uint32_t base = 0x10000000u;
     static const char *const names[RE_GUEST_LIBC_STDIO_SYMBOL_COUNT] = {
         "fopen", "fclose", "fread", "fwrite", "fseek", "ftell", "fgets",
-        "fprintf", "feof", "ferror", "fflush"
+        "fprintf", "feof", "ferror", "fflush", "sscanf", "fscanf"
     };
     REGUESTMEMORY memory;
     REGUESTMEMBUS bus;
@@ -111,7 +111,7 @@ int main(void) {
     REGUESTLIBCStdioBackend backend = {
         fake_open, fake_read, fake_write, fake_seek, fake_tell, fake_close, fake_flush
     };
-    REGUESTELF32LINKSYMBOL symbols[12] = {0};
+    REGUESTELF32LINKSYMBOL symbols[14] = {0};
     REGUESTSYMBOL exports[RE_GUEST_LIBC_STDIO_SYMBOL_COUNT];
     FakeStream stream = {{'a','b','c','d','e','f'}, 6u, 0u, 0u};
     size_t export_count = 0u, failed = 0u;
@@ -129,14 +129,16 @@ int main(void) {
     put_string(guest, 0x600u, "XY");
     put_string(guest, 0x700u, "id=%d name=%s\n");
     put_string(guest, 0x740u, "guest");
+    put_string(guest, 0x780u, "99 cats");
+    put_string(guest, 0x7a0u, "%d %s");
 
     assert(re_guest_libc_stdio_provider_init(&provider, &backend, &stream) ==
            RE_GUEST_LIBC_STDIO_OK);
     assert(re_guest_import_table_init(&imports, 0x30000000u) == RE_IMPORT_OK);
     assert(re_guest_libc_stdio_provider_bind_elf_symbols(&provider, &imports,
-        symbols, 12u, exports, RE_GUEST_LIBC_STDIO_SYMBOL_COUNT,
+        symbols, 14u, exports, RE_GUEST_LIBC_STDIO_SYMBOL_COUNT,
         &export_count, &failed) == RE_GUEST_LIBC_STDIO_OK);
-    assert(export_count == RE_GUEST_LIBC_STDIO_SYMBOL_COUNT && failed == 12u);
+    assert(export_count == RE_GUEST_LIBC_STDIO_SYMBOL_COUNT && failed == 14u);
 
     re_guest_memory_init(&memory);
     assert(re_guest_memory_map_ex(&memory, base, sizeof(guest), guest,
@@ -199,6 +201,23 @@ int main(void) {
     call_import(&runtime, exports[8].value, base + 0xd9u,
         handle, 0u, 0u, 0u);
     assert(runtime.cpu.r[0] == 0u);
+
+    /* sscanf parses a guest string and writes only to validated guest spans. */
+    call_import(&runtime, exports[11].value, base + 0xdbu,
+        base + 0x780u, base + 0x7a0u, base + 0x900u, base + 0x920u);
+    assert(runtime.cpu.r[0] == 2u);
+    assert((int32_t)*(uint32_t *)(void *)(guest + 0x900u) == 99);
+    assert(strcmp((char *)guest + 0x920u, "cats") == 0);
+
+    /* fscanf snapshots a seekable stream and restores unread bytes. */
+    memcpy(stream.bytes, "123 cats", 8u);
+    stream.length = 8u;
+    stream.position = 0u;
+    call_import(&runtime, exports[12].value, base + 0xddu,
+        handle, base + 0x7a0u, base + 0x940u, base + 0x960u);
+    assert(runtime.cpu.r[0] == 2u);
+    assert((int32_t)*(uint32_t *)(void *)(guest + 0x940u) == 123);
+    assert(strcmp((char *)guest + 0x960u, "cats") == 0);
 
     /* fflush and stream status imports use the same opaque FILE token. */
     call_import(&runtime, exports[10].value, base + 0xd8u,
