@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "re_guest_heap.h"
 #include "re_guest_imports.h"
 #include "re_guest_elf32_link.h"
 #include "re_guest_symbol_resolve.h"
@@ -12,20 +13,10 @@
 extern "C" {
 #endif
 
-#define RE_GUEST_CXX_HEAP_MAX_ALLOCS 512u
-#define RE_GUEST_CXX_HEAP_ALIGNMENT 8u
+#define RE_GUEST_CXX_HEAP_ALIGNMENT RE_GUEST_HEAP_DEFAULT_ALIGNMENT
 
 typedef struct {
-    uint32_t guest_address;
-    uint32_t size;
-    uint8_t active;
-} REGUESTCXXHeapAllocation;
-
-typedef struct {
-    uint32_t heap_base;
-    uint32_t heap_size;
-    uint8_t busy;
-    REGUESTCXXHeapAllocation allocations[RE_GUEST_CXX_HEAP_MAX_ALLOCS];
+    REGUESTHEAP heap;
 } REGUESTCXXHeapProvider;
 
 typedef enum {
@@ -37,9 +28,8 @@ typedef enum {
     RE_GUEST_CXX_HEAP_E_MEMORY = -984
 } REGUESTCXXHeapStatus;
 
-/* The heap must be a dedicated contiguous guest RW region, owned by the
- * runtime and not shared with the host allocator. Base and size are 8-byte
- * aligned. Provider metadata remains host-side.
+/* C++ new/delete share this heap arena with the libc malloc/free provider.
+ * The arena is a dedicated guest RW mapping; it is never a host allocation.
  */
 REGUESTCXXHeapStatus re_guest_cxx_heap_provider_init(
     REGUESTCXXHeapProvider *provider, uint32_t heap_base, uint32_t heap_size);
