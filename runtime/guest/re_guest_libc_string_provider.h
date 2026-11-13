@@ -25,6 +25,7 @@ typedef struct {
 struct REGUESTLIBCStringProvider {
     uint32_t strtok_next;
     REGUESTLIBCStringContext contexts[RE_GUEST_LIBC_STRING_SYMBOL_COUNT];
+    uint8_t initialized;
 };
 
 typedef enum {
