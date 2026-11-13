@@ -1,6 +1,6 @@
 # Resident Evil: Degeneration — Native ARM64 Port Research
 
-[![Stage](https://img.shields.io/badge/stage-123S-blue)](#project-status)
+[![Stage](https://img.shields.io/badge/stage-123T-blue)](#project-status)
 [![Platform](https://img.shields.io/badge/platform-Android%20ARM64-green)](#build-the-android-probe)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
@@ -630,3 +630,20 @@ host-side allocation metadata and guest-address-only results. Host CI and Androi
 pointer rather than throwing `std::bad_alloc`; C++ exceptions and the broader
 C++ ABI are not yet implemented. See
 [Stage 123S report](docs/STAGE123S_GUEST_CXX_HEAP_PROVIDER.md).
+
+
+## Stage 123T — ARM EABI compiler-helper provider
+
+Added guest ARM32 adapters for the 21 exact relocation-backed `__aeabi_*`
+imports in the original ELF32 manifest. Coverage includes double/float
+arithmetic and comparisons, integer conversions, 32-bit signed/unsigned
+division and divmod, 64-bit multiplication, and `__aeabi_ldivmod`. The
+shared import dispatcher now supports four-register return values (r0-r3),
+required for the 64-bit quotient/remainder pair. The provider exports
+unversioned guest Thumb trampolines without inferring a `libgcc.so` SONAME.
+See [Stage 123T report](docs/STAGE123T_ARM_EABI_COMPILER_HELPERS.md).
+
+Host CI passed in run `43415885622`: 312 Python tests, native C
+mock-header syntax checks, and all compiled host regressions, including
+`Guest ARM EABI provider tests: PASS`. Android ARM64 build/ELF verification
+is pending on the branch. No original-game runtime or device boot is claimed.
