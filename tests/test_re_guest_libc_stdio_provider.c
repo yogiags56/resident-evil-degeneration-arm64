@@ -127,7 +127,7 @@ int main(void) {
     put_string(guest, 0x100u, "data.bin");
     put_string(guest, 0x120u, "r+");
     put_string(guest, 0x600u, "XY");
-    put_string(guest, 0x700u, "id=%d name=%s\\n");
+    put_string(guest, 0x700u, "id=%d name=%s\n");
     put_string(guest, 0x740u, "guest");
 
     assert(re_guest_libc_stdio_provider_init(&provider, &backend, &stream) ==
