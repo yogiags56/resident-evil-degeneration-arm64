@@ -254,7 +254,7 @@ read from r0 and variadic words begin at AAPCS32 index 1. Formatted bytes are
 sent through a caller-supplied output callback; short writes and missing
 sinks fail closed. This avoids exposing host stdio or native callback
 pointers to the ARM32 guest. The host regression now checks exact output
-bytes and the return count. Host and Android ARM64 CI validation is pending.
+bytes and the return count. Host regression CI passed in run `43419274585`; Android ARM64 native CI is still running.
 Production module-loader installation and a real Android stdout/log sink
 remain open. See
 [Stage 123X](STAGE123X_GUEST_LIBC_PRINTF_OUTPUT_SINK.md).
