@@ -731,3 +731,14 @@ optional backend flush, and flush-on-close are covered by the expanded
 guest-dispatch host regression. Host and Android ARM64 CI are pending.
 `fscanf` and `sscanf` are deferred to a separate bounded parser stage.
 See [Stage 123Z report](docs/STAGE123Z_GUEST_LIBC_FORMATTED_FILE_IO.md).
+
+
+## Stage 124A — Guest libc bounded scanf parser
+
+Added a dedicated bounded guest scanf parser and stdio imports `sscanf`
+and `fscanf`. The parser validates guest destination spans and supports
+integer/floating conversions, strings, characters, scansets, field widths,
+assignment suppression, and `%n`. `fscanf` uses a bounded snapshot with
+seek-based lookahead restoration and therefore requires a seekable backend.
+Host and Android ARM64 CI are the release gate. See
+[Stage 124A report](docs/STAGE124A_GUEST_LIBC_SCANF_PARSER.md).
