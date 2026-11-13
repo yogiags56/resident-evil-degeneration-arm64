@@ -12,9 +12,11 @@
 extern "C" {
 #endif
 
-#define RE_GUEST_LIBC_FORMAT_SYMBOL_COUNT 2u
+#define RE_GUEST_LIBC_FORMAT_SYMBOL_COUNT 3u
 
 typedef struct REGUESTLIBCFormatProvider REGUESTLIBCFormatProvider;
+typedef int (*REGUESTLIBCFormatOutput)(const char *bytes, size_t length,
+                                      void *user);
 
 typedef struct {
     uint32_t kind;
@@ -23,6 +25,8 @@ typedef struct {
 
 struct REGUESTLIBCFormatProvider {
     uint8_t initialized;
+    REGUESTLIBCFormatOutput output;
+    void *output_user;
     REGUESTLIBCFormatContext contexts[RE_GUEST_LIBC_FORMAT_SYMBOL_COUNT];
 };
 
@@ -36,6 +40,10 @@ typedef enum {
 
 REGUESTLIBCFormatStatus re_guest_libc_format_provider_init(
     REGUESTLIBCFormatProvider *provider);
+
+REGUESTLIBCFormatStatus re_guest_libc_format_provider_set_output(
+    REGUESTLIBCFormatProvider *provider, REGUESTLIBCFormatOutput output,
+    void *user);
 
 REGUESTLIBCFormatStatus re_guest_libc_format_provider_bind_elf_symbols(
     REGUESTLIBCFormatProvider *provider,
