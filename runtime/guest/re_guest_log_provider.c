@@ -390,6 +390,8 @@ REGUESTLOGStatus re_guest_log_provider_bind_elf_symbols(
     size_t print_index = symbol_count;
     size_t write_index = symbol_count;
     uint32_t print_pointer = 0, write_pointer = 0;
+    (void)print_pointer;
+    (void)write_pointer;
     REGUESTIMPORTStatus status;
 
     if (export_count) *export_count = 0;
