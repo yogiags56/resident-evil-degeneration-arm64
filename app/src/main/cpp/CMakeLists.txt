@@ -51,6 +51,7 @@ add_library(re_asset_probe SHARED
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_dl_elf32_adapter.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_dl_provider_bridge.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_log_provider.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_zlib_provider.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_runtime.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/s3e_aapcs32.c)
 
@@ -90,9 +91,10 @@ endif()
 
 find_library(log-lib log)
 find_library(android-lib android)
+find_library(z-lib z)
 target_include_directories(re_asset_probe PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/archive
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest)
 target_compile_options(re_asset_probe PRIVATE -Wall -Wextra -Werror)
-target_link_libraries(re_asset_probe ${android-lib} ${log-lib})
+target_link_libraries(re_asset_probe ${android-lib} ${log-lib} ${z-lib})
