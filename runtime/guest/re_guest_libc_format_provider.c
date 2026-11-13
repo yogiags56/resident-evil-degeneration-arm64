@@ -89,6 +89,8 @@ static int find_undefined_symbol(
     const REGUESTELF32LINKSYMBOL *symbols, size_t count,
     const char *name, size_t *found) {
     size_t match = count;
+    if (!found) return 0;
+    *found = count;
     for (size_t i = 0; i < count; ++i) {
         const REGUESTELF32LINKSYMBOL *symbol = &symbols[i];
         if (!memchr(symbol->name, '\0', sizeof(symbol->name))) return 0;
@@ -99,7 +101,10 @@ static int find_undefined_symbol(
              symbol->visibility != RE_GUEST_STV_PROTECTED) ||
             (symbol->type != 0u && symbol->type != 2u))
             continue;
-        if (match != count) return 0;
+        if (match != count) {
+            *found = count;
+            return 0;
+        }
         match = i;
     }
     if (match == count) return 0;
@@ -138,12 +143,17 @@ REGUESTLIBCFormatStatus re_guest_libc_format_provider_bind_elf_symbols(
         return RE_GUEST_LIBC_FORMAT_E_CAPACITY;
 
     for (size_t i = 0; i < RE_GUEST_LIBC_FORMAT_SYMBOL_COUNT; ++i) {
+        indices[i] = symbol_count;
         if (!find_undefined_symbol(symbols, symbol_count, k_names[i], &indices[i])) {
             if (failed_symbol_index) *failed_symbol_index = indices[i];
             return RE_GUEST_LIBC_FORMAT_E_SYMBOL;
         }
-        for (size_t j = 0; j < i; ++j)
-            if (indices[i] == indices[j]) return RE_GUEST_LIBC_FORMAT_E_SYMBOL;
+        for (size_t j = 0; j < i; ++j) {
+            if (indices[i] == indices[j]) {
+                if (failed_symbol_index) *failed_symbol_index = indices[i];
+                return RE_GUEST_LIBC_FORMAT_E_SYMBOL;
+            }
+        }
     }
 
     backup = *imports;
