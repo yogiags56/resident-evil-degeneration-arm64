@@ -97,7 +97,7 @@ REGUESTIMPORTStatus re_guest_import_dispatch_mapped(
     REGUESTIMPORTTable *t, REGUESTCPU *cpu, const REGUESTMEMBUS *bus) {
     const REGUESTIMPORTBinding *b=NULL;
     S3EAAPCS32Frame frame;
-    REGUESTIMPORTResult result={0,0};
+    REGUESTIMPORTResult result={0};
     REGUESTCPU before;
     REGUESTIMPORTStatus hs;
     uint8_t stack[RE_IMPORT_MAPPED_STACK_BYTES];
@@ -130,6 +130,7 @@ REGUESTIMPORTStatus re_guest_import_dispatch_mapped(
     }
     lr=cpu->r[14];
     cpu->r[0]=result.r0;cpu->r[1]=result.r1;
+    cpu->r[2]=result.r2;cpu->r[3]=result.r3;
     cpu->thumb=(uint8_t)(lr&1u);
     cpu->r[15]=lr&(cpu->thumb?~1u:~3u);
     return RE_IMPORT_OK;
@@ -140,7 +141,7 @@ REGUESTIMPORTStatus re_guest_import_dispatch(REGUESTIMPORTTable *t,
                                               const REGUESTMEM *m) {
     const REGUESTIMPORTBinding *b=0;
     S3EAAPCS32Frame f;
-    REGUESTIMPORTResult result={0,0};
+    REGUESTIMPORTResult result={0};
     REGUESTIMPORTStatus hs;
     uint32_t pc,lr;
     size_t stack_off=0;
@@ -159,6 +160,8 @@ REGUESTIMPORTStatus re_guest_import_dispatch(REGUESTIMPORTTable *t,
     if(hs!=RE_IMPORT_OK) return hs==RE_IMPORT_E_UNBOUND?hs:RE_IMPORT_E_HANDLER;
     cpu->r[0]=result.r0;
     cpu->r[1]=result.r1;
+    cpu->r[2]=result.r2;
+    cpu->r[3]=result.r3;
     lr=cpu->r[14];
     cpu->thumb=(uint8_t)(lr&1u);
     cpu->r[15]=lr&(cpu->thumb?~1u:~3u);
