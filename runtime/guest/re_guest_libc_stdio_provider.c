@@ -393,7 +393,7 @@ REGUESTLIBCStdioStatus re_guest_libc_stdio_provider_init(
     REGUESTLIBCStdioProvider *p, const REGUESTLIBCStdioBackend *backend,
     void *user) {
     if (!p || !backend || !backend->open || !backend->read ||
-        !backend->write || !backend->seek || !backend->tell || !backend->close)
+        !backend->write || !backend->close)
         return RE_GUEST_LIBC_STDIO_E_ARGUMENT;
     memset(p, 0, sizeof(*p));
     p->backend = *backend;
