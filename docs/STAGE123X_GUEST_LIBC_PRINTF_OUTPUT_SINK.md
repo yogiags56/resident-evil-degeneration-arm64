@@ -41,7 +41,9 @@ test.
 
 ## Validation boundary
 
-Host regression CI passed in run `43419274585`, including the new guest\n`printf` callback assertion and the existing `snprintf`/`sprintf` regressions.\nAndroid ARM64 CI for the Stage 123X native source is still running. The
+Host regression CI passed in run `43419274585`, including the new guest
+`printf` callback assertion and the existing `snprintf`/`sprintf` regressions.
+Android ARM64 CI for the Stage 123X native source is still running. The
 provider is compiled into the native target, but production module-loader
 installation, a real Android stdout/log destination, original-game execution,
 and device boot are not claimed.
