@@ -4,13 +4,14 @@
 #include <string.h>
 
 #include "re_guest_format.h"
+#include "re_guest_scan.h"
 
 enum { STDIO_FOPEN, STDIO_FCLOSE, STDIO_FREAD, STDIO_FWRITE,
        STDIO_FSEEK, STDIO_FTELL, STDIO_FGETS, STDIO_FPRINTF,
-       STDIO_FEOF, STDIO_FERROR, STDIO_FFLUSH };
+       STDIO_FEOF, STDIO_FERROR, STDIO_FFLUSH, STDIO_SSCANF, STDIO_FSCANF };
 static const char *const k_names[RE_GUEST_LIBC_STDIO_SYMBOL_COUNT] = {
     "fopen", "fclose", "fread", "fwrite", "fseek", "ftell", "fgets",
-    "fprintf", "feof", "ferror", "fflush"
+    "fprintf", "feof", "ferror", "fflush", "sscanf", "fscanf"
 };
 
 static int guest_cstring(const REGUESTMEMBUS *bus, uint32_t address,
@@ -252,6 +253,68 @@ static REGUESTIMPORTStatus stdio_handler(
             }
         }
         result->r0 = (uint32_t)length;
+        break;
+    }
+    case STDIO_SSCANF:
+    case STDIO_FSCANF: {
+        char input[RE_GUEST_FORMAT_STRING_CAP];
+        char format[RE_GUEST_FORMAT_STRING_CAP];
+        uint32_t assignments = 0u;
+        size_t consumed = 0u;
+        int input_failure = 0;
+        int ok;
+        uint64_t start_position = 0u;
+        f = NULL;
+        if (!guest_cstring(bus, b, format, sizeof(format)))
+            return RE_IMPORT_E_HANDLER;
+        if (ctx->kind == STDIO_SSCANF) {
+            if (!guest_cstring(bus, a, input, sizeof(input)))
+                return RE_IMPORT_E_HANDLER;
+        } else {
+            f = resolve_file(p, a);
+            if (!f || !f->readable) return RE_IMPORT_E_HANDLER;
+            {
+                int64_t pos = p->backend.tell(p->backend_user, f->stream);
+                size_t n = 0u;
+                if (pos < 0) { f->error = 1u; return RE_IMPORT_E_HANDLER; }
+                start_position = (uint64_t)pos;
+                while (n + 1u < sizeof(input)) {
+                    int64_t got = p->backend.read(p->backend_user, f->stream,
+                                                  input + n, 1u);
+                    if (got < 0 || got > 1) {
+                        f->error = 1u;
+                        (void)p->backend.seek(p->backend_user, f->stream,
+                                              (int64_t)start_position, 0);
+                        return RE_IMPORT_E_HANDLER;
+                    }
+                    if (got == 0) { f->eof = 1u; break; }
+                    if (input[n++] == '\\n' && n > 0u) {
+                        /* Continue: scanf whitespace may span lines. */
+                    }
+                }
+                input[n] = '\\0';
+            }
+        }
+        ok = re_guest_scan_guest_sscanf(frame, (REGUESTMEMBUS *)bus, 2u,
+                input, format, &assignments, &consumed, &input_failure);
+        if (!ok) {
+            if (f) {
+                f->error = 1u;
+                (void)p->backend.seek(p->backend_user, f->stream,
+                                      (int64_t)start_position, 0);
+            }
+            return RE_IMPORT_E_HANDLER;
+        }
+        if (f) {
+            if (consumed > (size_t)INT64_MAX || start_position > (uint64_t)INT64_MAX ||
+                p->backend.seek(p->backend_user, f->stream,
+                    (int64_t)(start_position + consumed), 0) != 0) {
+                f->error = 1u;
+                return RE_IMPORT_E_HANDLER;
+            }
+        }
+        result->r0 = assignments ? assignments :
+                     (input_failure ? (uint32_t)-1 : 0u);
         break;
     }
     case STDIO_FEOF:
