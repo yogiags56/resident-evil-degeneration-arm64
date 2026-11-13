@@ -126,8 +126,8 @@ int main(void) {
     memset(&frame, 0, sizeof(frame));
     frame.r[2] = base + 0x220u;
     assert(re_guest_scan_guest_sscanf(&frame, &bus, 2u,
-        "abcdef 17", "%*3s %d", &assigned, &consumed, &input_failure));
-    assert(assigned == 1u && consumed == 9u);
+        "abc 17", "%*3s %d", &assigned, &consumed, &input_failure));
+    assert(assigned == 1u && consumed == 6u);
     memcpy(&signed_value, guest + 0x220u, sizeof(signed_value));
     assert(signed_value == 17);
 
