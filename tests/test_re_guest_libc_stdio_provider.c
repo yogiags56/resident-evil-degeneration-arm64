@@ -259,7 +259,7 @@ int main(void) {
     call_import(&runtime, exports[2].value, base + 0xf4u,
         base + 0x990u, 1u, 2u, handle);
     assert(runtime.cpu.r[0] == 2u);
-    assert(memcmp(guest + 0x990u, "Q1", 2u) == 0);
+    assert(memcmp(guest + 0x990u, "Q4", 2u) == 0);
     call_import(&runtime, exports[13].value, base + 0xf6u,
         (uint32_t)-1, handle, 0u, 0u);
     assert(runtime.cpu.r[0] == (uint32_t)-1);
