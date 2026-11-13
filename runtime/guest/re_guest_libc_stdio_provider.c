@@ -8,10 +8,11 @@
 
 enum { STDIO_FOPEN, STDIO_FCLOSE, STDIO_FREAD, STDIO_FWRITE,
        STDIO_FSEEK, STDIO_FTELL, STDIO_FGETS, STDIO_FPRINTF,
-       STDIO_FEOF, STDIO_FERROR, STDIO_FFLUSH, STDIO_SSCANF, STDIO_FSCANF };
+       STDIO_FEOF, STDIO_FERROR, STDIO_FFLUSH, STDIO_SSCANF, STDIO_FSCANF,
+       STDIO_UNGETC };
 static const char *const k_names[RE_GUEST_LIBC_STDIO_SYMBOL_COUNT] = {
     "fopen", "fclose", "fread", "fwrite", "fseek", "ftell", "fgets",
-    "fprintf", "feof", "ferror", "fflush", "sscanf", "fscanf"
+    "fprintf", "feof", "ferror", "fflush", "sscanf", "fscanf", "ungetc"
 };
 
 static int guest_cstring(const REGUESTMEMBUS *bus, uint32_t address,
@@ -336,6 +337,22 @@ static REGUESTIMPORTStatus stdio_handler(
         }
         result->r0 = assignments ? assignments :
                      (input_failure ? (uint32_t)-1 : 0u);
+        break;
+    }
+    case STDIO_UNGETC: {
+        uint8_t byte;
+        f = resolve_file(p, b);
+        if ((int32_t)a == -1 || !f || !f->readable ||
+            f->buffered_size >= RE_GUEST_LIBC_STDIO_BUFFER_CAP) {
+            result->r0 = (uint32_t)-1;
+            break;
+        }
+        byte = (uint8_t)a;
+        memmove(f->buffered + 1u, f->buffered, f->buffered_size);
+        f->buffered[0] = byte;
+        ++f->buffered_size;
+        f->eof = 0u;
+        result->r0 = (uint32_t)byte;
         break;
     }
     case STDIO_FEOF:
