@@ -3,7 +3,7 @@ name: Android ARM64 native build
 on:
   workflow_dispatch:
   push:
-    branches: [main, stage-120z-dependency-graph-resolution]
+    branches: [main, "stage-*"]
     paths:
       - "app/**"
       - "runtime/**"
