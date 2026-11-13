@@ -742,3 +742,13 @@ assignment suppression, and `%n`. `fscanf` uses a bounded snapshot with
 seek-based lookahead restoration and therefore requires a seekable backend.
 Host and Android ARM64 CI are the release gate. See
 [Stage 124A report](docs/STAGE124A_GUEST_LIBC_SCANF_PARSER.md).
+
+
+## Stage 124B — Scanf compatibility hardening
+
+Hardened guest destination integer range checks, floating input token parsing
+(including full infinity spellings), and `fscanf` EOF state after bounded
+speculative lookahead. Added regression coverage for integer bases, narrow
+stores, floating prefixes and `%lf`, suppressed fields, inverted scansets,
+partial failures, overflow, and stream EOF semantics. See
+[Stage 124B report](docs/STAGE124B_SCANF_COMPATIBILITY_HARDENING.md).
