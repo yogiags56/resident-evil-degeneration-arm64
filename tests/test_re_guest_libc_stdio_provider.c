@@ -199,10 +199,10 @@ int main(void) {
     call_import(&runtime, exports[8].value, base + 0xd6u,
         handle, 0u, 0u, 0u);
     assert(runtime.cpu.r[0] == 1u);
-    call_import(&runtime, exports[4].value, base + 0xd7u,
+    call_import(&runtime, exports[4].value, base + 0xe6u,
         handle, 0, 0u, 0u);
     assert((int32_t)runtime.cpu.r[0] == 0);
-    call_import(&runtime, exports[8].value, base + 0xd9u,
+    call_import(&runtime, exports[8].value, base + 0xe8u,
         handle, 0u, 0u, 0u);
     assert(runtime.cpu.r[0] == 0u);
 
