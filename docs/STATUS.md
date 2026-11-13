@@ -224,10 +224,10 @@ semantics; unsupported conversions, invalid pointers, unterminated inputs,
 and output overflow fail closed. The provider is included in the Android
 ARM64 CMake target and host regression runner. Tests cover register/stack
 arguments, truncation, zero-size output, 64-bit alignment, dynamic width,
-and missing/duplicate ELF symbol handling. Current Stage 123W host and
-Android ARM64 workflow validation must pass before this stage is marked
-validated. Production module-loader installation and original-game boot
-remain outstanding. See
+and missing/duplicate ELF symbol handling. Host CI passed in run `43418862945`, including the formatted-output
+provider and shared liblog regressions. Android ARM64 build and ELF
+verification passed in run `43418672203`. Production module-loader
+installation and original-game boot remain outstanding. See
 [Stage 123W](STAGE123W_GUEST_LIBC_FORMATTED_OUTPUT.md).
 
 
