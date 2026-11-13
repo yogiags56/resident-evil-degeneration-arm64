@@ -17,6 +17,7 @@ extern "C" {
 #define RE_GUEST_LIBC_STDIO_MAX_PATH 512u
 #define RE_GUEST_LIBC_STDIO_MAX_MODE 8u
 #define RE_GUEST_LIBC_STDIO_TOKEN_BASE 0xf17e0000u
+#define RE_GUEST_LIBC_STDIO_BUFFER_CAP 2048u
 
 typedef struct {
     void *(*open)(void *user, const char *path, const char *mode);
@@ -37,6 +38,8 @@ typedef struct {
     uint8_t append;
     uint8_t eof;
     uint8_t error;
+    uint16_t buffered_size;
+    uint8_t buffered[RE_GUEST_LIBC_STDIO_BUFFER_CAP];
 } REGUESTLIBCStdioFile;
 
 typedef struct REGUESTLIBCStdioProvider REGUESTLIBCStdioProvider;
