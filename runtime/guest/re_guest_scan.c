@@ -189,9 +189,7 @@ int re_guest_scan_guest_sscanf(const S3EAAPCS32Frame *frame,
             if (max > RE_GUEST_SCAN_TOKEN_CAP) return 0;
             if ((conv == 's' || conv == '[') && max == SIZE_MAX)
                 max = sizeof(temp) - 1u;
-            if (conv == 'c' && length != SCAN_LEN_NONE) return 0;
-            if (conv == 's' && length != SCAN_LEN_NONE && length != SCAN_LEN_L)
-                return 0;
+            if (length != SCAN_LEN_NONE) return 0;
             while (n < max && n + 1u < sizeof(temp) && in[n]) {
                 unsigned char ch = (unsigned char)in[n];
                 if (conv == 's' && scan_space(ch)) break;
@@ -217,6 +215,7 @@ int re_guest_scan_guest_sscanf(const S3EAAPCS32Frame *frame,
             size_t used = 0u;
             int base = conv == 'o' ? 8 : ((conv == 'x' || conv == 'X' || conv == 'p') ? 16 :
                        (conv == 'i' ? 0 : 10));
+            if (conv == 'p' && length != SCAN_LEN_NONE) return 0;
             int sign = conv == 'd' || conv == 'i';
             size_t max = width == SIZE_MAX ? RE_GUEST_SCAN_TOKEN_CAP - 1u : width;
             if (max > RE_GUEST_SCAN_TOKEN_CAP - 1u) return 0;
@@ -259,7 +258,7 @@ int re_guest_scan_guest_sscanf(const S3EAAPCS32Frame *frame,
             if (!suppress) {
                 uint32_t dst;
                 if (!get_arg(frame, &arg_index, &dst)) return 0;
-                if (length == SCAN_LEN_LL || length == SCAN_LEN_J) return 0;
+                if (length != SCAN_LEN_NONE && length != SCAN_LEN_L) return 0;
                 if (length == SCAN_LEN_L) {
                     uint64_t bits; memcpy(&bits, &value, sizeof(bits));
                     if (!guest_write(bus, dst, &bits, sizeof(bits))) return 0;
