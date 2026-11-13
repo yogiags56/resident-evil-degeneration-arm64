@@ -105,7 +105,7 @@ int main(void) {
     const uint32_t base = 0x10000000u;
     static const char *const names[RE_GUEST_LIBC_STDIO_SYMBOL_COUNT] = {
         "fopen", "fclose", "fread", "fwrite", "fseek", "ftell", "fgets",
-        "fprintf", "feof", "ferror", "fflush", "sscanf", "fscanf"
+        "fprintf", "feof", "ferror", "fflush", "sscanf", "fscanf", "ungetc"
     };
     REGUESTMEMORY memory;
     REGUESTMEMBUS bus;
@@ -116,7 +116,7 @@ int main(void) {
     REGUESTLIBCStdioBackend backend = {
         fake_open, fake_read, fake_write, fake_seek, fake_tell, fake_close, fake_flush
     };
-    REGUESTELF32LINKSYMBOL symbols[14] = {0};
+    REGUESTELF32LINKSYMBOL symbols[15] = {0};
     REGUESTSYMBOL exports[RE_GUEST_LIBC_STDIO_SYMBOL_COUNT];
     FakeStream stream = {{'a','b','c','d','e','f'}, 6u, 0u, 0u};
     size_t export_count = 0u, failed = 0u;
@@ -141,9 +141,9 @@ int main(void) {
            RE_GUEST_LIBC_STDIO_OK);
     assert(re_guest_import_table_init(&imports, 0x30000000u) == RE_IMPORT_OK);
     assert(re_guest_libc_stdio_provider_bind_elf_symbols(&provider, &imports,
-        symbols, 14u, exports, RE_GUEST_LIBC_STDIO_SYMBOL_COUNT,
+        symbols, 15u, exports, RE_GUEST_LIBC_STDIO_SYMBOL_COUNT,
         &export_count, &failed) == RE_GUEST_LIBC_STDIO_OK);
-    assert(export_count == RE_GUEST_LIBC_STDIO_SYMBOL_COUNT && failed == 14u);
+    assert(export_count == RE_GUEST_LIBC_STDIO_SYMBOL_COUNT && failed == 15u);
 
     re_guest_memory_init(&memory);
     assert(re_guest_memory_map_ex(&memory, base, sizeof(guest), guest,
@@ -249,6 +249,21 @@ int main(void) {
         handle, 0u, 0u, 0u);
     assert(runtime.cpu.r[0] == 0u);
 
+    /* ungetc pushes one byte in front of unread stream data and clears EOF. */
+    call_import(&runtime, exports[4].value, base + 0xf0u,
+        handle, 0u, 0u, 0u);
+    assert((int32_t)runtime.cpu.r[0] == 0);
+    call_import(&runtime, exports[13].value, base + 0xf2u,
+        (uint32_t)'Q', handle, 0u, 0u);
+    assert(runtime.cpu.r[0] == (uint32_t)'Q');
+    call_import(&runtime, exports[2].value, base + 0xf4u,
+        base + 0x990u, 1u, 2u, handle);
+    assert(runtime.cpu.r[0] == 2u);
+    assert(memcmp(guest + 0x990u, "Q1", 2u) == 0);
+    call_import(&runtime, exports[13].value, base + 0xf6u,
+        (uint32_t)-1, handle, 0u, 0u);
+    assert(runtime.cpu.r[0] == (uint32_t)-1);
+
     /* fflush and stream status imports use the same opaque FILE token. */
     call_import(&runtime, exports[10].value, base + 0xd8u,
         handle, 0u, 0u, 0u);
@@ -276,7 +291,7 @@ int main(void) {
             &nonseek_backend, &pipe_stream) == RE_GUEST_LIBC_STDIO_OK);
         assert(re_guest_import_table_init(&imports, 0x30000000u) == RE_IMPORT_OK);
         assert(re_guest_libc_stdio_provider_bind_elf_symbols(&nonseek_provider,
-            &imports, symbols, 14u, pipe_exports,
+            &imports, symbols, 15u, pipe_exports,
             RE_GUEST_LIBC_STDIO_SYMBOL_COUNT, &export_count, &failed) ==
             RE_GUEST_LIBC_STDIO_OK);
         re_guest_runtime_init_mapped(&runtime, &bus, &imports, 0x40000000u,
