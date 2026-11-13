@@ -63,23 +63,27 @@ static uint32_t alloc_unlocked(REGUESTHEAP *heap, const REGUESTMEMBUS *bus,
 
     candidate = align_up_u64(heap->heap_base, alignment);
     for (;;) {
-        const REGUESTHEAPAllocation *nearest = NULL;
+        uint64_t candidate_end = candidate + aligned_size;
+        uint64_t conflict_end = 0u;
         for (size_t i = 0; i < RE_GUEST_HEAP_MAX_ALLOCS; ++i) {
             const REGUESTHEAPAllocation *block = &heap->allocations[i];
-            if (!block->active || block->guest_address < candidate) continue;
-            if (!nearest || block->guest_address < nearest->guest_address)
-                nearest = block;
+            uint64_t block_start, block_end;
+            if (!block->active) continue;
+            block_start = block->guest_address;
+            block_end = block_start + block->capacity;
+            /* Include blocks that begin before the aligned candidate but
+             * still overlap it (notably valloc on a non-page-aligned arena).
+             */
+            if (block_start < candidate_end && block_end > candidate &&
+                block_end > conflict_end)
+                conflict_end = block_end;
         }
-        if (!nearest) {
-            if (candidate <= UINT32_MAX &&
-                candidate + aligned_size <= heap_end)
+        if (!conflict_end) {
+            if (candidate <= UINT32_MAX && candidate_end <= heap_end)
                 break;
             return 0u;
         }
-        if ((uint64_t)nearest->guest_address - candidate >= aligned_size)
-            break;
-        candidate = align_up_u64((uint64_t)nearest->guest_address +
-                                 nearest->capacity, alignment);
+        candidate = align_up_u64(conflict_end, alignment);
         if (candidate > heap_end) return 0u;
     }
 
