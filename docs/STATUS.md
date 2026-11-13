@@ -133,3 +133,12 @@ ARM64 CI validation are pending for this branch. Physical-device logcat
 verification, installation into the real module-load lifecycle, the remaining
 Bionic dependency providers, and original game boot remain outstanding. See
 [Stage 123Q](STAGE123Q_ANDROID_LIBLOG_NDK_INTEGRATION.md).
+
+
+## Stage 123Q validation update — 2026-11-13
+
+The host validation pipeline now passes on the Stage 123Q branch: 312 Python
+tests, native C translation-unit mock-header syntax checks, and the full
+compiled host-test executable suite, including the guest liblog provider
+regression. The Android ARM64 NDK build has been triggered for this stage and
+is still running. No Android APK build or device logcat result is claimed yet.
