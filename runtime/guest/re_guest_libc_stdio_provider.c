@@ -146,9 +146,14 @@ static REGUESTIMPORTStatus stdio_handler(
         f = resolve_file(p, a);
         if (!f) return RE_IMPORT_E_HANDLER;
         {
-            int rc = p->backend.close(p->backend_user, f->stream);
+            int flush_rc = 0;
+            int close_rc;
+            if (f->writable && p->backend.flush)
+                flush_rc = p->backend.flush(p->backend_user, f->stream);
+            if (flush_rc != 0) f->error = 1u;
+            close_rc = p->backend.close(p->backend_user, f->stream);
             f->stream = NULL; f->active = 0u;
-            result->r0 = (uint32_t)(rc == 0 ? 0 : -1);
+            result->r0 = (uint32_t)(flush_rc == 0 && close_rc == 0 ? 0 : -1);
         }
         break;
     case STDIO_FREAD:
@@ -184,6 +189,7 @@ static REGUESTIMPORTStatus stdio_handler(
         if (!f || p->backend.seek(p->backend_user, f->stream, offset,
                                   (int32_t)c) != 0)
             result->r0 = (uint32_t)-1;
+        else { f->eof = 0u; }
         break;
     }
     case STDIO_FTELL: {
