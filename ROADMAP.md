@@ -1,8 +1,10 @@
 # Project Roadmap
 
-## Active milestone update — Stage 123P (ARM32 guest liblog provider)
+## Active milestone update — Stage 123Q (Android NDK liblog callback integration)
 
-Stage 123P adds a callback-driven virtual liblog.so provider for the two relocation-backed symbols __android_log_print and __android_log_write. It binds exact ELF32 undefined symbol indices to guest Thumb import trampolines, copies guest strings through permission-checked memory, formats a bounded AAPCS32 variadic subset, and rolls back the import table on binding failure. Host regression and Android native source registration are added. Android callback integration and CI validation remain pending. See docs/STAGE123P_LIBLOG_GUEST_ABI_PROVIDER.md.
+Stage 123Q connects the Stage 123P virtual liblog.so provider to Android NDK logging. The native probe supplies a __android_log_write callback and exercises both exact guest Thumb import trampolines through synthetic mapped guest memory. Guest pointers are never forwarded as host pointers. Host and Android ARM64 CI validation are pending. Physical-device logcat validation and production module-loader lifecycle installation remain future work. See docs/STAGE123Q_ANDROID_LIBLOG_NDK_INTEGRATION.md.
+
+Stage 123P introduced the callback-driven guest liblog.so provider for __android_log_print and __android_log_write, with bounded guest-string copying, an AAPCS32 variadic formatter subset, exact symbol-index binding, and transactional rollback. See docs/STAGE123P_LIBLOG_GUEST_ABI_PROVIDER.md.
 
 ## Active milestone update — Stage 123O (original ELF32 DSO dependency evidence)
 
