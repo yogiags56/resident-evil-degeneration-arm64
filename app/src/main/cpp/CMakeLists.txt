@@ -51,6 +51,7 @@ add_library(re_asset_probe SHARED
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_dl_elf32_adapter.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_dl_provider_bridge.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_format.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_libc_format_provider.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_log_provider.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_zlib_provider.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_heap.c
