@@ -186,9 +186,9 @@ int re_guest_scan_guest_sscanf(const S3EAAPCS32Frame *frame,
                 if (!scanset_build(&fp, set)) return 0;
             }
             if (conv == 'c' && width == SIZE_MAX) max = 1u;
-            if (max > RE_GUEST_SCAN_TOKEN_CAP) return 0;
             if ((conv == 's' || conv == '[') && max == SIZE_MAX)
                 max = sizeof(temp) - 1u;
+            if (max > RE_GUEST_SCAN_TOKEN_CAP) return 0;
             if (length != SCAN_LEN_NONE) return 0;
             while (n < max && n + 1u < sizeof(temp) && in[n]) {
                 unsigned char ch = (unsigned char)in[n];
