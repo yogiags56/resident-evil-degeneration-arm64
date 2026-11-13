@@ -51,11 +51,11 @@ The host regression binds all four exact symbol indices and exercises scalar
 new, array new, 8-byte alignment, non-overlap, writes into returned guest
 memory, delete/reuse, null/unknown delete, and out-of-space rejection.
 
-Host CI passed on 2026-11-13: 312 Python tests, native C mock-header syntax
-checks, and all compiled host regressions including
-`Guest C++ heap provider tests: PASS`. Android ARM64 build validation is
-running separately. This does not prove the original game's C++ runtime or
-heap lifecycle is compatible.
+Host CI passed on 2026-11-13 in run `43413952682`: 312 Python tests, native
+C mock-header syntax checks, and all compiled host regressions including
+`Guest C++ heap provider tests: PASS`. Android ARM64 build and ELF verification
+also passed in run `43413952565`. This does not prove the original game's C++
+runtime or heap lifecycle is compatible.
 
 ## Next
 
