@@ -69,9 +69,13 @@ included in the Android ARM64 CMake target.
 
 ## Validation
 
-Host and Android ARM64 CI for the final Stage 123Y source revision are
-pending. Earlier source checks passed before the final path-normalization
-hardening; do not treat those runs as validation of the current head.
+Host CI passed in run `43420175068` on the Stage 123Y source after the
+path-normalization hardening; the provider regression, Python suite, native
+mock-header checks, and compiled host tests all passed. Android ARM64 build
+and ELF verification for the provider source are still running in run
+`43420138210`. The host run SHA differs only in documentation from the
+provider implementation SHA; no provider source changes followed the
+validated source.
 
 ## Next
 
