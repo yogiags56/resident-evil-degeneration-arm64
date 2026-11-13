@@ -64,11 +64,14 @@ int main(void) {
     /* %n stores consumed input but is not counted as an assignment. */
     memset(&frame, 0, sizeof(frame));
     frame.r[2] = base + 0x1a0u;
+    frame.r[3] = base + 0x1a4u;
     assert(re_guest_scan_guest_sscanf(&frame, &bus, 2u,
         "42x", "%d%n", &assigned, &consumed, &input_failure));
     assert(assigned == 1u && consumed == 2u);
     memcpy(&signed_value, guest + 0x1a0u, sizeof(signed_value));
     assert(signed_value == 42);
+    memcpy(&signed_value, guest + 0x1a4u, sizeof(signed_value));
+    assert(signed_value == 2);
 
     /* Matching failure is not a parser fault. */
     memset(&frame, 0, sizeof(frame));
