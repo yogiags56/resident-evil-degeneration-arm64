@@ -270,7 +270,7 @@ Guest path normalization rejects absolute paths and parent traversal.
 The backend is an explicit read/write/seek/tell/close vtable. A host
 regression exercises the provider through the guest import dispatcher and
 is registered in the host test runner; the provider is included in the
-Android ARM64 CMake target. Host CI passed in run `43420175068`; Android ARM64 build and ELF
-verification are still running in run `43420138210`. Production module-loader wiring, a writable Android backend,
+Android ARM64 CMake target. Host CI passed in run `43420175068`. Android ARM64 app build, ELF
+verification, artifact collection, and upload passed in run `43420138210`. Production module-loader wiring, a writable Android backend,
 `fprintf`, and original-game file access remain outstanding. See
 [Stage 123Y](STAGE123Y_GUEST_LIBC_STDIO_FILE_IO.md).
