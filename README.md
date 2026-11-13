@@ -619,3 +619,15 @@ without passing guest pointers to it. The host regression exercises the
 guest import trampolines and validates decompressed bytes and stream
 bookkeeping. Host CI passed in run `43413431936`; Android ARM64 build passed in run `43413417668`. See
 [Stage 123R report](docs/STAGE123R_GUEST_LIBZ_ABI_PROVIDER.md).
+
+
+## Stage 123S — Guest C++ new/delete heap provider
+
+Added guest ARM32 adapters for the four relocation-backed C++ allocation
+symbols `_Znwj`, `_Znaj`, `_ZdlPv`, and `_ZdaPv`. They use a bounded
+8-byte-aligned first-fit allocator over a dedicated guest RW arena, with
+host-side allocation metadata and guest-address-only results. Host tests pass;
+Android ARM64 validation is pending. OOM currently returns a null guest
+pointer rather than throwing `std::bad_alloc`; C++ exceptions and the broader
+C++ ABI are not yet implemented. See
+[Stage 123S report](docs/STAGE123S_GUEST_CXX_HEAP_PROVIDER.md).
