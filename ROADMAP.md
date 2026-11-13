@@ -1,10 +1,16 @@
 # Project Roadmap
 
-## Active milestone update — Stage 123T (ARM EABI compiler-helper provider)
+## Active milestone update — Stage 123U (shared guest heap and libc allocation provider)
+
+Stage 123U adds a bounded shared guest heap used by both the Stage 123S C++ new/delete provider and exact relocation-backed libc malloc/free/realloc/valloc imports. The heap tracks 512 allocations in host metadata, returns guest addresses only, supports 8-byte normal alignment and 4096-byte valloc alignment, and preserves old realloc blocks on failure. Cross-family free/reuse is covered by regression. Host CI passed in run 43416640694; Android ARM64 build and ELF verification passed in run 43416621992. Production heap arena reservation/lifetime remains open. See docs/STAGE123U_SHARED_GUEST_HEAP_LIBC_ALLOC.md.
+
+## Completed milestone — Stage 123T (ARM EABI compiler-helper provider)
 
 Stage 123T adds guest adapters for the 21 exact relocation-backed __aeabi_* imports in the original ELF32 manifest. It covers double/float arithmetic and comparisons, integer conversions, 32-bit signed/unsigned division and divmod, 64-bit multiplication, and __aeabi_ldivmod. The import dispatcher now supports four-register results (r0-r3). Host CI passed in run 43415885622; Android ARM64 build and ELF verification passed in run 43415890966, including artifact upload. No libgcc.so SONAME is inferred. See docs/STAGE123T_ARM_EABI_COMPILER_HELPERS.md.
 
 ## Completed milestone — Stage 123S (guest C++ new/delete heap provider)
+
+Stage 123U supersedes the original Stage 123S private allocation-record implementation with a common heap shared by libc and C++ allocation families.
 
 Stage 123S adds guest ARM32 adapters for the four relocation-backed C++ allocation imports _Znwj, _Znaj, _ZdlPv, and _ZdaPv. It uses a dedicated guest RW arena, bounded host-side allocation records, 8-byte-aligned first-fit allocation, exact-address release, and guest-address-only pointers. Host CI and Android ARM64 build/ELF verification both passed (runs `43413952682` and `43413952565`). It does not implement C malloc/free, C++ exceptions, std::bad_alloc, sized/aligned/nothrow new/delete, or production heap lifecycle integration. See docs/STAGE123S_GUEST_CXX_HEAP_PROVIDER.md.
 Stage 123P introduced the callback-driven guest liblog.so provider for __android_log_print and __android_log_write, with bounded guest-string copying, an AAPCS32 variadic formatter subset, exact symbol-index binding, and transactional rollback. See docs/STAGE123P_LIBLOG_GUEST_ABI_PROVIDER.md.
