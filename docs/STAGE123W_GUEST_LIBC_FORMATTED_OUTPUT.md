@@ -58,9 +58,11 @@ variadics, 64-bit even-word alignment, dynamic width, truncation, zero-sized
 transactional import-table rollback. Existing guest liblog formatter tests
 continue to exercise the shared implementation.
 
-Android ARM64 build and ELF verification passed in run `43418672203`,
-including artifact upload. The latest host run after fixing the test's NUL
-literal is `43418862945`; record its final result after completion.
+Host CI passed in run `43418862945`: 312 Python tests, native C mock-header
+syntax checks, and all compiled host regressions, including
+`Guest libc formatted-output provider tests: PASS` and
+`Guest liblog provider tests: PASS`. Android ARM64 build and ELF verification
+passed in run `43418672203`, including artifact upload.
 
 ## Deliberate limitations
 
