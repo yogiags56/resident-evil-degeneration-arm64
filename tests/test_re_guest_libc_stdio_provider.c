@@ -183,6 +183,23 @@ int main(void) {
     assert(runtime.cpu.r[0] == 17u);
     assert(memcmp(stream.bytes + 6u, "id=17 name=guest\n", 17u) == 0);
 
+    /* Reading beyond the current end sets EOF; a successful seek clears it. */
+    call_import(&runtime, exports[4].value, base + 0xd2u,
+        handle, 0, 2u, 0u);
+    assert((int32_t)runtime.cpu.r[0] == 0);
+    call_import(&runtime, exports[2].value, base + 0xd4u,
+        base + 0x900u, 1u, 1u, handle);
+    assert(runtime.cpu.r[0] == 0u);
+    call_import(&runtime, exports[8].value, base + 0xd6u,
+        handle, 0u, 0u, 0u);
+    assert(runtime.cpu.r[0] == 1u);
+    call_import(&runtime, exports[4].value, base + 0xd7u,
+        handle, 0, 0u, 0u);
+    assert((int32_t)runtime.cpu.r[0] == 0);
+    call_import(&runtime, exports[8].value, base + 0xd9u,
+        handle, 0u, 0u, 0u);
+    assert(runtime.cpu.r[0] == 0u);
+
     /* fflush and stream status imports use the same opaque FILE token. */
     call_import(&runtime, exports[10].value, base + 0xd8u,
         handle, 0u, 0u, 0u);
