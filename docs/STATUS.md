@@ -1,6 +1,6 @@
 # Current Status
 
-**Current implementation milestone: Stage 123W — guest libc formatted output provider.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
+**Current implementation milestone: Stage 123X — guest libc printf output sink.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
 
 Stage 123L adds a bounded guest DSO provider catalog for the Stage 123I/123K dynamic-loader bridge. It validates unique basename-only SONAMEs, resolves symbols only within the opened provider, tracks open references, and returns caller-supplied guest addresses without exposing host pointers. The standalone regression is wired into host tests and the Android CMake target. CI validation is pending; earlier failed GitHub Actions attempts did not expose downloadable logs or artifacts, so their failure cannot yet be attributed to source code. See [Stage 123L](STAGE123L_GUEST_DSO_PROVIDER_REGISTRY.md).
 
@@ -244,3 +244,17 @@ tests and all native regressions, including the new libc string provider
 test. Android ARM64 build and ELF verification passed in run
 `43417396929`. The production module loader does not yet install this
 provider. See [Stage 123V](STAGE123V_GUEST_LIBC_MEMORY_STRING.md).
+
+
+## Stage 123X — Guest libc printf output sink
+
+Extended the Stage 123W formatted-output provider with the exact
+relocation-backed `libc.so` symbol `printf`. The guest format pointer is
+read from r0 and variadic words begin at AAPCS32 index 1. Formatted bytes are
+sent through a caller-supplied output callback; short writes and missing
+sinks fail closed. This avoids exposing host stdio or native callback
+pointers to the ARM32 guest. The host regression now checks exact output
+bytes and the return count. Host and Android ARM64 CI validation is pending.
+Production module-loader installation and a real Android stdout/log sink
+remain open. See
+[Stage 123X](STAGE123X_GUEST_LIBC_PRINTF_OUTPUT_SINK.md).
