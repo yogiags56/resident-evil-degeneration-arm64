@@ -60,6 +60,7 @@ int main(void) {
     (void)strcpy((char *)guest + 0x1c0u, "hello ");
     (void)strcpy((char *)guest + 0x1e0u, "  -1234xyz");
     (void)strcpy((char *)guest + 0x200u, "red,green,,blue");
+    (void)strcpy((char *)guest + 0x220u, ",");
     (void)strcpy((char *)guest + 0x240u, "abcdef");
 
     assert(re_guest_libc_string_provider_init(&provider) == RE_GUEST_LIBC_STRING_OK);
@@ -99,7 +100,7 @@ int main(void) {
     assert(runtime.cpu.r[0] == base + 0x300u);
     assert(strcmp(guest_string(guest, base, base + 0x300u), "hello") == 0);
     call_import(&runtime, exports[1].value, base + 0xe0u, base + 0x241u, base + 0x240u, 5u);
-    assert(strcmp(guest_string(guest, base, base + 0x241u), "aabcd") == 0);
+    assert(strcmp(guest_string(guest, base, base + 0x241u), "aabcde") == 0);
     call_import(&runtime, exports[2].value, base + 0x100u, base + 0x320u, 'A', 4u);
     assert(memcmp(guest + 0x320u, "AAAA", 4u) == 0);
 
