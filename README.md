@@ -15,7 +15,7 @@ An engineering research project to run the original ARM32 Android game runtime o
 > **Stage 123M — ELF32 exports into guest `dlopen` providers:** the new adapter converts already-parsed/mapped ELF32 modules into per-SONAME provider entries, preserves load-bias and Thumb/data pointer semantics, and stages updates before committing to protect a live catalog on failure. Host regression and Android native-target wiring have been added; CI has not yet validated this stage. It still does not load Android system DSOs or create GLES/EGL ARM32 trampolines. See [Stage 123M](docs/STAGE123M_ELF32_DLOPEN_PROVIDER_ADAPTER.md).
 > **Stage 123N — guest bridge/provider wiring:** the Stage 123L catalog can now be installed as the callback backend for the Stage 123I guest `dlopen` bridge. A host regression covers opaque guest handles and catalog lifecycle; Android target/test registration is present. CI remains pending and no actual Android system DSO or GLES/EGL trampoline is implemented. See [Stage 123N](docs/STAGE123N_GUEST_DL_BRIDGE_PROVIDER_WIRING.md).
 > **Stage 123O — original DSO manifest:** a fresh hash-pinned inspection of `libjirobiodg.so` records its six direct `DT_NEEDED` dependencies, 4,057 relocation entries, 137 symbol-backed references and the separate runtime GLES fallback DSO names. The APK itself remains excluded; derived metadata is committed. See [Stage 123O](docs/STAGE123O_ORIGINAL_DSO_DEPENDENCY_EVIDENCE.md) and [machine-readable manifest](reports/STAGE123O_LIBJIROBIODG_PROVIDER_MANIFEST.json).
-> **Stage 123P — guest liblog ABI provider:** added exact ELF32 symbol-index binding for `__android_log_print` and `__android_log_write`, bounded guest-memory string copying, an AAPCS32 variadic formatter subset, and transactional guest Thumb trampoline exports. Host regression and Android source registration are included; the native logging callback and CI validation remain pending. See [Stage 123P](docs/STAGE123P_LIBLOG_GUEST_ABI_PROVIDER.md).
+> **Stage 123P — guest liblog ABI provider:** added exact ELF32 symbol-index binding for `__android_log_print` and `__android_log_write`, bounded guest-memory string copying, an AAPCS32 variadic formatter subset, and transactional guest Thumb trampoline exports. Host regression and Android source registration are included; the Android NDK callback integration is now implemented and its host/Android ARM64 build validations passed. Physical-device logcat validation remains pending. See [Stage 123P](docs/STAGE123P_LIBLOG_GUEST_ABI_PROVIDER.md) and [Stage 123Q](docs/STAGE123Q_ANDROID_LIBLOG_NDK_INTEGRATION.md).
 
 > **Critical format boundary:** the actual guest executable `assets/biohazard.s3e` is an LZMA-alone-compressed **XE3U** image, not an ELF file. The Stage 97 audit identified `libjirobiodg.so` as a separate ELF32 ARM shared object. The new ELF32 pipeline may serve that shared-library path; it must not be fed `biohazard.s3e`. The native XE3U image mapper, internal fixup application, external S3E import binding, and integration with the ARM32 runtime remain required before attempting the real game entry point. The LZMA adapter has synthetic host CI coverage; the uploaded original image has independently been decoded and matched against Stage 97. The internal relocation evidence is documented in [Stage 123D](docs/STAGE123D_INTERNAL_RELOCATION_EVIDENCE.md): all 230 nonzero external import stubs match their exact relocation cells, and a candidate-only transactional internal relocation planner now has passing host tests. The native C audit CLI still needs to be run against the uploaded asset in a local build environment.
 
@@ -604,7 +604,7 @@ of the original APK's full DSO closure or game boot. See
 
 Host CI passed: 312 Python tests, native C mock-header syntax checks, and all
 compiled host-test executables including the guest liblog provider regression.
-The Android ARM64 NDK build is running for this branch. This does not yet prove
+The Android ARM64 NDK build passed in run `43412881170`. This does not yet prove
 a device-side logcat result or original-game boot.
 
 
@@ -617,5 +617,5 @@ opaque guest state tokens, copies input/output through validated guest memory,
 and delegates decompression to the native Android ARM64 zlib implementation
 without passing guest pointers to it. The host regression exercises the
 guest import trampolines and validates decompressed bytes and stream
-bookkeeping. Host CI passed; Android ARM64 validation is pending. See
+bookkeeping. Host CI passed in run `43413431936`; Android ARM64 build passed in run `43413417668`. See
 [Stage 123R report](docs/STAGE123R_GUEST_LIBZ_ABI_PROVIDER.md).
