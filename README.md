@@ -645,5 +645,6 @@ See [Stage 123T report](docs/STAGE123T_ARM_EABI_COMPILER_HELPERS.md).
 
 Host CI passed in run `43415885622`: 312 Python tests, native C
 mock-header syntax checks, and all compiled host regressions, including
-`Guest ARM EABI provider tests: PASS`. Android ARM64 build/ELF verification
-is pending on the branch. No original-game runtime or device boot is claimed.
+`Guest ARM EABI provider tests: PASS`. Android ARM64 build and ELF
+verification passed in run `43415890966`, including artifact upload. No
+original-game runtime or device boot is claimed.
