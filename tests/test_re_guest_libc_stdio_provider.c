@@ -225,10 +225,28 @@ int main(void) {
 
     call_import(&runtime, exports[8].value, base + 0xdcu,
         handle, 0u, 0u, 0u);
-    assert(runtime.cpu.r[0] == 1u);
+    assert(runtime.cpu.r[0] == 0u); /* Lookahead EOF was beyond the match. */
     call_import(&runtime, exports[4].value, base + 0xdeu,
         handle, 0u, 0u, 0u);
     assert((int32_t)runtime.cpu.r[0] == 0);
+
+    /* A conversion that actually needs more input reports EOF to the guest. */
+    memcpy(stream.bytes, "42", 2u);
+    stream.length = 2u;
+    stream.position = 0u;
+    strcpy((char *)guest + 0x7a0u, "%d %d");
+    call_import(&runtime, exports[12].value, base + 0xeau,
+        handle, base + 0x7a0u, base + 0x940u, base + 0x960u);
+    assert(runtime.cpu.r[0] == 1u);
+    call_import(&runtime, exports[8].value, base + 0xecu,
+        handle, 0u, 0u, 0u);
+    assert(runtime.cpu.r[0] == 1u);
+    call_import(&runtime, exports[4].value, base + 0xeeu,
+        handle, 0u, 0u, 0u);
+    assert((int32_t)runtime.cpu.r[0] == 0);
+    call_import(&runtime, exports[8].value, base + 0xf0u,
+        handle, 0u, 0u, 0u);
+    assert(runtime.cpu.r[0] == 0u);
 
     /* fflush and stream status imports use the same opaque FILE token. */
     call_import(&runtime, exports[10].value, base + 0xd8u,
