@@ -720,3 +720,14 @@ is registered and the provider is included in the Android ARM64 target.
 Final-head CI is pending; production loader wiring, writable Android storage,
 `fprintf`, and game boot are not claimed. See
 [Stage 123Y report](docs/STAGE123Y_GUEST_LIBC_STDIO_FILE_IO.md).
+
+
+## Stage 123Z — Guest libc formatted file output and stream status
+
+Extended guest stdio with `fprintf`, `feof`, `ferror`, and `fflush`.
+`fprintf` uses the shared bounded AAPCS32 formatter and writes through
+the opaque guest FILE-token backend. EOF/error indicators, seek clearing,
+optional backend flush, and flush-on-close are covered by the expanded
+guest-dispatch host regression. Host and Android ARM64 CI are pending.
+`fscanf` and `sscanf` are deferred to a separate bounded parser stage.
+See [Stage 123Z report](docs/STAGE123Z_GUEST_LIBC_FORMATTED_FILE_IO.md).
