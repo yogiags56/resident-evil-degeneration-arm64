@@ -174,6 +174,6 @@ and `_ZdaPv`. The provider allocates 8-byte-aligned blocks from a dedicated
 guest RW arena using bounded host-side metadata; returned values are guest
 addresses, never host pointers. The host regression passed, including
 allocation, non-overlap, free/reuse, and out-of-space behavior. Android ARM64
-build validation is pending. C++ exception semantics, C malloc/free, and
+build and ELF verification also passed in run `43413952565`. C++ exception semantics, C malloc/free, and
 production heap lifecycle integration remain open. See
 [Stage 123S](STAGE123S_GUEST_CXX_HEAP_PROVIDER.md).
