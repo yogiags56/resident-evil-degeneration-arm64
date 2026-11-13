@@ -194,7 +194,7 @@ int main(void) {
     {
         S3EAAPCS32Frame frame = {{0x1000u,0x1020u,0,0}, 0x1000u,
                                  guest_bytes, sizeof(guest_bytes)};
-        REGUESTIMPORTResult result = {0xFFFFFFFFu, 0xFFFFFFFFu};
+        REGUESTIMPORTResult result = {0xFFFFFFFFu, 0xFFFFFFFFu, 0u, 0u};
         backend.missing = 1;
         CHECK(re_s3e_file_bridge_open_handler(&frame, &memory, &bridge,
                                                &result) == RE_IMPORT_OK);
