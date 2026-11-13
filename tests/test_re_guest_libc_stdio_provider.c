@@ -113,7 +113,6 @@ int main(void) {
     REGUESTRuntime runtime;
     REGUESTLIBCStdioProvider provider, nonseek_provider;
     REGUESTLIBCStdioBackend nonseek_backend;
-    REGUESTSYMBOL nonseek_exports[RE_GUEST_LIBC_STDIO_SYMBOL_COUNT];
     REGUESTLIBCStdioBackend backend = {
         fake_open, fake_read, fake_write, fake_seek, fake_tell, fake_close, fake_flush
     };
