@@ -15,9 +15,17 @@ extern "C" {
 #define RE_GUEST_LIBC_STRING_SYMBOL_COUNT 15u
 #define RE_GUEST_LIBC_STRING_MAX_BYTES 65536u
 
+typedef struct REGUESTLIBCStringProvider REGUESTLIBCStringProvider;
+
 typedef struct {
+    uint32_t kind;
+    REGUESTLIBCStringProvider *provider;
+} REGUESTLIBCStringContext;
+
+struct REGUESTLIBCStringProvider {
     uint32_t strtok_next;
-} REGUESTLIBCStringProvider;
+    REGUESTLIBCStringContext contexts[RE_GUEST_LIBC_STRING_SYMBOL_COUNT];
+};
 
 typedef enum {
     RE_GUEST_LIBC_STRING_OK = 0,
