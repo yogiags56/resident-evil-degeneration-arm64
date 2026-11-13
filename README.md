@@ -626,8 +626,7 @@ bookkeeping. Host CI passed in run `43413431936`; Android ARM64 build passed in 
 Added guest ARM32 adapters for the four relocation-backed C++ allocation
 symbols `_Znwj`, `_Znaj`, `_ZdlPv`, and `_ZdaPv`. They use a bounded
 8-byte-aligned first-fit allocator over a dedicated guest RW arena, with
-host-side allocation metadata and guest-address-only results. Host tests pass;
-Android ARM64 validation is pending. OOM currently returns a null guest
+host-side allocation metadata and guest-address-only results. Host CI and Android ARM64 build/ELF verification both passed (runs `43413952682` and `43413952565`). OOM currently returns a null guest
 pointer rather than throwing `std::bad_alloc`; C++ exceptions and the broader
 C++ ABI are not yet implemented. See
 [Stage 123S report](docs/STAGE123S_GUEST_CXX_HEAP_PROVIDER.md).
