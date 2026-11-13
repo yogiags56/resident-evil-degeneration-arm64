@@ -211,7 +211,9 @@ static REGUESTIMPORTStatus libc_string_handler(
             break;
         case LIBC_STRNCAT:
             if (!dst || !src || count > RE_GUEST_LIBC_STRING_MAX_BYTES ||
-                !cstring_length(bus, dst, &length))
+                !cstring_length(bus, dst, &length) ||
+                length >= RE_GUEST_LIBC_STRING_MAX_BYTES ||
+                count > RE_GUEST_LIBC_STRING_MAX_BYTES - length - 1u)
                 return RE_IMPORT_E_HANDLER;
             for (uint32_t i = 0; i < count; ++i) {
                 if (!read_byte(bus, src, i, &a)) return RE_IMPORT_E_HANDLER;
@@ -374,7 +376,10 @@ static int find_undefined_symbol(
 REGUESTLIBCStringStatus re_guest_libc_string_provider_init(
     REGUESTLIBCStringProvider *provider) {
     if (!provider) return RE_GUEST_LIBC_STRING_E_ARGUMENT;
-    provider->strtok_next = 0u;
+    memset(provider, 0, sizeof(*provider));
+    for (size_t i = 0; i < RE_GUEST_LIBC_STRING_SYMBOL_COUNT; ++i)
+        provider->contexts[i].provider = provider;
+    provider->initialized = 1u;
     return RE_GUEST_LIBC_STRING_OK;
 }
 
@@ -390,7 +395,7 @@ REGUESTLIBCStringStatus re_guest_libc_string_provider_bind_elf_symbols(
 
     if (export_count) *export_count = 0u;
     if (failed_symbol_index) *failed_symbol_index = symbol_count;
-    if (!provider || !imports || !symbols || !exports || !export_count ||
+    if (!provider || !provider->initialized || !imports || !symbols || !exports || !export_count ||
         export_capacity < RE_GUEST_LIBC_STRING_SYMBOL_COUNT)
         return RE_GUEST_LIBC_STRING_E_ARGUMENT;
     if (symbol_count > RE_GUEST_ELF32_LINK_MAX_SYMBOLS ||
