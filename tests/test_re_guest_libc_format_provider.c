@@ -93,8 +93,6 @@ int main(void) {
         assert(rejected_index == 2u);
         assert(memcmp(exports, before, sizeof(before)) == 0);
 
-        incomplete[2 - 1].name[0] = '\0';
-        (void)strcpy(incomplete[1].name, "sprintf");
         (void)strcpy(incomplete[0].name, "snprintf");
         incomplete[0].section_index = 0u;
         incomplete[0].binding = RE_GUEST_STB_GLOBAL;
