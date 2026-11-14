@@ -74,6 +74,12 @@ The exact-SONAME DSO catalog now has a combined initializer for the implemented 
 
 The guest DSO catalog can now include both the implemented libc subset and the two current Android logging imports. The combined initializer binds both against the consumer ELF32 symbol inventory and publishes the catalog and export arrays atomically; rollback is tested when a required log import is missing. This is not the full Android logging API or complete Bionic ABI. See [Stage 125B report](docs/STAGE125B_LIBC_LIBLOG_CATALOG_INTEGRATION.md).
 
+
+
+### Stage 125D — Atomic libc + liblog + libz + libdl catalog integration
+
+The shared exact-SONAME catalog now has a combined initializer for the implemented libc subset, Android logging, zlib inflate, and the guest dynamic-loader bridge (`dlopen`, `dlsym`, `dlclose`, `dlerror`). A regression opens a sample DSO through the committed bridge and resolves a guest symbol. The initializer commits all four provider families and import state transactionally. This is not complete Android dependency closure or original-game boot. See [Stage 125D report](docs/STAGE125D_LIBC_LIBLOG_LIBZ_LIBDL_CATALOG_INTEGRATION.md).
+
 ## Repository layout
 
 ```text
