@@ -1,6 +1,6 @@
 # Resident Evil: Degeneration — Native ARM64 Port Research
 
-[![Stage](https://img.shields.io/badge/stage-124E-blue)](#project-status)
+[![Stage](https://img.shields.io/badge/stage-125F-blue)](#project-status)
 [![Platform](https://img.shields.io/badge/platform-Android%20ARM64-green)](#build-the-android-probe)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
@@ -33,6 +33,10 @@ bash tools/android_toolchain_doctor.sh --json
 ```
 
 The doctor checks the installed NDK revision and host LLVM/CMake tools, CMake/Ninja, Java/Gradle, and the `ANDROID_LIBLZMA_ROOT` header/archive. It also verifies that the static liblzma archive contains an ELF64 AArch64 object when the required tools are present. It is diagnostic-only and does not install SDK components or download dependencies. A non-zero exit means the environment is not ready for the Android build.
+
+### Stage 125F — Original DSO provider-closure audit
+
+A fail-closed audit now compares the six exact `DT_NEEDED` entries and the original 136 relocation-backed undefined names against explicit guest-provider policy. `libm.so` is recorded as dependency-only: no unsupported symbol ownership is invented. The audit deliberately reports an incomplete production gate while remaining filesystem, process/time, pthread and socket imports lack guest adapters. This is static coverage evidence, not runtime dependency resolution or game boot. See [Stage 125F report](docs/STAGE125F_ORIGINAL_DSO_PROVIDER_CLOSURE_AUDIT.md), [provider policy](reports/STAGE125F_PROVIDER_POLICY.json), and [audit tool](tools/audit_original_dso_closure.py).
 
 ## Project status
 
