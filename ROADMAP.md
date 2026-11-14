@@ -1,8 +1,8 @@
 # Project Roadmap
 
-## Active milestone update — Stage 125E (shared-heap libstdc++ catalog integration)
+## Active milestone update — Stage 125F (original DSO provider-closure audit)
 
-The combined exact-SONAME catalog now includes the four relocation-backed C++ allocation operators under libstdc++.so. C++ provider supports an explicit shared-heap mode and uses the exact REGUESTHEAP already owned by the libc allocation provider; this preserves allocation identity across malloc/free and new/delete. The combined initializer binds all four C++ symbols and publishes a six-entry catalog (one fixture DSO plus five virtual system providers). Remaining: complete C++ runtime semantics, remaining libc/POSIX imports, libm dependency policy, GLES/EGL callable adapters, production XE3U-to-ELF loader boot, and original-game execution. See docs/STAGE125E_LIBSTDCXX_SHARED_HEAP_CATALOG_INTEGRATION.md.
+Added a deterministic fail-closed audit that cross-checks the exact six DT_NEEDED entries and all 136 unique relocation-backed undefined names from the hash-pinned Stage 123O manifest against explicit SONAME and ABI-family provider policy. `libm.so` is deliberately dependency-only; the 21 `__aeabi_*` helpers remain an ABI-family provider without an invented libgcc/libm SONAME. The audit reports uncovered filesystem, process/time, pthread and socket imports and keeps `production_loader_gate` false until the complete relocation-backed inventory is covered. Regression tests reject missing/duplicate policies and fabricated exports. This stage is static coverage only; no DSO loading, relocation or game boot is claimed. See docs/STAGE125F_ORIGINAL_DSO_PROVIDER_CLOSURE_AUDIT.md.
 
 ## Active milestone update — Stage 124D (guest ungetc pushback)
 
