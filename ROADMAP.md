@@ -1,8 +1,8 @@
 # Project Roadmap
 
-## Active milestone update — Stage 125B (libc.so + liblog.so catalog integration)
+## Active milestone update — Stage 125C (libc.so + liblog.so + libz.so catalog integration)
 
-Extended the exact-SONAME DSO catalog with the transactional libc subset and two relocation-backed Android logging imports (`__android_log_print`, `__android_log_write`). Regression coverage checks exact SONAME lookup and atomic rollback after libc binding. The zlib adapter, remaining DSO providers, GLES/EGL callable adapters, production loader installation, and original-game boot remain open. See `docs/STAGE125B_LIBC_LIBLOG_CATALOG_INTEGRATION.md`.
+Extended the exact-SONAME DSO catalog with the transactional libc subset, two relocation-backed Android logging imports, and four guest zlib inflate imports. Regression coverage checks exact `libz.so` lookup and atomic rollback after a missing zlib import. The zlib adapter remains a four-function subset; remaining DSO providers, GLES/EGL callable adapters, production loader installation, and original-game boot remain open. See `docs/STAGE125C_LIBC_LIBLOG_LIBZ_CATALOG_INTEGRATION.md`.
 
 ## Active milestone update — Stage 124D (guest ungetc pushback)
 
