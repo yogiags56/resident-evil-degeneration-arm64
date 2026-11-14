@@ -348,6 +348,11 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
   runtime/guest/re_guest_memory.c runtime/guest/re_guest_memory_bus.c \
   runtime/guest/re_guest_cpu_bus_adapter.c \
   -o build/host-tests/test_re_guest_gl_imports
+"$CC" "${CFLAGS[@]}" -I runtime/archive -I runtime/guest \
+  tests/test_re_guest_libc_vfs_backend.c \
+  runtime/guest/re_guest_libc_vfs_backend.c runtime/archive/re_dtrz_vfs.c \
+  -o build/host-tests/test_re_guest_libc_vfs_backend
+
 "$CC" "${CFLAGS[@]}" -I runtime/archive tests/test_re_dtrz_vfs.c \
   runtime/archive/re_dtrz_vfs.c -o build/host-tests/test_re_dtrz_vfs
 
