@@ -1,0 +1,135 @@
+{
+  "schema": "resident-evil-degeneration-provider-policy/v1",
+  "source_manifest": "reports/STAGE123O_LIBJIROBIODG_PROVIDER_MANIFEST.json",
+  "expected_dt_needed_in_order": [
+    "libc.so",
+    "libm.so",
+    "liblog.so",
+    "libstdc++.so",
+    "libz.so",
+    "libdl.so"
+  ],
+  "soname_policy": {
+    "libc.so": {
+      "mode": "partial_guest_provider",
+      "provider": "guest libc provider set",
+      "provided_symbols": [
+        "malloc",
+        "free",
+        "realloc",
+        "valloc",
+        "memcpy",
+        "memmove",
+        "memset",
+        "strlen",
+        "strcmp",
+        "strncmp",
+        "strcpy",
+        "strncpy",
+        "strncat",
+        "strchr",
+        "strstr",
+        "strcasecmp",
+        "strncasecmp",
+        "atoi",
+        "strtok",
+        "snprintf",
+        "sprintf",
+        "printf",
+        "fopen",
+        "fclose",
+        "fread",
+        "fwrite",
+        "fseek",
+        "ftell",
+        "fgets",
+        "fprintf",
+        "feof",
+        "ferror",
+        "fflush",
+        "sscanf",
+        "fscanf",
+        "ungetc"
+      ]
+    },
+    "libm.so": {
+      "mode": "dependency_only",
+      "provider": "no synthetic libm exports",
+      "provided_symbols": [],
+      "relocation_symbols": [],
+      "rationale": "The hash-pinned ELF32 relocation-backed undefined-name inventory contains no direct libm-owned math symbol. The 21 __aeabi_* arithmetic/conversion helpers are handled by the separately audited ARM EABI provider; DT_NEEDED is still preserved and must be satisfied by a verified guest DSO policy before production loading."
+    },
+    "liblog.so": {
+      "mode": "guest_provider",
+      "provider": "Android log guest ABI provider",
+      "provided_symbols": [
+        "__android_log_print",
+        "__android_log_write"
+      ]
+    },
+    "libstdc++.so": {
+      "mode": "partial_guest_provider",
+      "provider": "shared-heap C++ allocation provider",
+      "provided_symbols": [
+        "_Znwj",
+        "_Znaj",
+        "_ZdlPv",
+        "_ZdaPv"
+      ]
+    },
+    "libz.so": {
+      "mode": "partial_guest_provider",
+      "provider": "guest zlib provider",
+      "provided_symbols": [
+        "inflate",
+        "inflateEnd",
+        "inflateInit2_",
+        "inflateInit_"
+      ]
+    },
+    "libdl.so": {
+      "mode": "guest_provider",
+      "provider": "guest dynamic-loader bridge",
+      "provided_symbols": [
+        "dlopen",
+        "dlsym",
+        "dlclose",
+        "dlerror"
+      ]
+    }
+  },
+  "abi_families": {
+    "ARM_EABI": {
+      "soname": null,
+      "provider": "guest ARM EABI compiler-helper provider",
+      "provided_symbols": [
+        "__aeabi_d2f",
+        "__aeabi_d2iz",
+        "__aeabi_dadd",
+        "__aeabi_dcmpeq",
+        "__aeabi_dcmplt",
+        "__aeabi_ddiv",
+        "__aeabi_dmul",
+        "__aeabi_dsub",
+        "__aeabi_f2iz",
+        "__aeabi_fadd",
+        "__aeabi_fmul",
+        "__aeabi_fsub",
+        "__aeabi_i2d",
+        "__aeabi_i2f",
+        "__aeabi_idiv",
+        "__aeabi_idivmod",
+        "__aeabi_ldivmod",
+        "__aeabi_lmul",
+        "__aeabi_ui2d",
+        "__aeabi_uidiv",
+        "__aeabi_uidivmod"
+      ]
+    }
+  },
+  "notes": [
+    "Provider inventories describe implemented guest-callable adapters, not host Android symbol forwarding.",
+    "A dependency-only policy entry does not claim that a runtime DSO has been loaded or validated.",
+    "Uncovered imports must block production loader activation; do not silently bind them to guessed SONAMEs."
+  ]
+}
