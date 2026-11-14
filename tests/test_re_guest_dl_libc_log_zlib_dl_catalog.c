@@ -44,6 +44,7 @@ int main(void) {
     size_t libc_count=0u,log_count=0u,zlib_count=0u,dl_count=0u;
     size_t failed_symbol=0u,failed_module=0u;
     uint32_t token=0u,address=0u;
+    uintptr_t libdl_handle=0u;
 
     memset(symbols,0,sizeof(symbols));
     for(size_t i=0;i<RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT;i++){
@@ -107,13 +108,13 @@ int main(void) {
 
     /* The virtual libdl.so exports resolve to the four generated guest stubs. */
     assert(re_guest_dl_provider_catalog_open_callback("libdl.so",0u,
-        (uintptr_t *)&token,&catalog)==0);
+        &libdl_handle,&catalog)==0);
     for(size_t i=0;i<4u;i++){
-        assert(re_guest_dl_provider_catalog_symbol_callback((uintptr_t)token,
+        assert(re_guest_dl_provider_catalog_symbol_callback(libdl_handle,
             dl_names[i],&address,&catalog)==0);
         assert(address==dl_exports[i].value);
     }
-    assert(re_guest_dl_provider_catalog_close_callback((uintptr_t)token,&catalog)==0);
+    assert(re_guest_dl_provider_catalog_close_callback(libdl_handle,&catalog)==0);
 
     assert(re_guest_dl_bridge_close_all(&bridge)==RE_GUEST_DL_OK);
     re_guest_zlib_provider_shutdown(&zlib_provider);
