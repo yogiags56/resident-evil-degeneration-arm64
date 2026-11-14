@@ -85,6 +85,34 @@ REGUESTDLProviderStatus re_guest_dl_provider_catalog_init_with_libc_log_zlib(
     size_t *failed_symbol_index,
     size_t *failed_module);
 
+/* Backward-compatible initializer without the optional C++ provider. */
+REGUESTDLProviderStatus re_guest_dl_provider_catalog_init_with_libc_log_zlib_dl(
+    REGUESTDLProviderCatalog *catalog,
+    REGUESTDLBridge *dl_bridge,
+    const REGUESTDLProviderSource *module_sources,
+    size_t module_count,
+    const REGUESTLIBCProviderSet *libc_set,
+    REGUESTLOGProvider *log_provider,
+    REGUESTZLIBProvider *zlib_provider,
+    REGUESTIMPORTTable *imports,
+    const REGUESTELF32LINKSYMBOL *consumer_symbols,
+    size_t consumer_symbol_count,
+    REGUESTSYMBOL *libc_exports,
+    size_t libc_export_capacity,
+    size_t *libc_export_count,
+    REGUESTSYMBOL *log_exports,
+    size_t log_export_capacity,
+    size_t *log_export_count,
+    REGUESTSYMBOL *zlib_exports,
+    size_t zlib_export_capacity,
+    size_t *zlib_export_count,
+    REGUESTSYMBOL *dl_exports,
+    size_t dl_export_capacity,
+    size_t *dl_export_count,
+    uint32_t error_guest_address,
+    size_t *failed_symbol_index,
+    size_t *failed_module);
+
 /* Extend libc + liblog + libz with the four relocation-backed libdl imports.
  * The bridge object is bound as the import-handler context and initialized
  * against the committed catalog before this function returns. The bridge,
