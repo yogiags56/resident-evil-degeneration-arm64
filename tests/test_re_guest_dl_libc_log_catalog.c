@@ -96,6 +96,7 @@ int main(void) {
     /* Force a failure after libc binding: liblog's second required symbol is
        absent. Every published object must remain unchanged. */
     before=catalog;
+    assert(re_guest_import_table_init(&imports,0x32000000u)==RE_IMPORT_OK);
     import_before=imports;
     memset(libc_exports,0x5a,sizeof(libc_exports));
     memset(log_exports,0x5a,sizeof(log_exports));
