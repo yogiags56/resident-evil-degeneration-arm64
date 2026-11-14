@@ -1,5 +1,9 @@
 # Project Roadmap
 
+## Active milestone update — Stage 125H (read-only POSIX VFS descriptors)
+
+Added a 32-slot POSIX-like descriptor table over the existing DTRZ VFS. Supports O_RDONLY open, read, lseek SET/CUR/END, close, F_OK/R_OK access checks, read-only regular-file stat metadata, and close-all. Write/create/truncate/append and W_OK/X_OK are denied. Descriptor values are integers and the API is not yet an AAPCS32 guest import dispatcher. Host tests and Android CMake registration are included; CI pending. See docs/STAGE125H_READONLY_POSIX_VFS_DESCRIPTORS.md.
+
 ## Active milestone update — Stage 125G (read-only archive-backed guest stdio)
 
 Added a read-only DTRZ VFS backend implementing the existing guest libc stdio backend contract. Guest fopen accepts only r/rb relative archive paths; fread reads decoded entry bytes; fseek/ftell support SET/CUR/END; fclose releases bounded host-owned stream slots. Writes explicitly fail. Path traversal and absolute paths are rejected by the VFS lookup path. Host regression covers stream lifecycle, seek/read boundaries, write denial and invalid paths. Android CMake and host test runner registration are included. This is not a POSIX fd provider and is not yet wired into the production game boot path. See docs/STAGE125G_READONLY_ARCHIVE_GUEST_STDIO.md.
