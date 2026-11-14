@@ -16,7 +16,9 @@ extern "C" {
 #define RE_GUEST_CXX_HEAP_ALIGNMENT RE_GUEST_HEAP_DEFAULT_ALIGNMENT
 
 typedef struct {
-    REGUESTHEAP heap;
+    REGUESTHEAP owned_heap;
+    REGUESTHEAP *heap;
+    uint8_t owns_heap;
 } REGUESTCXXHeapProvider;
 
 typedef enum {
@@ -33,6 +35,12 @@ typedef enum {
  */
 REGUESTCXXHeapStatus re_guest_cxx_heap_provider_init(
     REGUESTCXXHeapProvider *provider, uint32_t heap_base, uint32_t heap_size);
+
+/* Attach to the exact same allocation records used by libc malloc/free.
+ * The shared heap must outlive this provider and all guest allocations.
+ */
+REGUESTCXXHeapStatus re_guest_cxx_heap_provider_init_shared(
+    REGUESTCXXHeapProvider *provider, REGUESTHEAP *shared_heap);
 
 REGUESTCXXHeapStatus re_guest_cxx_heap_provider_bind_elf_symbols(
     REGUESTCXXHeapProvider *provider,
