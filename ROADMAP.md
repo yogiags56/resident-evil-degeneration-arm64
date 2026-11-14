@@ -1,8 +1,8 @@
 # Project Roadmap
 
-## Active milestone update — Stage 125C (libc.so + liblog.so + libz.so catalog integration)
+## Active milestone update — Stage 125D (libc.so + liblog.so + libz.so + libdl.so catalog integration)
 
-Extended the exact-SONAME DSO catalog with the transactional libc subset, two relocation-backed Android logging imports, and four guest zlib inflate imports. Regression coverage checks exact `libz.so` lookup and atomic rollback after a missing zlib import. The zlib adapter remains a four-function subset; remaining DSO providers, GLES/EGL callable adapters, production loader installation, and original-game boot remain open. See `docs/STAGE125C_LIBC_LIBLOG_LIBZ_CATALOG_INTEGRATION.md`.
+Extended the shared exact-SONAME provider catalog with the four relocation-backed libdl imports and installed guest `dlopen/dlsym/dlclose/dlerror` bridge. Regression coverage verifies bridge open/symbol/close against a sample DSO and exact `libdl.so` export lookup. The initializer publishes the combined catalog, export arrays, and import table atomically. Remaining: `libm.so` dependency treatment, C++ heap provider integration for `libstdc++.so`, remaining libc/POSIX imports, full guest dependency closure, GLES/EGL callable adapters, production XE3U boot, and original-game execution. See `docs/STAGE125D_LIBC_LIBLOG_LIBZ_LIBDL_CATALOG_INTEGRATION.md`.
 
 ## Active milestone update — Stage 124D (guest ungetc pushback)
 
