@@ -1,8 +1,8 @@
 # Project Roadmap
 
-## Active milestone update — Stage 124E (transactional libc provider set)
+## Active milestone update — Stage 125A (libc.so DSO catalog integration)
 
-Added an aggregate binder for 36 current libc adapter imports spanning allocation, memory/string, formatted output, and stdio. Binding is transactional and covered by success/rollback host regression; Android CMake includes the module. Production loader installation, missing libc/POSIX providers, GLES/EGL callable adapters, and original-game boot remain open. See `docs/STAGE124E_TRANSACTIONAL_LIBC_PROVIDER_SET.md`.
+Connected the transactional 36-symbol libc subset to the exact-SONAME DSO catalog. The dynamic-link catalog can open `libc.so` and resolve the guest `malloc` trampoline; a new regression covers successful lookup and atomic rollback. Production loader installation, missing libc/POSIX providers, GLES/EGL callable adapters, and original-game boot remain open. See `docs/STAGE125A_LIBC_DSO_CATALOG_INTEGRATION.md`.
 
 ## Active milestone update — Stage 124D (guest ungetc pushback)
 
