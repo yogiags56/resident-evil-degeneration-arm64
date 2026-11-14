@@ -6,6 +6,7 @@
 #include "re_guest_log_provider.h"
 #include "re_guest_zlib_provider.h"
 #include "re_guest_dl_provider_bridge.h"
+#include "re_guest_cxx_heap_provider.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -69,6 +70,7 @@ REGUESTDLProviderStatus re_guest_dl_provider_catalog_init_with_libc_log_zlib(
     const REGUESTLIBCProviderSet *libc_set,
     REGUESTLOGProvider *log_provider,
     REGUESTZLIBProvider *zlib_provider,
+    REGUESTCXXHeapProvider *cxx_provider,
     REGUESTIMPORTTable *imports,
     const REGUESTELF32LINKSYMBOL *consumer_symbols,
     size_t consumer_symbol_count,
@@ -112,6 +114,9 @@ REGUESTDLProviderStatus re_guest_dl_provider_catalog_init_with_libc_log_zlib_dl(
     REGUESTSYMBOL *dl_exports,
     size_t dl_export_capacity,
     size_t *dl_export_count,
+    REGUESTSYMBOL *cxx_exports,
+    size_t cxx_export_capacity,
+    size_t *cxx_export_count,
     uint32_t error_guest_address,
     size_t *failed_symbol_index,
     size_t *failed_module);
