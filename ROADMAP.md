@@ -1,5 +1,9 @@
 # Project Roadmap
 
+## Active milestone update — Stage 124E (transactional libc provider set)
+
+Added an aggregate binder for 36 current libc adapter imports spanning allocation, memory/string, formatted output, and stdio. Binding is transactional and covered by success/rollback host regression; Android CMake includes the module. Production loader installation, missing libc/POSIX providers, GLES/EGL callable adapters, and original-game boot remain open. See `docs/STAGE124E_TRANSACTIONAL_LIBC_PROVIDER_SET.md`.
+
 ## Active milestone update — Stage 124D (guest ungetc pushback)
 
 Added an exact ELF32-index-bound `ungetc` adapter backed by the stdio provider's bounded unread buffer. Pushback clears EOF and is consumed before backend bytes by subsequent reads. Guest-dispatch regression coverage is added; host CI and Android ARM64 validation are pending. Production loader integration and original-game boot remain open. See `docs/STAGE124D_UNGETC_PUSHBACK.md`.
