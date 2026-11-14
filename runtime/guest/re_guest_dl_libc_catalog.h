@@ -90,7 +90,7 @@ REGUESTDLProviderStatus re_guest_dl_provider_catalog_init_with_libc_log_zlib(
  * against the committed catalog before this function returns. The bridge,
  * provider objects, and all export arrays must outlive guest execution.
  */
-REGUESTDLProviderStatus re_guest_dl_provider_catalog_init_with_libc_log_zlib_dl(
+REGUESTDLProviderStatus re_guest_dl_provider_catalog_init_with_libc_log_zlib_dl_with_cxx(
     REGUESTDLProviderCatalog *catalog,
     REGUESTDLBridge *dl_bridge,
     const REGUESTDLProviderSource *module_sources,
