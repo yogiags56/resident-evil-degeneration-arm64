@@ -23,9 +23,10 @@ int main(void) {
     static const char *const log_names[2] = {"__android_log_print","__android_log_write"};
     static const char *const zlib_names[4] = {"inflate","inflateEnd","inflateInit2_","inflateInit_"};
     static const char *const dl_names[4] = {"dlopen","dlsym","dlclose","dlerror"};
-    REGUESTELF32LINKSYMBOL symbols[RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT+11u];
+    static const char *const cxx_names[4] = {"_Znwj","_Znaj","_ZdlPv","_ZdaPv"};
+    REGUESTELF32LINKSYMBOL symbols[RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT+15u];
     REGUESTSYMBOL libc_exports[RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT];
-    REGUESTSYMBOL log_exports[2],zlib_exports[4],dl_exports[4];
+    REGUESTSYMBOL log_exports[2],zlib_exports[4],dl_exports[4],cxx_exports[4];
     REGUESTSYMBOL sample_export={"sample_entry",0x71001001u,
         RE_GUEST_STB_GLOBAL,RE_GUEST_STV_DEFAULT,1u,NULL,"libsample.so"};
     REGUESTDLProviderSource module={"libsample.so",&sample_export,1u};
@@ -40,8 +41,9 @@ int main(void) {
     REGUESTLIBCProviderSet set={&alloc,&string,&format,&stdio};
     REGUESTLOGProvider log_provider={log_write,NULL};
     REGUESTZLIBProvider zlib_provider;
+    REGUESTCXXHeapProvider cxx_provider;
     REGUESTIMPORTTable imports;
-    size_t libc_count=0u,log_count=0u,zlib_count=0u,dl_count=0u;
+    size_t libc_count=0u,log_count=0u,zlib_count=0u,dl_count=0u,cxx_count=0u;
     size_t failed_symbol=0u,failed_module=0u;
     uint32_t token=0u,address=0u;
     uintptr_t libdl_handle=0u;
@@ -71,10 +73,17 @@ int main(void) {
         symbols[at].binding=RE_GUEST_STB_GLOBAL;
         symbols[at].visibility=RE_GUEST_STV_DEFAULT;
         symbols[at].type=2u;
+        at=RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT+11u+i;
+        strcpy(symbols[at].name,cxx_names[i]);
+        symbols[at].binding=RE_GUEST_STB_GLOBAL;
+        symbols[at].visibility=RE_GUEST_STV_DEFAULT;
+        symbols[at].type=2u;
     }
 
     assert(re_guest_heap_init(&heap,0x50000000u,0x10000u)==RE_GUEST_HEAP_OK);
     assert(re_guest_libc_alloc_provider_init(&alloc,&heap)==RE_GUEST_LIBC_ALLOC_OK);
+    assert(re_guest_cxx_heap_provider_init_shared(&cxx_provider,alloc.heap)==RE_GUEST_CXX_HEAP_OK);
+    assert(cxx_provider.heap==alloc.heap && cxx_provider.owns_heap==0u);
     assert(re_guest_libc_string_provider_init(&string)==RE_GUEST_LIBC_STRING_OK);
     assert(re_guest_libc_format_provider_init(&format)==RE_GUEST_LIBC_FORMAT_OK);
     assert(re_guest_libc_stdio_provider_init(&stdio,&backend,NULL)==RE_GUEST_LIBC_STDIO_OK);
@@ -82,17 +91,23 @@ int main(void) {
     assert(re_guest_import_table_init(&imports,0x30000000u)==RE_IMPORT_OK);
 
     assert(re_guest_dl_provider_catalog_init_with_libc_log_zlib_dl(
-        &catalog,&bridge,&module,1u,&set,&log_provider,&zlib_provider,&imports,
-        symbols,RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT+11u,
+        &catalog,&bridge,&module,1u,&set,&log_provider,&zlib_provider,&cxx_provider,&imports,
+        symbols,RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT+15u,
         libc_exports,RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT,&libc_count,
         log_exports,2u,&log_count,zlib_exports,4u,&zlib_count,
-        dl_exports,4u,&dl_count,0x40000000u,&failed_symbol,&failed_module)
+        dl_exports,4u,&dl_count,cxx_exports,4u,&cxx_count,0x40000000u,&failed_symbol,&failed_module)
         ==RE_GUEST_DL_PROVIDER_OK);
-    assert(catalog.count==5u);
+    assert(catalog.count==6u);
     assert(libc_count==RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT);
-    assert(log_count==2u && zlib_count==4u && dl_count==4u);
-    assert(imports.count==RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT+10u);
+    assert(log_count==2u && zlib_count==4u && dl_count==4u && cxx_count==4u);
+    assert(imports.count==RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT+14u);
     assert(strcmp(catalog.entries[4].soname,"libdl.so")==0);
+    assert(strcmp(catalog.entries[5].soname,"libstdc++.so")==0);
+    for(size_t i=0;i<4u;i++){
+        assert(strcmp(cxx_exports[i].name,cxx_names[i])==0);
+        assert(cxx_exports[i].value!=0u);
+        assert(strcmp(cxx_exports[i].version_library,"libstdc++.so")==0);
+    }
     for(size_t i=0;i<4u;i++){
         assert(strcmp(dl_exports[i].name,dl_names[i])==0);
         assert(dl_exports[i].value!=0u);
@@ -118,6 +133,7 @@ int main(void) {
 
     assert(re_guest_dl_bridge_close_all(&bridge)==RE_GUEST_DL_OK);
     re_guest_zlib_provider_shutdown(&zlib_provider);
+    re_guest_cxx_heap_provider_shutdown(&cxx_provider);
     re_guest_heap_shutdown(&heap);
     puts("Guest libc + liblog + libz + libdl catalog integration tests: PASS");
     return 0;
