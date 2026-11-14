@@ -48,7 +48,7 @@ int main(void) {
     assert(memcmp(output, "me asset data", 13u) == 0);
     assert(backend.seek(&owner, stream, 0, 2) == 0);
     assert(backend.tell(&owner, stream) == (int64_t)(sizeof(payload) - 1u));
-    assert(backend.seek(&owner, stream, 1, 0) == -1);
+    assert(backend.seek(&owner, stream, 100, 0) == -1);
     assert(backend.seek(&owner, stream, 0, 99) == -1);
     assert(backend.close(&owner, stream) == 0);
     assert(backend.close(&owner, stream) == -1);
