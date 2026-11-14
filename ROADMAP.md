@@ -1,5 +1,9 @@
 # Project Roadmap
 
+## Active milestone update — Stage 125I (AAPCS32 POSIX VFS imports)
+
+Added a mapped AAPCS32 import provider for five libc symbols: open, read, lseek, close, access. It binds through guest Thumb trampolines, validates bounded guest path strings and read output ranges, marshals lseek's 64-bit offset in r2/r3 with whence on the guest stack, and optionally writes a caller-provided guest errno cell while retaining last_errno. A real mapped-runtime regression invokes all five through the import dispatcher. Source and test are registered in Android CMake and host test runner. Not yet included in the combined libc provider set/catalog; stat dispatch and production loader instantiation remain. See docs/STAGE125I_AAPCS32_POSIX_VFS_IMPORTS.md.
+
 ## Active milestone update — Stage 125H (read-only POSIX VFS descriptors)
 
 Added a 32-slot POSIX-like descriptor table over the existing DTRZ VFS. Supports O_RDONLY open, read, lseek SET/CUR/END, close, F_OK/R_OK access checks, read-only regular-file stat metadata, and close-all. Write/create/truncate/append and W_OK/X_OK are denied. Descriptor values are integers and the API is not yet an AAPCS32 guest import dispatcher. Host tests and Android CMake registration are included; CI pending. See docs/STAGE125H_READONLY_POSIX_VFS_DESCRIPTORS.md.
