@@ -83,7 +83,7 @@ int main(void) {
     assert(re_guest_heap_init(&heap,0x50000000u,0x10000u)==RE_GUEST_HEAP_OK);
     assert(re_guest_libc_alloc_provider_init(&alloc,&heap)==RE_GUEST_LIBC_ALLOC_OK);
     assert(re_guest_cxx_heap_provider_init_shared(&cxx_provider,alloc.heap)==RE_GUEST_CXX_HEAP_OK);
-    assert(cxx_provider.heap==alloc.heap && cxx_provider.owns_heap==0u);
+    assert(cxx_provider.shared_heap==alloc.heap && cxx_provider.owns_heap==0u);
     assert(re_guest_libc_string_provider_init(&string)==RE_GUEST_LIBC_STRING_OK);
     assert(re_guest_libc_format_provider_init(&format)==RE_GUEST_LIBC_FORMAT_OK);
     assert(re_guest_libc_stdio_provider_init(&stdio,&backend,NULL)==RE_GUEST_LIBC_STDIO_OK);
