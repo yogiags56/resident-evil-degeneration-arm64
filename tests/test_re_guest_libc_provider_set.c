@@ -33,6 +33,7 @@ int main(void) {
     REGUESTLIBCProviderSet set = {&alloc,&string,&format,&stdio};
     REGUESTIMPORTTable imports, before;
     size_t count=0u, failed=0u;
+    REGUESTLIBCProviderSetStatus bind_status;
 
     memset(symbols,0,sizeof(symbols));
     memset(exports,0xa5,sizeof(exports));
@@ -72,10 +73,13 @@ int main(void) {
     memset(exports,0x5a,sizeof(exports));
     symbols[35].name[0]='x';
     count=99u;
-    assert(re_guest_libc_provider_set_bind_elf_symbols(&set,&imports,symbols,
+    bind_status=re_guest_libc_provider_set_bind_elf_symbols(&set,&imports,symbols,
         RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT,exports,
-        RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT,&count,&failed)==
-        RE_GUEST_LIBC_PROVIDER_SET_E_STDIO);
+        RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT,&count,&failed);
+    if(bind_status!=RE_GUEST_LIBC_PROVIDER_SET_E_STDIO)
+        fprintf(stderr,"unexpected provider-set status=%d failed=%zu imports=%zu\\n",
+            (int)bind_status,failed,imports.count);
+    assert(bind_status==RE_GUEST_LIBC_PROVIDER_SET_E_STDIO);
     assert(imports.count==before.count);
     assert(memcmp(&imports,&before,sizeof(imports))==0);
     assert(count==0u);
