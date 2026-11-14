@@ -64,7 +64,8 @@ add_library(re_asset_probe SHARED
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_libc_provider_set.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_libc_string_provider.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_scan.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_libc_stdio_provider.c\n    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_libc_vfs_backend.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_libc_stdio_provider.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_libc_vfs_backend.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_cxx_heap_provider.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_eabi_provider.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_runtime.c
