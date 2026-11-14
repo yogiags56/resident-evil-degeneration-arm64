@@ -34,6 +34,10 @@ bash tools/android_toolchain_doctor.sh --json
 
 The doctor checks the installed NDK revision and host LLVM/CMake tools, CMake/Ninja, Java/Gradle, and the `ANDROID_LIBLZMA_ROOT` header/archive. It also verifies that the static liblzma archive contains an ELF64 AArch64 object when the required tools are present. It is diagnostic-only and does not install SDK components or download dependencies. A non-zero exit means the environment is not ready for the Android build.
 
+### Stage 125I — AAPCS32 POSIX VFS import adapters
+
+Five exact `libc.so` imports (`open`, `read`, `lseek`, `close`, `access`) now bind through the mapped ARM32 trampoline dispatcher. Guest paths and output buffers are validated through the memory bus; `lseek` uses AAPCS32 64-bit register/stack marshalling and optional guest errno storage. The adapter is not yet wired into the combined libc catalog or production loader. Host and Android CI are pending. See [Stage 125I](docs/STAGE125I_AAPCS32_POSIX_VFS_IMPORTS.md).
+
 ### Stage 125H — Read-only POSIX VFS descriptors
 
 A bounded 32-slot descriptor layer now shares the DTRZ VFS for `open(O_RDONLY)`, `read`, `lseek`, `close`, `access(F_OK/R_OK)`, read-only `stat`, and close-all. Write modes and W_OK/X_OK are denied. Host tests and Android CMake registration are included; CI is pending. This is not yet guest AAPCS32 dispatch or production boot integration. See [Stage 125H](docs/STAGE125H_READONLY_POSIX_VFS_DESCRIPTORS.md).
