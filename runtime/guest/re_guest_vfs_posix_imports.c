@@ -76,19 +76,19 @@ static REGUESTIMPORTStatus posix_handler(
     case POSIX_READ: {
         void *host = NULL;
         int64_t got;
-        if (b > INT32_MAX) {
+        if (c > INT32_MAX) {
             set_errno(p, bus, RE_GUEST_VFS_POSIX_ERRNO_EINVAL);
             result->r0 = (uint32_t)-1;
             break;
         }
-        if (b && re_guest_memory_resolve(bus->memory, a, b,
+        if (c && re_guest_memory_resolve(bus->memory, b, c,
                 RE_GUEST_MEM_WRITE, &host) != RE_GUEST_MEM_OK) {
             set_errno(p, bus, RE_GUEST_VFS_POSIX_ERRNO_EFAULT);
             result->r0 = (uint32_t)-1;
             break;
         }
-        got = re_guest_vfs_posix_read(p->filesystem, (int32_t)frame->r[0],
-                                      host, b);
+        got = re_guest_vfs_posix_read(p->filesystem, (int32_t)a,
+                                      host, c);
         if (got < 0) {
             set_errno(p, bus, RE_GUEST_VFS_POSIX_ERRNO_EBADF);
             result->r0 = (uint32_t)-1;
