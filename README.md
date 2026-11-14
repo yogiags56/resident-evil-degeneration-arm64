@@ -1,6 +1,6 @@
 # Resident Evil: Degeneration — Native ARM64 Port Research
 
-[![Stage](https://img.shields.io/badge/stage-124D-blue)](#project-status)
+[![Stage](https://img.shields.io/badge/stage-124E-blue)](#project-status)
 [![Platform](https://img.shields.io/badge/platform-Android%20ARM64-green)](#build-the-android-probe)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
@@ -51,6 +51,12 @@ Current confirmed foundations:
 ### Stage 124D — Guest `ungetc` pushback
 
 The guest libc stdio provider now exports `ungetc` through its exact ELF32 symbol index. A successful call prepends one byte to the bounded per-file unread buffer and clears EOF; subsequent reads consume it before backend data. The host regression exercises the guest Thumb trampoline, byte order, and EOF rejection. Production loader installation and original-game boot remain outstanding. See [Stage 124D report](docs/STAGE124D_UNGETC_PUSHBACK.md).
+
+
+
+### Stage 124E — Transactional libc provider set
+
+A new aggregate binder connects the current allocation, memory/string, formatted-output, and stdio adapters to one ELF32 symbol table. It publishes 36 guest exports only after every family binds successfully; failures roll back the import table and preserve the output buffer. Host regression coverage checks both success and rollback, and the Android native target includes the new module. This remains provider integration infrastructure, not the production original-game loader. See [Stage 124E report](docs/STAGE124E_TRANSACTIONAL_LIBC_PROVIDER_SET.md).
 
 ## Repository layout
 
