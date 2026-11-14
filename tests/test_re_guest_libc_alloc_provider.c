@@ -30,6 +30,7 @@ int main(void) {
     REGUESTIMPORTTable imports;
     REGUESTRuntime runtime;
     REGUESTCXXHeapProvider cxx;
+    REGUESTHEAP shared_heap;
     REGUESTLIBCAllocProvider libc;
     REGUESTELF32LINKSYMBOL symbols[9] = {0};
     REGUESTSYMBOL cxx_exports[4], libc_exports[4];
@@ -51,9 +52,12 @@ int main(void) {
         symbols[i].visibility = RE_GUEST_STV_DEFAULT;
     }
 
-    assert(re_guest_cxx_heap_provider_init(&cxx, heap_base, 0x8000u) ==
+    assert(re_guest_heap_init(&shared_heap, heap_base, 0x8000u) ==
+           RE_GUEST_HEAP_OK);
+    assert(re_guest_cxx_heap_provider_init_shared(&cxx, &shared_heap) ==
            RE_GUEST_CXX_HEAP_OK);
-    assert(re_guest_libc_alloc_provider_init(&libc, &cxx.heap) ==
+    assert(cxx.shared_heap == &shared_heap && cxx.owns_heap == 0u);
+    assert(re_guest_libc_alloc_provider_init(&libc, &shared_heap) ==
            RE_GUEST_LIBC_ALLOC_OK);
     assert(re_guest_import_table_init(&imports, 0x30000000u) == RE_IMPORT_OK);
     assert(re_guest_cxx_heap_provider_bind_elf_symbols(&cxx, &imports,
@@ -139,6 +143,8 @@ int main(void) {
     assert(runtime.cpu.r[0] == 0u);
 
     re_guest_cxx_heap_provider_shutdown(&cxx);
+    assert(shared_heap.heap_base == heap_base); /* shared shutdown does not own it */
+    re_guest_heap_shutdown(&shared_heap);
     puts("Shared guest heap/libc allocation tests: PASS");
     return 0;
 }
