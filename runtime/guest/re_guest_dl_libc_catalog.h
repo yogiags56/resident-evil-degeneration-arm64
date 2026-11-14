@@ -112,6 +112,7 @@ REGUESTDLProviderStatus re_guest_dl_provider_catalog_init_with_libc_log_zlib_dl(
     REGUESTSYMBOL *dl_exports,
     size_t dl_export_capacity,
     size_t *dl_export_count,
+    uint32_t error_guest_address,
     size_t *failed_symbol_index,
     size_t *failed_module);
 
