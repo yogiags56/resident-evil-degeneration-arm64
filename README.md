@@ -58,6 +58,12 @@ The guest libc stdio provider now exports `ungetc` through its exact ELF32 symbo
 
 A new aggregate binder connects the current allocation, memory/string, formatted-output, and stdio adapters to one ELF32 symbol table. It publishes 36 guest exports only after every family binds successfully; failures roll back the import table and preserve the output buffer. Host regression coverage checks both success and rollback, and the Android native target includes the new module. This remains provider integration infrastructure, not the production original-game loader. See [Stage 124E report](docs/STAGE124E_TRANSACTIONAL_LIBC_PROVIDER_SET.md).
 
+
+
+### Stage 125A — libc.so DSO catalog integration
+
+The implemented libc subset can now be appended to the guest DSO provider catalog as an exact `libc.so` entry. Catalog construction, import trampolines and caller-owned exports are committed together; a regression verifies exact-SONAME open, `malloc` lookup and rollback on a missing stdio import. This is still a partial libc ABI, not a complete Android/Bionic runtime. See [Stage 125A report](docs/STAGE125A_LIBC_DSO_CATALOG_INTEGRATION.md).
+
 ## Repository layout
 
 ```text
