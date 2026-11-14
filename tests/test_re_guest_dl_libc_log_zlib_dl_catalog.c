@@ -23,7 +23,7 @@ int main(void) {
     static const char *const log_names[2] = {"__android_log_print","__android_log_write"};
     static const char *const zlib_names[4] = {"inflate","inflateEnd","inflateInit2_","inflateInit_"};
     static const char *const dl_names[4] = {"dlopen","dlsym","dlclose","dlerror"};
-    REGUESTELF32LINKSYMBOL symbols[RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT+10u];
+    REGUESTELF32LINKSYMBOL symbols[RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT+11u];
     REGUESTSYMBOL libc_exports[RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT];
     REGUESTSYMBOL log_exports[2],zlib_exports[4],dl_exports[4];
     REGUESTSYMBOL sample_export={"sample_entry",0x71001001u,
@@ -83,7 +83,7 @@ int main(void) {
 
     assert(re_guest_dl_provider_catalog_init_with_libc_log_zlib_dl(
         &catalog,&bridge,&module,1u,&set,&log_provider,&zlib_provider,&imports,
-        symbols,RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT+10u,
+        symbols,RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT+11u,
         libc_exports,RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT,&libc_count,
         log_exports,2u,&log_count,zlib_exports,4u,&zlib_count,
         dl_exports,4u,&dl_count,0x40000000u,&failed_symbol,&failed_module)
