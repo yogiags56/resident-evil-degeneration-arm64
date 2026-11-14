@@ -5,6 +5,7 @@
 #include "re_guest_libc_provider_set.h"
 #include "re_guest_log_provider.h"
 #include "re_guest_zlib_provider.h"
+#include "re_guest_dl_provider_bridge.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -80,6 +81,37 @@ REGUESTDLProviderStatus re_guest_dl_provider_catalog_init_with_libc_log_zlib(
     REGUESTSYMBOL *zlib_exports,
     size_t zlib_export_capacity,
     size_t *zlib_export_count,
+    size_t *failed_symbol_index,
+    size_t *failed_module);
+
+/* Extend libc + liblog + libz with the four relocation-backed libdl imports.
+ * The bridge object is bound as the import-handler context and initialized
+ * against the committed catalog before this function returns. The bridge,
+ * provider objects, and all export arrays must outlive guest execution.
+ */
+REGUESTDLProviderStatus re_guest_dl_provider_catalog_init_with_libc_log_zlib_dl(
+    REGUESTDLProviderCatalog *catalog,
+    REGUESTDLBridge *dl_bridge,
+    const REGUESTDLProviderSource *module_sources,
+    size_t module_count,
+    const REGUESTLIBCProviderSet *libc_set,
+    REGUESTLOGProvider *log_provider,
+    REGUESTZLIBProvider *zlib_provider,
+    REGUESTIMPORTTable *imports,
+    const REGUESTELF32LINKSYMBOL *consumer_symbols,
+    size_t consumer_symbol_count,
+    REGUESTSYMBOL *libc_exports,
+    size_t libc_export_capacity,
+    size_t *libc_export_count,
+    REGUESTSYMBOL *log_exports,
+    size_t log_export_capacity,
+    size_t *log_export_count,
+    REGUESTSYMBOL *zlib_exports,
+    size_t zlib_export_capacity,
+    size_t *zlib_export_count,
+    REGUESTSYMBOL *dl_exports,
+    size_t dl_export_capacity,
+    size_t *dl_export_count,
     size_t *failed_symbol_index,
     size_t *failed_module);
 
