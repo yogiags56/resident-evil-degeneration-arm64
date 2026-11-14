@@ -1,8 +1,8 @@
 # Project Roadmap
 
-## Active milestone update — Stage 125A (libc.so DSO catalog integration)
+## Active milestone update — Stage 125B (libc.so + liblog.so catalog integration)
 
-Connected the transactional 36-symbol libc subset to the exact-SONAME DSO catalog. The dynamic-link catalog can open `libc.so` and resolve the guest `malloc` trampoline; a new regression covers successful lookup and atomic rollback. Production loader installation, missing libc/POSIX providers, GLES/EGL callable adapters, and original-game boot remain open. See `docs/STAGE125A_LIBC_DSO_CATALOG_INTEGRATION.md`.
+Extended the exact-SONAME DSO catalog with the transactional libc subset and two relocation-backed Android logging imports (`__android_log_print`, `__android_log_write`). Regression coverage checks exact SONAME lookup and atomic rollback after libc binding. The zlib adapter, remaining DSO providers, GLES/EGL callable adapters, production loader installation, and original-game boot remain open. See `docs/STAGE125B_LIBC_LIBLOG_CATALOG_INTEGRATION.md`.
 
 ## Active milestone update — Stage 124D (guest ungetc pushback)
 
