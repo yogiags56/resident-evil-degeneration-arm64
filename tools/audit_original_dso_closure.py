@@ -98,7 +98,7 @@ def main() -> int:
         rendered = json.dumps(result, indent=2)
         if args.json:
             args.json.parent.mkdir(parents=True, exist_ok=True)
-            args.json.write_text(rendered + "\\n", encoding="utf-8")
+            args.json.write_text(rendered + "\n", encoding="utf-8")
         print(rendered)
         return 0 if result["production_loader_gate"] else 2
     except (OSError, json.JSONDecodeError, AuditError) as exc:
