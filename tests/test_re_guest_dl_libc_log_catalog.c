@@ -30,7 +30,7 @@ int main(void) {
     REGUESTDLProviderSource module={"libsample.so",&module_export,1u};
     REGUESTDLProviderCatalog catalog,before;
     REGUESTLIBCAllocProvider alloc;
-    REGUESTCStringProvider string;
+    REGUESTLIBCStringProvider string;
     REGUESTLIBCFormatProvider format;
     REGUESTLIBCStdioProvider stdio;
     REGUESTLIBCStdioBackend backend={stub_open,stub_read,stub_write,NULL,NULL,stub_close,NULL};
