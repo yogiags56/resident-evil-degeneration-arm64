@@ -63,6 +63,9 @@ int main(void) {
     assert(strcmp(exports[22].name,"fopen")==0);
     assert(strcmp(exports[35].name,"ungetc")==0);
 
+    /* Retry from an empty table so the deliberately missing stdio symbol
+       fails after earlier provider families have already bound. */
+    assert(re_guest_import_table_init(&imports,0x30000000u)==RE_IMPORT_OK);
     /* Missing one exact symbol must roll back every import binding and
        preserve the caller's output array. */
     before=imports;
