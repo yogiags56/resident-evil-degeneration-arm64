@@ -349,6 +349,15 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
   runtime/guest/re_guest_cpu_bus_adapter.c \
   -o build/host-tests/test_re_guest_gl_imports
 "$CC" "${CFLAGS[@]}" -I runtime/archive -I runtime/guest \
+  tests/test_re_guest_vfs_posix_imports.c \
+  runtime/guest/re_guest_vfs_posix_imports.c runtime/guest/re_guest_vfs_posix.c \
+  runtime/archive/re_dtrz_vfs.c runtime/guest/re_guest_imports.c \
+  runtime/guest/re_guest_runtime.c runtime/guest/s3e_aapcs32.c \
+  runtime/guest/re_guest_cpu.c runtime/guest/re_guest_memory.c \
+  runtime/guest/re_guest_memory_bus.c runtime/guest/re_guest_cpu_bus_adapter.c \
+  -o build/host-tests/test_re_guest_vfs_posix_imports
+
+"$CC" "${CFLAGS[@]}" -I runtime/archive -I runtime/guest \
   tests/test_re_guest_vfs_posix.c runtime/guest/re_guest_vfs_posix.c \
   runtime/archive/re_dtrz_vfs.c -o build/host-tests/test_re_guest_vfs_posix
 
