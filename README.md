@@ -80,6 +80,12 @@ The guest DSO catalog can now include both the implemented libc subset and the t
 
 The shared exact-SONAME catalog now has a combined initializer for the implemented libc subset, Android logging, zlib inflate, and the guest dynamic-loader bridge (`dlopen`, `dlsym`, `dlclose`, `dlerror`). A regression opens a sample DSO through the committed bridge and resolves a guest symbol. The initializer commits all four provider families and import state transactionally. This is not complete Android dependency closure or original-game boot. See [Stage 125D report](docs/STAGE125D_LIBC_LIBLOG_LIBZ_LIBDL_CATALOG_INTEGRATION.md).
 
+
+
+### Stage 125E — Shared-heap libstdc++ integration
+
+The combined exact-SONAME catalog now also exposes the four original relocation-backed C++ allocation operators under libstdc++.so. The C++ provider can attach to the exact REGUESTHEAP used by libc allocation, so C malloc/free and C++ new/delete share allocation records rather than maintaining independent arenas. This is provider/catalog integration, not a complete C++ runtime or original-game boot. See [Stage 125E report](docs/STAGE125E_LIBSTDCXX_SHARED_HEAP_CATALOG_INTEGRATION.md).
+
 ## Repository layout
 
 ```text
