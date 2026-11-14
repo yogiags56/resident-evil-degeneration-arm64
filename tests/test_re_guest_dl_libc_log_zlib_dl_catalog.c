@@ -90,7 +90,7 @@ int main(void) {
     assert(re_guest_zlib_provider_init(&zlib_provider,0x72000000u)==RE_GUEST_ZLIB_OK);
     assert(re_guest_import_table_init(&imports,0x30000000u)==RE_IMPORT_OK);
 
-    assert(re_guest_dl_provider_catalog_init_with_libc_log_zlib_dl(
+    assert(re_guest_dl_provider_catalog_init_with_libc_log_zlib_dl_with_cxx(
         &catalog,&bridge,&module,1u,&set,&log_provider,&zlib_provider,&cxx_provider,&imports,
         symbols,RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT+15u,
         libc_exports,RE_GUEST_LIBC_PROVIDER_SET_SYMBOL_COUNT,&libc_count,
