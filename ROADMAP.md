@@ -1,8 +1,8 @@
 # Project Roadmap
 
-## Active milestone update — Stage 125D (libc.so + liblog.so + libz.so + libdl.so catalog integration)
+## Active milestone update — Stage 125E (shared-heap libstdc++ catalog integration)
 
-Extended the shared exact-SONAME provider catalog with the four relocation-backed libdl imports and installed guest `dlopen/dlsym/dlclose/dlerror` bridge. Regression coverage verifies bridge open/symbol/close against a sample DSO and exact `libdl.so` export lookup. The initializer publishes the combined catalog, export arrays, and import table atomically. Remaining: `libm.so` dependency treatment, C++ heap provider integration for `libstdc++.so`, remaining libc/POSIX imports, full guest dependency closure, GLES/EGL callable adapters, production XE3U boot, and original-game execution. See `docs/STAGE125D_LIBC_LIBLOG_LIBZ_LIBDL_CATALOG_INTEGRATION.md`.
+The combined exact-SONAME catalog now includes the four relocation-backed C++ allocation operators under libstdc++.so. C++ provider supports an explicit shared-heap mode and uses the exact REGUESTHEAP already owned by the libc allocation provider; this preserves allocation identity across malloc/free and new/delete. The combined initializer binds all four C++ symbols and publishes a six-entry catalog (one fixture DSO plus five virtual system providers). Remaining: complete C++ runtime semantics, remaining libc/POSIX imports, libm dependency policy, GLES/EGL callable adapters, production XE3U-to-ELF loader boot, and original-game execution. See docs/STAGE125E_LIBSTDCXX_SHARED_HEAP_CATALOG_INTEGRATION.md.
 
 ## Active milestone update — Stage 124D (guest ungetc pushback)
 
