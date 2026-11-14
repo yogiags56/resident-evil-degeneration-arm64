@@ -323,6 +323,7 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
   -lz -o build/host-tests/test_re_guest_dl_libc_log_zlib_catalog
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_dl_libc_log_zlib_dl_catalog.c \
   runtime/guest/re_guest_dl_libc_log_zlib_dl_catalog.c \
+  runtime/guest/re_guest_cxx_heap_provider.c \
   runtime/guest/re_guest_dl_libc_log_zlib_catalog.c \
   runtime/guest/re_guest_dl_provider_catalog.c runtime/guest/re_guest_dl_bridge.c \
   runtime/guest/re_guest_libc_provider_set.c runtime/guest/re_guest_libc_alloc_provider.c \
