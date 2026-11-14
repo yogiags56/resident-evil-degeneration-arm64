@@ -4,6 +4,7 @@
 #include "re_guest_dl_provider_catalog.h"
 #include "re_guest_libc_provider_set.h"
 #include "re_guest_log_provider.h"
+#include "re_guest_zlib_provider.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,6 +53,33 @@ REGUESTDLProviderStatus re_guest_dl_provider_catalog_init_with_libc_and_log(
     REGUESTSYMBOL *log_exports,
     size_t log_export_capacity,
     size_t *log_export_count,
+    size_t *failed_symbol_index,
+    size_t *failed_module);
+
+/* Extend the combined libc + liblog catalog with the implemented libz inflate
+ * subset. The zlib provider must be initialized by the caller with a guest
+ * token range before calling this initializer and must outlive guest streams.
+ * Catalog, imports, and all three export arrays are committed atomically.
+ */
+REGUESTDLProviderStatus re_guest_dl_provider_catalog_init_with_libc_log_zlib(
+    REGUESTDLProviderCatalog *catalog,
+    const REGUESTDLProviderSource *module_sources,
+    size_t module_count,
+    const REGUESTLIBCProviderSet *libc_set,
+    REGUESTLOGProvider *log_provider,
+    REGUESTZLIBProvider *zlib_provider,
+    REGUESTIMPORTTable *imports,
+    const REGUESTELF32LINKSYMBOL *consumer_symbols,
+    size_t consumer_symbol_count,
+    REGUESTSYMBOL *libc_exports,
+    size_t libc_export_capacity,
+    size_t *libc_export_count,
+    REGUESTSYMBOL *log_exports,
+    size_t log_export_capacity,
+    size_t *log_export_count,
+    REGUESTSYMBOL *zlib_exports,
+    size_t zlib_export_capacity,
+    size_t *zlib_export_count,
     size_t *failed_symbol_index,
     size_t *failed_module);
 
