@@ -25,14 +25,14 @@ static int64_t vfs_read(void *user, void *stream, void *dst, uint64_t bytes) {
     REGUESTLIBCVFSStream *slot = (REGUESTLIBCVFSStream *)stream;
     size_t amount = 0u;
     if (!backend || !backend->initialized || !slot || !slot->active ||
-        (!dst && bytes) || bytes > SIZE_MAX)
+        (!dst && bytes) || (uint64_t)(size_t)bytes != bytes)
         return -1;
     if (re_dtrz_read(&slot->file, dst, (size_t)bytes, &amount) != RE_DTRZ_OK)
         return -1;
     return (int64_t)amount;
 }
 
-static int vfs_seek(void *user, void *stream, int64_t offset, int whence) {
+static int64_t vfs_write(void *user, void *stream, const void *src, uint64_t bytes) {\n    (void)user; (void)stream; (void)src; (void)bytes;\n    return -1; /* Archive assets are intentionally read-only. */\n}\n\nstatic int vfs_seek(void *user, void *stream, int64_t offset, int whence) {
     REGUESTLIBCVFSBackend *backend = (REGUESTLIBCVFSBackend *)user;
     REGUESTLIBCVFSStream *slot = (REGUESTLIBCVFSStream *)stream;
     uint64_t base, target;
@@ -94,7 +94,7 @@ void re_guest_libc_vfs_backend_get_stdio(
     memset(stdio_backend, 0, sizeof(*stdio_backend));
     if (!backend || !backend->initialized) return;
     stdio_backend->open = vfs_open;
-    stdio_backend->read = vfs_read;
+    stdio_backend->read = vfs_read;\n    stdio_backend->write = vfs_write;
     stdio_backend->seek = vfs_seek;
     stdio_backend->tell = vfs_tell;
     stdio_backend->close = vfs_close;
