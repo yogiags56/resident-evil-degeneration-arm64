@@ -2,12 +2,17 @@
 
 #include <string.h>
 
+static REGUESTHEAP *provider_heap(REGUESTCXXHeapProvider *provider) {
+    if (!provider) return NULL;
+    return provider->owns_heap ? &provider->heap : provider->shared_heap;
+}
+
 static REGUESTIMPORTStatus new_handler(
     const S3EAAPCS32Frame *frame, const REGUESTMEMBUS *bus, void *user,
     REGUESTIMPORTResult *result) {
     REGUESTCXXHeapProvider *provider = (REGUESTCXXHeapProvider *)user;
     if (!frame || !bus || !provider || !result) return RE_IMPORT_E_HANDLER;
-    result->r0 = re_guest_heap_alloc(provider->heap, bus, frame->r[0],
+    result->r0 = re_guest_heap_alloc(provider_heap(provider), bus, frame->r[0],
                                      RE_GUEST_CXX_HEAP_ALIGNMENT);
     result->r1 = result->r2 = result->r3 = 0u;
     return RE_IMPORT_OK;
@@ -19,7 +24,7 @@ static REGUESTIMPORTStatus delete_handler(
     REGUESTCXXHeapProvider *provider = (REGUESTCXXHeapProvider *)user;
     (void)bus;
     if (!frame || !provider || !result) return RE_IMPORT_E_HANDLER;
-    re_guest_heap_free(provider->heap, frame->r[0]);
+    re_guest_heap_free(provider_heap(provider), frame->r[0]);
     result->r0 = result->r1 = result->r2 = result->r3 = 0u;
     return RE_IMPORT_OK;
 }
@@ -50,10 +55,10 @@ REGUESTCXXHeapStatus re_guest_cxx_heap_provider_init(
     REGUESTCXXHeapProvider *provider, uint32_t heap_base, uint32_t heap_size) {
     if (!provider) return RE_GUEST_CXX_HEAP_E_ARGUMENT;
     memset(provider, 0, sizeof(*provider));
-    if (re_guest_heap_init(&provider->owned_heap, heap_base, heap_size) !=
+    if (re_guest_heap_init(&provider->heap, heap_base, heap_size) !=
         RE_GUEST_HEAP_OK)
         return RE_GUEST_CXX_HEAP_E_ARGUMENT;
-    provider->heap = &provider->owned_heap;
+    provider->shared_heap = NULL;
     provider->owns_heap = 1u;
     return RE_GUEST_CXX_HEAP_OK;
 }
@@ -64,7 +69,7 @@ REGUESTCXXHeapStatus re_guest_cxx_heap_provider_init_shared(
         !shared_heap->heap_size)
         return RE_GUEST_CXX_HEAP_E_ARGUMENT;
     memset(provider, 0, sizeof(*provider));
-    provider->heap = shared_heap;
+    provider->shared_heap = shared_heap;
     return RE_GUEST_CXX_HEAP_OK;
 }
 
@@ -90,7 +95,7 @@ REGUESTCXXHeapStatus re_guest_cxx_heap_provider_bind_elf_symbols(
 
     if (export_count) *export_count = 0u;
     if (failed_symbol_index) *failed_symbol_index = symbol_count;
-    if (!provider || !provider->heap || !provider->heap->heap_base || !imports || !symbols ||
+    if (!provider || !provider_heap(provider) || !provider_heap(provider)->heap_base || !imports || !symbols ||
         !exports || !export_count || export_capacity < 4u)
         return RE_GUEST_CXX_HEAP_E_ARGUMENT;
     if (symbol_count > RE_GUEST_ELF32_LINK_MAX_SYMBOLS ||
@@ -126,7 +131,7 @@ REGUESTCXXHeapStatus re_guest_cxx_heap_provider_bind_elf_symbols(
 
 void re_guest_cxx_heap_provider_shutdown(REGUESTCXXHeapProvider *provider) {
     if (provider) {
-        if (provider->owns_heap) re_guest_heap_shutdown(&provider->owned_heap);
+        if (provider->owns_heap) re_guest_heap_shutdown(&provider->heap);
         memset(provider, 0, sizeof(*provider));
     }
 }
