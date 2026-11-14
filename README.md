@@ -64,6 +64,12 @@ A new aggregate binder connects the current allocation, memory/string, formatted
 
 The implemented libc subset can now be appended to the guest DSO provider catalog as an exact `libc.so` entry. Catalog construction, import trampolines and caller-owned exports are committed together; a regression verifies exact-SONAME open, `malloc` lookup and rollback on a missing stdio import. This is still a partial libc ABI, not a complete Android/Bionic runtime. See [Stage 125A report](docs/STAGE125A_LIBC_DSO_CATALOG_INTEGRATION.md).
 
+
+
+### Stage 125B — Atomic libc.so + liblog.so catalog integration
+
+The guest DSO catalog can now include both the implemented libc subset and the two current Android logging imports. The combined initializer binds both against the consumer ELF32 symbol inventory and publishes the catalog and export arrays atomically; rollback is tested when a required log import is missing. This is not the full Android logging API or complete Bionic ABI. See [Stage 125B report](docs/STAGE125B_LIBC_LIBLOG_CATALOG_INTEGRATION.md).
+
 ## Repository layout
 
 ```text
