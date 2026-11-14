@@ -103,8 +103,13 @@ REGUESTDLProviderStatus re_guest_dl_provider_catalog_init_with_libc_log_zlib_dl(
 
     /* Initialize a private bridge that points at the caller's catalog object.
        Its user pointer remains valid after the pending catalog is committed. */
-    dl_status = re_guest_dl_bridge_init_with_provider_catalog(
-        &pending_bridge, catalog, error_guest_address);
+    dl_status = re_guest_dl_bridge_init(
+        &pending_bridge,
+        re_guest_dl_provider_catalog_open_callback,
+        re_guest_dl_provider_catalog_symbol_callback,
+        re_guest_dl_provider_catalog_close_callback,
+        catalog,
+        error_guest_address);
     if (dl_status == RE_GUEST_DL_OK)
         dl_status = re_guest_dl_bridge_bind_elf_symbols(
             &pending_bridge, imports, consumer_symbols, consumer_symbol_count,
