@@ -66,6 +66,10 @@ The implemented libc subset can now be appended to the guest DSO provider catalo
 
 
 
+### Stage 125C — Atomic libc.so + liblog.so + libz.so catalog integration
+
+The exact-SONAME DSO catalog now has a combined initializer for the implemented libc subset, two Android logging imports, and four guest zlib inflate imports. The initializer commits all three export arrays, the catalog, and import table atomically; the regression covers exact `libz.so` lookup and rollback after a missing zlib symbol. The zlib adapter is still only a four-function inflate subset. See [Stage 125C report](docs/STAGE125C_LIBC_LIBLOG_LIBZ_CATALOG_INTEGRATION.md).
+
 ### Stage 125B — Atomic libc.so + liblog.so catalog integration
 
 The guest DSO catalog can now include both the implemented libc subset and the two current Android logging imports. The combined initializer binds both against the consumer ELF32 symbol inventory and publishes the catalog and export arrays atomically; rollback is tested when a required log import is missing. This is not the full Android logging API or complete Bionic ABI. See [Stage 125B report](docs/STAGE125B_LIBC_LIBLOG_CATALOG_INTEGRATION.md).
