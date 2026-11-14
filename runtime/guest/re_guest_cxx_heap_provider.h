@@ -16,8 +16,8 @@ extern "C" {
 #define RE_GUEST_CXX_HEAP_ALIGNMENT RE_GUEST_HEAP_DEFAULT_ALIGNMENT
 
 typedef struct {
-    REGUESTHEAP owned_heap;
-    REGUESTHEAP *heap;
+    REGUESTHEAP heap;
+    REGUESTHEAP *shared_heap;
     uint8_t owns_heap;
 } REGUESTCXXHeapProvider;
 
