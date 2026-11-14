@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-REGUESTDLProviderStatus re_guest_dl_provider_catalog_init_with_libc_log_zlib_dl(
+REGUESTDLProviderStatus re_guest_dl_provider_catalog_init_with_libc_log_zlib_dl_with_cxx(
     REGUESTDLProviderCatalog *catalog,
     REGUESTDLBridge *dl_bridge,
     const REGUESTDLProviderSource *module_sources,
