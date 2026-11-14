@@ -1,5 +1,9 @@
 # Project Roadmap
 
+## Active milestone update — Stage 125G (read-only archive-backed guest stdio)
+
+Added a read-only DTRZ VFS backend implementing the existing guest libc stdio backend contract. Guest fopen accepts only r/rb relative archive paths; fread reads decoded entry bytes; fseek/ftell support SET/CUR/END; fclose releases bounded host-owned stream slots. Writes explicitly fail. Path traversal and absolute paths are rejected by the VFS lookup path. Host regression covers stream lifecycle, seek/read boundaries, write denial and invalid paths. Android CMake and host test runner registration are included. This is not a POSIX fd provider and is not yet wired into the production game boot path. See docs/STAGE125G_READONLY_ARCHIVE_GUEST_STDIO.md.
+
 ## Active milestone update — Stage 125F (original DSO provider-closure audit)
 
 Added a deterministic fail-closed audit that cross-checks the exact six DT_NEEDED entries and all 136 unique relocation-backed undefined names from the hash-pinned Stage 123O manifest against explicit SONAME and ABI-family provider policy. `libm.so` is deliberately dependency-only; the 21 `__aeabi_*` helpers remain an ABI-family provider without an invented libgcc/libm SONAME. The audit reports uncovered filesystem, process/time, pthread and socket imports and keeps `production_loader_gate` false until the complete relocation-backed inventory is covered. Regression tests reject missing/duplicate policies and fabricated exports. This stage is static coverage only; no DSO loading, relocation or game boot is claimed. See docs/STAGE125F_ORIGINAL_DSO_PROVIDER_CLOSURE_AUDIT.md.
