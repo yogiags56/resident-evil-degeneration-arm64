@@ -33,7 +33,7 @@ int main(void) {
            RE_GUEST_LIBC_VFS_OK);
     re_guest_libc_vfs_backend_get_stdio(&owner, &backend);
     assert(backend.open && backend.read && backend.seek && backend.tell &&
-           backend.close && !backend.write && !backend.flush);
+           backend.close && backend.write && !backend.flush);
 
     stream = backend.open(&owner, "data/config.bin", "rb");
     assert(stream != NULL);
