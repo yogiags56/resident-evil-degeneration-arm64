@@ -338,6 +338,19 @@ static REGUESTIMPORTStatus stdio_handler(
                      (input_failure ? (uint32_t)-1 : 0u);
         break;
     }
+    case STDIO_UNGETC:
+        f = resolve_file(p, b);
+        if (!f || !f->readable) return RE_IMPORT_E_HANDLER;
+        if ((int32_t)a == -1 || f->buffered_size >= RE_GUEST_LIBC_STDIO_BUFFER_CAP) {
+            result->r0 = (uint32_t)-1;
+        } else {
+            memmove(f->buffered + 1u, f->buffered, f->buffered_size);
+            f->buffered[0] = (uint8_t)a;
+            ++f->buffered_size;
+            f->eof = 0u;
+            result->r0 = (uint32_t)(uint8_t)a;
+        }
+        break;
     case STDIO_FEOF:
     case STDIO_FERROR:
         f = resolve_file(p, a);
