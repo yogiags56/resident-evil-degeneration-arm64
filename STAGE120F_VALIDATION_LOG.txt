@@ -1,0 +1,26 @@
+Stage 120F validation record
+============================
+
+GitHub Actions workflow: Source checks
+Run ID: 42598567251
+Commit: 3c82e7e90a7d892bf00db8ed3da308c1665d46d0
+Result: success
+
+Observed:
+- python3 -m unittest discover -s tests -v
+- 147 Python tests passed (7.259 seconds)
+- bash ./tools/compile_host_mock.sh completed successfully.
+- Native host C regression executables completed successfully.
+- Stage 120F tests passed:
+  * exact duplicate declarations preserve all raw records
+  * partial file-range overlap classification
+  * cross-symbol-namespace matches remain candidate-only
+  * different RELA addends are not duplicates
+  * section-header-free APS2 fixture reconciles through PT_DYNAMIC/PT_LOAD
+  * invalid non-ELF input rejected
+
+Not tested:
+- Android ARM64 build/device installation in this run.
+- Physical-device execution.
+- Original game boot or gameplay.
+- Proprietary original ELF/APK analysis.
