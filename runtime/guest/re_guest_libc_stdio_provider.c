@@ -8,10 +8,11 @@
 
 enum { STDIO_FOPEN, STDIO_FCLOSE, STDIO_FREAD, STDIO_FWRITE,
        STDIO_FSEEK, STDIO_FTELL, STDIO_FGETS, STDIO_FPRINTF,
-       STDIO_FEOF, STDIO_FERROR, STDIO_FFLUSH, STDIO_SSCANF, STDIO_FSCANF };
+       STDIO_FEOF, STDIO_FERROR, STDIO_FFLUSH, STDIO_SSCANF, STDIO_FSCANF,
+       STDIO_UNGETC };
 static const char *const k_names[RE_GUEST_LIBC_STDIO_SYMBOL_COUNT] = {
     "fopen", "fclose", "fread", "fwrite", "fseek", "ftell", "fgets",
-    "fprintf", "feof", "ferror", "fflush", "sscanf", "fscanf"
+    "fprintf", "feof", "ferror", "fflush", "sscanf", "fscanf", "ungetc"
 };
 
 static int guest_cstring(const REGUESTMEMBUS *bus, uint32_t address,
