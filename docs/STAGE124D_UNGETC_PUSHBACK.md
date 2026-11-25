@@ -1,19 +1,20 @@
 # Stage 124D — Guest stdio pushback with ungetc
 
 ## Goal
-Support the original guest libc's one-character pushback operation on seekable and forward-only stream backends without requiring backend seek/tell callbacks.
+Implement guest `ungetc` through the existing bounded unread buffer, including on forward-only stream backends.
 
 ## Implemented
-- Added the relocation-backed guest `ungetc` import to the stdio provider export table.
-- Reuses the per-file bounded unread buffer; pushback prepends one byte so it is consumed before previously buffered lookahead.
+- Registered `ungetc` as the fourteenth relocation-backed stdio import.
+- Pushes an unsigned byte to the front of the per-file unread buffer, ahead of any buffered lookahead.
 - Successful pushback clears the guest EOF indicator and returns the pushed byte as an unsigned-char value.
-- Passing EOF, an invalid/non-readable stream, or a full unread buffer fails without changing stream state.
-- Added guest-dispatch regression coverage for EOF observation, pushback, EOF clearing, and reading the pushed byte back from a non-seekable backend.
+- Passing EOF returns EOF without modifying the stream; a full buffer also returns EOF.
+- The unread buffer permits bounded repeated pushback, rather than relying on backend seek/tell support.
+- Regression coverage exercises EOF observation, pushback, EOF clearing, reading the pushed byte, EOF argument rejection, and invalid stream handling.
 
 ## Deliberate limits
-- This stage implements one-character `ungetc` semantics, not a general-purpose multi-byte pushback queue.
-- It does not claim complete Bionic stdio compatibility, production loader installation, or original game boot.
-- Backend read errors and short-read/EOF distinctions remain separate follow-up work.
+- This is a bounded guest stdio compatibility implementation, not a claim of complete Bionic stdio parity.
+- Backend read-error semantics and full production loader activation remain separate work.
+- No original game boot or gameplay is claimed.
 
 ## Validation
-Host regression and Android ARM64 build/ELF verification are required before marking this stage complete.
+The initial host CI run failed because the new import name and enum value were not registered in the provider source. Stage 124D corrects the enum/export registration and expands regression coverage. Host regression and Android ARM64 build/ELF verification must pass on the final PR head before this stage is accepted.
