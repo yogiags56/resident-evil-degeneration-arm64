@@ -764,4 +764,6 @@ See [Stage 124C report](docs/STAGE124C_NONSEEKABLE_STREAMS.md).
 
 ## Stage 124D — Guest stdio pushback
 
-Added the relocation-backed guest `ungetc` import. It prepends one byte to the bounded per-file unread buffer, works with forward-only backends, and clears EOF after successful pushback. The guest-dispatch regression covers EOF observation, pushback, EOF clearing, and reading the pushed byte back. Host and Android ARM64 CI are the release gate; original game boot is not claimed. See [Stage 124D report](docs/STAGE124D_UNGETC_PUSHBACK.md).
+Registered the guest `ungetc` import and implemented bounded pushback using the per-file unread buffer. Pushback is independent of backend seek/tell support, clears EOF on success, and rejects EOF/full-buffer inputs. Regression coverage includes forward-only streams, EOF reset, byte readback, and invalid-stream handling. Host and Android ARM64 CI are the acceptance gate; original game boot is not claimed. See [Stage 124D report](docs/STAGE124D_UNGETC_PUSHBACK.md).
+
+
