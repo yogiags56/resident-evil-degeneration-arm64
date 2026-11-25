@@ -1,3 +1,13 @@
+## Stage 124D — guest stdio `ungetc` (validation in progress)
+
+The provider now registers the fourteenth stdio import, `ungetc`, and pushes an unsigned byte into the front of the bounded per-file unread buffer. Successful pushback clears EOF; an EOF argument or full buffer returns EOF without changing state. The implementation does not require backend seek/tell and is covered by guest-dispatch regression for a forward-only backend.
+
+The first CI attempt exposed a missing enum/name registration; this was corrected. A later test review removed an invalid-stream call from the regression because invalid `FILE *` use is outside the defined C stdio contract. The final branch head is undergoing host tests and Android ARM64 native build/ELF verification. Do not mark Stage 124D complete until both checks pass. No production game boot or gameplay is claimed.
+
+See [Stage 124D report](STAGE124D_UNGETC_PUSHBACK.md) and [PR #42](https://github.com/yogiags56/resident-evil-degeneration-arm64/pull/42).
+
+---
+
 # Current Status
 
 **Current implementation milestone: Stage 124C — guest libc non-seekable stream support.** Stage 123F adds a read-only plan for all 238 XE3U type-4 external cells and a rollback-safe apply routine. Bound symbols receive symbol-specific Thumb trampolines; unknown symbols can be routed to the runtime unresolved-import trap. The original shared resolver slot at `0x13B704` is intentionally bypassed by this port strategy. Host CI passed in run `42877554684`, including transactional import planning/apply, direct Thumb dispatch through the original ARM stub, ARM/Thumb interworking, and CPU stack regressions. Android ARM64 NDK build/ELF verification passed in run `42877209331`.
