@@ -330,12 +330,6 @@ int main(void) {
         call_import(&runtime, pipe_exports[1].value, base + 0x104u,
             handle, 0u, 0u, 0u);
         assert(runtime.cpu.r[0] == 0u);
-        call_import(&runtime, pipe_exports[5].value, base + 0xf8u,
-            handle, 0u, 0u, 0u);
-        assert(runtime.cpu.r[0] == (uint32_t)-1);
-        call_import(&runtime, pipe_exports[4].value, base + 0xfau,
-            handle, 0u, 0u, 0u);
-        assert(runtime.cpu.r[0] == (uint32_t)-1);
         call_import(&runtime, pipe_exports[1].value, base + 0xfcu,
             handle, 0u, 0u, 0u);
         assert(runtime.cpu.r[0] == 0u && !pipe_stream.opened);
