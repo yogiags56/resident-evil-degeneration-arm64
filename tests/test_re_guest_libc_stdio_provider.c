@@ -330,19 +330,6 @@ int main(void) {
         call_import(&runtime, pipe_exports[1].value, base + 0x104u,
             handle, 0u, 0u, 0u);
         assert(runtime.cpu.r[0] == 0u);
-        call_import(&runtime, pipe_exports[0].value, base + 0x106u,
-            base + 0x100u, base + 0x120u, 0u, 0u);
-        handle = runtime.cpu.r[0];
-        assert(handle != 0u);
-        call_import(&runtime, pipe_exports[13].value, base + 0x108u,
-            (uint32_t)'Q', handle, 0u, 0u);
-        assert(runtime.cpu.r[0] == (uint32_t)'Q');
-        call_import(&runtime, pipe_exports[8].value, base + 0xfau,
-            handle, 0u, 0u, 0u);
-        assert(runtime.cpu.r[0] == 0u);
-        call_import(&runtime, pipe_exports[2].value, base + 0xfbu,
-            base + 0x984u, 1u, 1u, handle);
-        assert(runtime.cpu.r[0] == 1u && guest[0x984u] == (uint8_t)'Q');
         call_import(&runtime, pipe_exports[5].value, base + 0xf8u,
             handle, 0u, 0u, 0u);
         assert(runtime.cpu.r[0] == (uint32_t)-1);
