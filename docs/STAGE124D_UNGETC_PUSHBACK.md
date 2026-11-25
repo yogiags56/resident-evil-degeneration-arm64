@@ -9,7 +9,7 @@ Implement guest `ungetc` through the existing bounded unread buffer, including o
 - Successful pushback clears the guest EOF indicator and returns the pushed byte as an unsigned-char value.
 - Passing EOF returns EOF without modifying the stream; a full buffer also returns EOF.
 - The unread buffer permits bounded repeated pushback, rather than relying on backend seek/tell support.
-- Regression coverage exercises EOF observation, pushback, EOF clearing, reading the pushed byte, EOF argument rejection, and invalid stream handling.
+- Regression coverage exercises EOF observation, pushback, EOF clearing, reading the pushed byte, and EOF argument rejection.
 
 ## Deliberate limits
 - This is a bounded guest stdio compatibility implementation, not a claim of complete Bionic stdio parity.
