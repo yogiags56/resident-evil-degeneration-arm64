@@ -106,7 +106,7 @@ static int64_t file_read(REGUESTLIBCStdioProvider *p,
                                       out + copied, bytes - copied);
         if (got < 0 || (uint64_t)got > bytes - copied) {
             f->error = 1u;
-            return copied ? (int64_t)copied : -1;
+            return (int64_t)copied;
         }
         copied += (uint64_t)got;
     }
@@ -260,7 +260,7 @@ static REGUESTIMPORTStatus stdio_handler(
         while (written + 1u < count) {
             int64_t got = file_read(p, f, &byte, 1u);
             if (got < 0 || got > 1) { f->error = 1u; return RE_IMPORT_E_HANDLER; }
-            if (got == 0) { f->eof = 1u; break; }
+            if (got == 0) { if (!f->error) f->eof = 1u; break; }
             ((char *)host)[written++] = (char)byte;
             if (byte == (uint8_t)'\n') break;
         }
