@@ -114,6 +114,27 @@ static int64_t file_read(REGUESTLIBCStdioProvider *p,
     return (int64_t)copied;
 }
 
+static int64_t file_write(REGUESTLIBCStdioProvider *p,
+                          REGUESTLIBCStdioFile *f, const void *src,
+                          uint64_t bytes) {
+    int64_t written;
+    if (!p || !f || (!src && bytes)) return -1;
+    if (f->append) {
+        if (!p->backend.seek ||
+            p->backend.seek(p->backend_user, f->stream, 0, 2) != 0) {
+            f->error = 1u;
+            return -1;
+        }
+    }
+    written = p->backend.write(p->backend_user, f->stream, src, bytes);
+    if (written < 0 || (uint64_t)written > bytes) {
+        f->error = 1u;
+        return -1;
+    }
+    if ((uint64_t)written < bytes) f->error = 1u;
+    return written;
+}
+
 static void reset_file_state(REGUESTLIBCStdioFile *f) {
     if (!f) return;
     f->readable = 0u;
@@ -218,7 +239,7 @@ static REGUESTIMPORTStatus stdio_handler(
         if (ctx->kind == STDIO_FREAD)
             transferred = file_read(p, f, host, total);
         else
-            transferred = p->backend.write(p->backend_user, f->stream, host, total);
+            transferred = file_write(p, f, host, total);
         if (transferred < 0 || (uint64_t)transferred > total) {
             f->error = 1u;
             return RE_IMPORT_E_HANDLER;
@@ -310,7 +331,7 @@ static REGUESTIMPORTStatus stdio_handler(
             return RE_IMPORT_E_HANDLER;
         }
         if (length) {
-            written = p->backend.write(p->backend_user, f->stream, output, length);
+            written = file_write(p, f, output, length);
             if (written < 0 || (uint64_t)written != length) {
                 f->error = 1u;
                 return RE_IMPORT_E_HANDLER;

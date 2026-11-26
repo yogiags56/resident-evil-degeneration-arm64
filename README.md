@@ -782,3 +782,8 @@ Added a fifteenth stdio import for `clearerr`, clearing EOF and error indicators
 ## Stage 124G — stdio lifecycle
 
 Stream close/reopen now resets EOF, error, access-mode, and unread-buffer state. Provider shutdown flushes writable streams when supported. Regression coverage checks slot reuse, generation-token renewal, and no stale pushback leakage. See [Stage 124G report](docs/STAGE124G_STDIO_LIFECYCLE.md). CI remains the acceptance gate.
+
+
+## Stage 124I — append semantics
+
+`fwrite` and `fprintf` share append-aware write handling that repositions seekable append streams to EOF before every write. Non-seekable append is rejected with `ferror` until the backend provides an atomic append capability. See [Stage 124I report](docs/STAGE124I_APPEND_NONSEEK.md). CI remains the acceptance gate.
