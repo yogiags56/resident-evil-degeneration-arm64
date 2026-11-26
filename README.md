@@ -792,3 +792,8 @@ Stream close/reopen now resets EOF, error, access-mode, and unread-buffer state.
 ## Stage 124J — update-stream transitions
 
 Update-mode streams now track read/write direction. Input after output flushes when the backend supports flushing; output after input requires positioning unless EOF was reached. See [Stage 124J report](docs/STAGE124J_UPDATE_STREAM_TRANSITIONS.md). CI remains the acceptance gate.
+
+
+## Stage 124K — `fflush(NULL)` synchronization
+
+`fflush(NULL)` flushes all active backend streams, preserves per-stream error reporting, and resets update-mode direction state after successful flush. See [Stage 124K report](docs/STAGE124K_FFLUSH_ALL_AUDIT.md). CI remains the acceptance gate.
