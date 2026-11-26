@@ -170,6 +170,33 @@ int main(void) {
     assert(runtime.cpu.r[0] == 2u);
     assert(memcmp(guest + 0x400u, "abcd", 4u) == 0);
 
+    /* Pushback moves the logical position backwards by one byte. */
+    call_import(&runtime, exports[13].value, base + 0x42u,
+        (uint32_t)'Z', handle, 0u, 0u);
+    assert(runtime.cpu.r[0] == (uint32_t)'Z');
+    call_import(&runtime, exports[5].value, base + 0x44u,
+        handle, 0u, 0u, 0u);
+    assert(runtime.cpu.r[0] == 3u);
+    /* SEEK_CUR must account for unread pushback bytes before clearing them. */
+    call_import(&runtime, exports[4].value, base + 0x46u,
+        handle, 0u, 1u, 0u);
+    assert((int32_t)runtime.cpu.r[0] == 0);
+    call_import(&runtime, exports[2].value, base + 0x48u,
+        base + 0x404u, 1u, 1u, handle);
+    assert(runtime.cpu.r[0] == 1u && guest[0x404u] == (uint8_t)'d');
+    /* Backend seek failure sets ferror and clearerr restores the indicator. */
+    call_import(&runtime, exports[4].value, base + 0x4au,
+        handle, 0u, 9u, 0u);
+    assert((int32_t)runtime.cpu.r[0] == -1);
+    call_import(&runtime, exports[9].value, base + 0x4cu,
+        handle, 0u, 0u, 0u);
+    assert(runtime.cpu.r[0] == 1u);
+    call_import(&runtime, exports[14].value, base + 0x4eu,
+        handle, 0u, 0u, 0u);
+    call_import(&runtime, exports[9].value, base + 0x50u,
+        handle, 0u, 0u, 0u);
+    assert(runtime.cpu.r[0] == 0u);
+
     /* fseek(FILE*, offset, SEEK_SET) uses r0/r1/r2 on AAPCS32. */
     call_import(&runtime, exports[4].value, base + 0x60u,
         handle, 1u, 0u, 0u);
