@@ -1,3 +1,11 @@
+## Stage 124I — append positioning and non-seekable audit (validation pending)
+
+Both `fwrite` and `fprintf` now use a shared stream-write helper. Append-mode streams seek to EOF before every write, preventing a changed backend cursor from overwriting existing content. If the backend cannot seek, append writes fail and set `ferror`; atomic append support for non-seekable backends remains a known limitation. Regression coverage simulates cursor movement after open and checks the append lands at EOF. Host and Android ARM64 CI are required. No game boot is claimed.
+
+See [Stage 124I report](STAGE124I_APPEND_NONSEEK.md).
+
+---
+
 ## Stage 124H — stdio seek and logical-position audit (validation pending)
 
 Added regression coverage for `ftell` with a pending `ungetc` byte, `fseek(SEEK_CUR)` accounting for unread bytes, and backend seek failure setting `ferror` with recovery through `clearerr`. The broader audit still needs non-seekable stream behavior, update-stream transitions, and append-mode positioning. Host and Android ARM64 CI are required before acceptance. No original game boot is claimed.
