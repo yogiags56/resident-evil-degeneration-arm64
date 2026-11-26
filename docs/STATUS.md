@@ -1,3 +1,11 @@
+## Stage 124E — stdio EOF and backend read-error semantics (validation pending)
+
+The follow-up distinguishes clean EOF from backend read failures. `file_read` preserves bytes already copied from the unread buffer when the backend subsequently errors, sets the stream error indicator, and returns the partial count. `fread` must not convert that error into EOF. A regression injects a one-shot backend error after a pushed-back byte and checks the returned byte, `feof`, and `ferror`. Host and Android ARM64 CI are pending. No original game boot is claimed.
+
+See [Stage 124E report](STAGE124E_STDIO_ERROR_SEMANTICS.md).
+
+---
+
 ## Stage 124D — guest stdio `ungetc` (validation in progress)
 
 The provider now registers the fourteenth stdio import, `ungetc`, and pushes an unsigned byte into the front of the bounded per-file unread buffer. Successful pushback clears EOF; an EOF argument or full buffer returns EOF without changing state. The implementation does not require backend seek/tell and is covered by guest-dispatch regression for a forward-only backend.
