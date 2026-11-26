@@ -1,3 +1,11 @@
+## Stage 124K — fflush(NULL) synchronization audit (validation pending)
+
+`fflush(NULL)` now flushes all active streams, marks per-stream errors on failures, and resets update-stream direction after successful flush. Regression coverage verifies direction reset. Input-stream `fflush` semantics and complete ISO C/Bionic conformance remain outside this checkpoint. Host and Android ARM64 CI are required; no game boot is claimed.
+
+See [Stage 124K report](STAGE124K_FFLUSH_ALL_AUDIT.md).
+
+---
+
 ## Stage 124J — update-stream transitions (validation pending)
 
 Track update-mode (`+`) streams and the last I/O direction. Reads after writes flush through the optional backend callback; writes after reads require positioning unless EOF was reached, accounting for pending pushback. `fread`, `fgets`, `fscanf`, `fwrite`, and `fprintf` share transition preparation. Explicit successful seek resets direction state. Host and Android ARM64 CI are required before acceptance; this is not full Bionic conformance and no game boot is claimed.
