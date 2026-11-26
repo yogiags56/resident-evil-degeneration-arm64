@@ -209,7 +209,8 @@ static REGUESTIMPORTStatus stdio_handler(
             f->error = 1u;
             return RE_IMPORT_E_HANDLER;
         }
-        if (ctx->kind == STDIO_FREAD && (uint64_t)transferred < total)
+        if (ctx->kind == STDIO_FREAD && (uint64_t)transferred < total &&
+            !f->error)
             f->eof = 1u;
         result->r0 = (uint32_t)((uint64_t)transferred / b);
         break;
