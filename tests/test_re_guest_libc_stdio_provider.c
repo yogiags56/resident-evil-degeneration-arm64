@@ -299,17 +299,17 @@ int main(void) {
 
     /* Append mode must seek to EOF before every write, not just fopen. */
     strcpy((char *)guest + 0x120u, "a");
-    call_import(&runtime, exports[0].value, base + 0xf1u,
+    call_import(&runtime, exports[0].value, base + 0xf2u,
         base + 0x100u, base + 0x120u, 0u, 0u);
     handle = runtime.cpu.r[0];
     assert(handle != 0u && stream.opened);
     stream.position = 0u; /* Simulate another writer moving the file cursor. */
     strcpy((char *)guest + 0x600u, "!");
-    call_import(&runtime, exports[3].value, base + 0xf3u,
+    call_import(&runtime, exports[3].value, base + 0xf4u,
         base + 0x600u, 1u, 1u, handle);
     assert(runtime.cpu.r[0] == 1u);
     assert(stream.length == 9u && stream.bytes[8] == (uint8_t)'!');
-    call_import(&runtime, exports[1].value, base + 0xf5u,
+    call_import(&runtime, exports[1].value, base + 0xf6u,
         handle, 0u, 0u, 0u);
     assert(runtime.cpu.r[0] == 0u && !stream.opened);
     strcpy((char *)guest + 0x120u, "r+");
