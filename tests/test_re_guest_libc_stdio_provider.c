@@ -217,7 +217,7 @@ int main(void) {
 
     /* Update streams require positioning between input and output. */
     call_import(&runtime, exports[4].value, base + 0xb0u,
-        handle, 0, 0u, 0u);
+        handle, 0, 1u, 0u);
     assert((int32_t)runtime.cpu.r[0] == 0);
 
     /* fwrite returns complete item count and updates the backend stream. */
