@@ -62,7 +62,7 @@ static int normalize_path(const char *input, char output[RE_GUEST_LIBC_STDIO_MAX
 }
 
 static int parse_mode(const char *mode, uint8_t *readable,
-                      uint8_t *writable, uint8_t *append) {
+                      uint8_t *writable, uint8_t *append, uint8_t *update) {
     size_t n;
     int plus = 0, binary = 0;
     if (!mode || !mode[0]) return 0;
@@ -77,12 +77,43 @@ static int parse_mode(const char *mode, uint8_t *readable,
     *readable = (uint8_t)(mode[0] == 'r' || plus);
     *writable = (uint8_t)(mode[0] != 'r' || plus);
     *append = (uint8_t)(mode[0] == 'a');
+    *update = (uint8_t)plus;
     return 1;
 }
 
 static uint32_t file_token(size_t index, uint16_t generation) {
     return RE_GUEST_LIBC_STDIO_TOKEN_BASE |
            ((uint32_t)generation << 5) | (uint32_t)(index + 1u);
+}
+
+static int prepare_stream_read(REGUESTLIBCStdioProvider *p,
+                                REGUESTLIBCStdioFile *f) {
+    if (f->update && f->last_io == 2u) {
+        if (p->backend.flush &&
+            p->backend.flush(p->backend_user, f->stream) != 0) {
+            f->error = 1u;
+            return 0;
+        }
+    }
+    f->last_io = 1u;
+    return 1;
+}
+
+static int prepare_stream_write(REGUESTLIBCStdioProvider *p,
+                                 REGUESTLIBCStdioFile *f) {
+    if (f->update && f->last_io == 1u && !f->eof) {
+        if (!p->backend.seek ||
+            p->backend.seek(p->backend_user, f->stream,
+                            -(int64_t)f->buffered_size, 1) != 0) {
+            f->error = 1u;
+            return 0;
+        }
+        f->buffered_size = 0u;
+    } else if (f->update && f->last_io == 1u) {
+        f->buffered_size = 0u;
+    }
+    f->last_io = 2u;
+    return 1;
 }
 
 static int64_t file_read(REGUESTLIBCStdioProvider *p,
@@ -92,6 +123,7 @@ static int64_t file_read(REGUESTLIBCStdioProvider *p,
     uint64_t copied = 0u;
     if (!p || !f || (!dst && bytes)) return -1;
     if (bytes == 0u) return 0;
+    if (!prepare_stream_read(p, f)) return -1;
     if (f->buffered_size) {
         size_t take = bytes < f->buffered_size ?
                       (size_t)bytes : f->buffered_size;
@@ -119,6 +151,7 @@ static int64_t file_write(REGUESTLIBCStdioProvider *p,
                           uint64_t bytes) {
     int64_t written;
     if (!p || !f || (!src && bytes)) return -1;
+    if (!prepare_stream_write(p, f)) return -1;
     if (f->append) {
         if (!p->backend.seek ||
             p->backend.seek(p->backend_user, f->stream, 0, 2) != 0) {
@@ -140,6 +173,8 @@ static void reset_file_state(REGUESTLIBCStdioFile *f) {
     f->readable = 0u;
     f->writable = 0u;
     f->append = 0u;
+    f->update = 0u;
+    f->last_io = 0u;
     f->eof = 0u;
     f->error = 0u;
     f->buffered_size = 0u;
@@ -179,13 +214,13 @@ static REGUESTIMPORTStatus stdio_handler(
         char path[RE_GUEST_LIBC_STDIO_MAX_PATH];
         char normalized[RE_GUEST_LIBC_STDIO_MAX_PATH];
         char mode[RE_GUEST_LIBC_STDIO_MAX_MODE];
-        uint8_t rd, wr, ap;
+        uint8_t rd, wr, ap, upd;
         size_t i;
         void *stream;
         if (!guest_cstring(bus, a, path, sizeof(path)) ||
             !guest_cstring(bus, b, mode, sizeof(mode)) ||
             !normalize_path(path, normalized) ||
-            !parse_mode(mode, &rd, &wr, &ap)) return RE_IMPORT_E_HANDLER;
+            !parse_mode(mode, &rd, &wr, &ap, &upd)) return RE_IMPORT_E_HANDLER;
         for (i = 0; i < RE_GUEST_LIBC_STDIO_MAX_FILES; ++i)
             if (!p->files[i].active) break;
         if (i == RE_GUEST_LIBC_STDIO_MAX_FILES) return RE_IMPORT_E_HANDLER;
@@ -202,6 +237,7 @@ static REGUESTIMPORTStatus stdio_handler(
             p->files[i].readable = rd;
             p->files[i].writable = wr;
             p->files[i].append = ap;
+            p->files[i].update = upd;
             result->r0 = file_token(i, generation);
         }
         break;
@@ -266,6 +302,7 @@ static REGUESTIMPORTStatus stdio_handler(
             } else {
                 f->eof = 0u;
                 f->buffered_size = 0u;
+                f->last_io = 0u;
             }
         }
         break;
@@ -358,6 +395,7 @@ static REGUESTIMPORTStatus stdio_handler(
             f = resolve_file(p, a);
             if (!f || !f->readable || sizeof(input) >
                 RE_GUEST_LIBC_STDIO_BUFFER_CAP) return RE_IMPORT_E_HANDLER;
+            if (!prepare_stream_read(p, f)) return RE_IMPORT_E_HANDLER;
             while (f->buffered_size < sizeof(input) - 1u) {
                 int64_t got = p->backend.read(p->backend_user, f->stream,
                     f->buffered + f->buffered_size,
@@ -433,6 +471,8 @@ static REGUESTIMPORTStatus stdio_handler(
             if (p->backend.flush && p->backend.flush(p->backend_user, f->stream) != 0) {
                 f->error = 1u;
                 result->r0 = (uint32_t)-1;
+            } else {
+                f->last_io = 0u;
             }
         }
         break;
