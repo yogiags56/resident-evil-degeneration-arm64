@@ -11,7 +11,9 @@ typedef struct {
     size_t length;
     size_t position;
     uint8_t opened;
-} FakeStream;
+ } FakeStream;
+
+static int fake_read_error_once;
 
 static void *fake_open(void *user, const char *path, const char *mode) {
     FakeStream *s = (FakeStream *)user;
@@ -28,6 +30,10 @@ static int64_t fake_read(void *user, void *stream, void *dst, uint64_t bytes) {
     size_t available, take;
     (void)user;
     if (!s || !s->opened || (!dst && bytes)) return -1;
+    if (fake_read_error_once) {
+        fake_read_error_once = 0;
+        return -1;
+    }
     available = s->position < s->length ? s->length - s->position : 0u;
     take = bytes < available ? (size_t)bytes : available;
     if (take) memcpy(dst, s->bytes + s->position, take);
@@ -310,7 +316,21 @@ int main(void) {
         call_import(&runtime, pipe_exports[2].value, base + 0x18u,
             base + 0x984u, 1u, 1u, handle);
         assert(runtime.cpu.r[0] == 1u && guest[0x984u] == (uint8_t)'Q');
+        /* A buffered byte must be returned even if the backend then errors. */
         call_import(&runtime, pipe_exports[13].value, base + 0x1au,
+            (uint32_t)'R', handle, 0u, 0u);
+        assert(runtime.cpu.r[0] == (uint32_t)'R');
+        fake_read_error_once = 1;
+        call_import(&runtime, pipe_exports[2].value, base + 0x1cu,
+            base + 0x988u, 1u, 2u, handle);
+        assert(runtime.cpu.r[0] == 1u && guest[0x988u] == (uint8_t)'R');
+        call_import(&runtime, pipe_exports[8].value, base + 0x1eu,
+            handle, 0u, 0u, 0u);
+        assert(runtime.cpu.r[0] == 0u);
+        call_import(&runtime, pipe_exports[9].value, base + 0x20u,
+            handle, 0u, 0u, 0u);
+        assert(runtime.cpu.r[0] == 1u);
+        call_import(&runtime, pipe_exports[13].value, base + 0x22u,
             (uint32_t)-1, handle, 0u, 0u);
         assert(runtime.cpu.r[0] == (uint32_t)-1);
         call_import(&runtime, pipe_exports[1].value, base + 0x1cu,
