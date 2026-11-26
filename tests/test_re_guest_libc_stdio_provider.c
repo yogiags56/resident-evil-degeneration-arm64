@@ -294,26 +294,26 @@ int main(void) {
             base + 0x980u, 1u, 3u, handle);
         assert(runtime.cpu.r[0] == 3u);
         assert(memcmp(guest + 0x980u, "XYZ", 3u) == 0);
-        call_import(&runtime, pipe_exports[2].value, base + 0xf7u,
+        call_import(&runtime, pipe_exports[2].value, base + 0x10u,
             base + 0x984u, 1u, 1u, handle);
         assert(runtime.cpu.r[0] == 0u);
-        call_import(&runtime, pipe_exports[8].value, base + 0xf8u,
+        call_import(&runtime, pipe_exports[8].value, base + 0x12u,
             handle, 0u, 0u, 0u);
         assert(runtime.cpu.r[0] == 1u);
         /* Push back an unsigned byte, clear EOF, and consume it first. */
-        call_import(&runtime, pipe_exports[13].value, base + 0xf9u,
+        call_import(&runtime, pipe_exports[13].value, base + 0x14u,
             (uint32_t)'Q', handle, 0u, 0u);
         assert(runtime.cpu.r[0] == (uint32_t)'Q');
-        call_import(&runtime, pipe_exports[8].value, base + 0xfau,
+        call_import(&runtime, pipe_exports[8].value, base + 0x16u,
             handle, 0u, 0u, 0u);
         assert(runtime.cpu.r[0] == 0u);
-        call_import(&runtime, pipe_exports[2].value, base + 0xfbu,
+        call_import(&runtime, pipe_exports[2].value, base + 0x18u,
             base + 0x984u, 1u, 1u, handle);
         assert(runtime.cpu.r[0] == 1u && guest[0x984u] == (uint8_t)'Q');
-        call_import(&runtime, pipe_exports[13].value, base + 0xfcu,
+        call_import(&runtime, pipe_exports[13].value, base + 0x1au,
             (uint32_t)-1, handle, 0u, 0u);
         assert(runtime.cpu.r[0] == (uint32_t)-1);
-        call_import(&runtime, pipe_exports[1].value, base + 0xfdu,
+        call_import(&runtime, pipe_exports[1].value, base + 0x1cu,
             handle, 0u, 0u, 0u);
         assert(runtime.cpu.r[0] == 0u && !pipe_stream.opened);
     }
