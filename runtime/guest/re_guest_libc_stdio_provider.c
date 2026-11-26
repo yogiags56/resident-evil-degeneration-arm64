@@ -114,6 +114,16 @@ static int64_t file_read(REGUESTLIBCStdioProvider *p,
     return (int64_t)copied;
 }
 
+static void reset_file_state(REGUESTLIBCStdioFile *f) {
+    if (!f) return;
+    f->readable = 0u;
+    f->writable = 0u;
+    f->append = 0u;
+    f->eof = 0u;
+    f->error = 0u;
+    f->buffered_size = 0u;
+}
+
 static REGUESTLIBCStdioFile *resolve_file(REGUESTLIBCStdioProvider *p,
                                            uint32_t token) {
     uint32_t low, generation;
@@ -164,6 +174,7 @@ static REGUESTIMPORTStatus stdio_handler(
             uint16_t generation = (uint16_t)(p->next_generation++ & 0x7ffu);
             if (!generation) generation = (uint16_t)(p->next_generation++ & 0x7ffu);
             if (!p->next_generation) p->next_generation = 1u;
+            reset_file_state(&p->files[i]);
             p->files[i].stream = stream;
             p->files[i].generation = generation;
             p->files[i].active = 1u;
@@ -184,7 +195,9 @@ static REGUESTIMPORTStatus stdio_handler(
                 flush_rc = p->backend.flush(p->backend_user, f->stream);
             if (flush_rc != 0) f->error = 1u;
             close_rc = p->backend.close(p->backend_user, f->stream);
-            f->stream = NULL; f->active = 0u;
+            f->stream = NULL;
+            f->active = 0u;
+            reset_file_state(f);
             result->r0 = (uint32_t)(flush_rc == 0 && close_rc == 0 ? 0 : -1);
         }
         break;
@@ -219,14 +232,20 @@ static REGUESTIMPORTStatus stdio_handler(
     case STDIO_FSEEK: {
         int64_t offset = (int32_t)b;
         f = resolve_file(p, a);
-        if (!f || !p->backend.seek) {
+        if (!f) return RE_IMPORT_E_HANDLER;
+        if (!p->backend.seek) {
+            f->error = 1u;
             result->r0 = (uint32_t)-1;
         } else {
             if ((int32_t)c == 1) offset -= (int64_t)f->buffered_size;
             if (p->backend.seek(p->backend_user, f->stream, offset,
-                                (int32_t)c) != 0)
+                                (int32_t)c) != 0) {
+                f->error = 1u;
                 result->r0 = (uint32_t)-1;
-            else { f->eof = 0u; f->buffered_size = 0u; }
+            } else {
+                f->eof = 0u;
+                f->buffered_size = 0u;
+            }
         }
         break;
     }
@@ -234,10 +253,16 @@ static REGUESTIMPORTStatus stdio_handler(
         int64_t position;
         f = resolve_file(p, a);
         if (!f) return RE_IMPORT_E_HANDLER;
-        if (!p->backend.tell) { result->r0 = (uint32_t)-1; break; }
-        position = p->backend.tell(p->backend_user, f->stream);
-        if (position < (int64_t)f->buffered_size || position > INT32_MAX)
+        if (!p->backend.tell) {
+            f->error = 1u;
             result->r0 = (uint32_t)-1;
+            break;
+        }
+        position = p->backend.tell(p->backend_user, f->stream);
+        if (position < (int64_t)f->buffered_size || position > INT32_MAX) {
+            f->error = 1u;
+            result->r0 = (uint32_t)-1;
+        }
         else result->r0 = (uint32_t)(position - f->buffered_size);
         break;
     }
@@ -480,9 +505,12 @@ void re_guest_libc_stdio_provider_close_all(REGUESTLIBCStdioProvider *p) {
     for (size_t i = 0; i < RE_GUEST_LIBC_STDIO_MAX_FILES; ++i) {
         REGUESTLIBCStdioFile *f = &p->files[i];
         if (f->active && f->stream) {
+            if (f->writable && p->backend.flush)
+                (void)p->backend.flush(p->backend_user, f->stream);
             (void)p->backend.close(p->backend_user, f->stream);
             f->stream = NULL;
             f->active = 0u;
+            reset_file_state(f);
         }
     }
 }
