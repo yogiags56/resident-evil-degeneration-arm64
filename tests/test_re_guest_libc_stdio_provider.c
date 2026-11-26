@@ -292,7 +292,7 @@ int main(void) {
 
     /* fflush(NULL) synchronizes every stream and resets update direction. */
     provider.files[(handle & 0x1fu) - 1u].last_io = 2u;
-    call_import(&runtime, exports[10].value, base + 0xd7u,
+    call_import(&runtime, exports[10].value, base + 0xd6u,
         0u, 0u, 0u, 0u);
     assert(runtime.cpu.r[0] == 0u);
     assert(provider.files[(handle & 0x1fu) - 1u].last_io == 0u);
