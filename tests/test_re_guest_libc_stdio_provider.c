@@ -361,9 +361,36 @@ int main(void) {
         call_import(&runtime, pipe_exports[13].value, base + 0x32u,
             (uint32_t)-1, handle, 0u, 0u);
         assert(runtime.cpu.r[0] == (uint32_t)-1);
-        call_import(&runtime, pipe_exports[1].value, base + 0x34u,
+        /* Pushback state must not leak when a FILE slot is reused. */
+        call_import(&runtime, pipe_exports[13].value, base + 0x34u,
+            (uint32_t)'S', handle, 0u, 0u);
+        assert(runtime.cpu.r[0] == (uint32_t)'S');
+        call_import(&runtime, pipe_exports[1].value, base + 0x36u,
             handle, 0u, 0u, 0u);
         assert(runtime.cpu.r[0] == 0u && !pipe_stream.opened);
+        memcpy(pipe_stream.bytes, "NEW", 3u);
+        pipe_stream.length = 3u;
+        pipe_stream.position = 0u;
+        call_import(&runtime, pipe_exports[0].value, base + 0x38u,
+            base + 0x100u, base + 0x120u, 0u, 0u);
+        {
+            uint32_t reopened = runtime.cpu.r[0];
+            assert(reopened != 0u && reopened != handle);
+            call_import(&runtime, pipe_exports[8].value, base + 0x3au,
+                reopened, 0u, 0u, 0u);
+            assert(runtime.cpu.r[0] == 0u);
+            call_import(&runtime, pipe_exports[9].value, base + 0x3cu,
+                reopened, 0u, 0u, 0u);
+            assert(runtime.cpu.r[0] == 0u);
+            call_import(&runtime, pipe_exports[2].value, base + 0x3eu,
+                base + 0x990u, 1u, 1u, reopened);
+            assert(runtime.cpu.r[0] == 1u && guest[0x990u] == (uint8_t)'N');
+            /* Old generation tokens must remain invalid after slot reuse. */
+            assert(reopened != handle);
+            call_import(&runtime, pipe_exports[1].value, base + 0x40u,
+                reopened, 0u, 0u, 0u);
+            assert(runtime.cpu.r[0] == 0u && !pipe_stream.opened);
+        }
     }
     assert(re_guest_import_table_init(&imports, 0x30000000u) == RE_IMPORT_OK);
     puts("Guest libc stdio provider tests: PASS");
