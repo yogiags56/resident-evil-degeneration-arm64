@@ -212,6 +212,11 @@ int main(void) {
     assert(runtime.cpu.r[0] == base + 0x500u);
     assert(strcmp((char *)guest + 0x500u, "bcd") == 0);
 
+    /* Update streams require positioning between input and output. */
+    call_import(&runtime, exports[4].value, base + 0xb0u,
+        handle, 0, 0u, 0u);
+    assert((int32_t)runtime.cpu.r[0] == 0);
+
     /* fwrite returns complete item count and updates the backend stream. */
     call_import(&runtime, exports[3].value, base + 0xc0u,
         base + 0x600u, 1u, 2u, handle);
