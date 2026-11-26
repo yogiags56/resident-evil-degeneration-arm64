@@ -772,3 +772,8 @@ Registered the guest `ungetc` import and implemented bounded pushback using the 
 ## Stage 124E — stdio read error semantics
 
 The follow-up preserves bytes already copied from the unread buffer when a backend read subsequently fails, sets `ferror`, and prevents `fread` from misreporting that short result as EOF. Regression coverage injects a backend read failure after a pushed-back byte. See [Stage 124E report](docs/STAGE124E_STDIO_ERROR_SEMANTICS.md). Host regression and Android ARM64 CI remain the acceptance gate.
+
+
+## Stage 124F — guest `clearerr`
+
+Added a fifteenth stdio import for `clearerr`, clearing EOF and error indicators. Backend read failures now return partial/zero counts while preserving `ferror`; they are not confused with EOF or import-dispatch failures. Regression coverage includes buffered and unbuffered backend failures and clearerr recovery. See [Stage 124F report](docs/STAGE124F_CLEARERR_RECOVERY.md). CI remains the acceptance gate.

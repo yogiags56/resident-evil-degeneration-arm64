@@ -111,7 +111,7 @@ int main(void) {
     const uint32_t base = 0x10000000u;
     static const char *const names[RE_GUEST_LIBC_STDIO_SYMBOL_COUNT] = {
         "fopen", "fclose", "fread", "fwrite", "fseek", "ftell", "fgets",
-        "fprintf", "feof", "ferror", "fflush", "sscanf", "fscanf", "ungetc"
+        "fprintf", "feof", "ferror", "fflush", "sscanf", "fscanf", "ungetc", "clearerr"
     };
     REGUESTMEMORY memory;
     REGUESTMEMBUS bus;
@@ -122,7 +122,7 @@ int main(void) {
     REGUESTLIBCStdioBackend backend = {
         fake_open, fake_read, fake_write, fake_seek, fake_tell, fake_close, fake_flush
     };
-    REGUESTELF32LINKSYMBOL symbols[15] = {0};
+    REGUESTELF32LINKSYMBOL symbols[16] = {0};
     REGUESTSYMBOL exports[RE_GUEST_LIBC_STDIO_SYMBOL_COUNT];
     FakeStream stream = {{'a','b','c','d','e','f'}, 6u, 0u, 0u};
     size_t export_count = 0u, failed = 0u;
@@ -147,9 +147,9 @@ int main(void) {
            RE_GUEST_LIBC_STDIO_OK);
     assert(re_guest_import_table_init(&imports, 0x30000000u) == RE_IMPORT_OK);
     assert(re_guest_libc_stdio_provider_bind_elf_symbols(&provider, &imports,
-        symbols, 15u, exports, RE_GUEST_LIBC_STDIO_SYMBOL_COUNT,
+        symbols, 16u, exports, RE_GUEST_LIBC_STDIO_SYMBOL_COUNT,
         &export_count, &failed) == RE_GUEST_LIBC_STDIO_OK);
-    assert(export_count == RE_GUEST_LIBC_STDIO_SYMBOL_COUNT && failed == 15u);
+    assert(export_count == RE_GUEST_LIBC_STDIO_SYMBOL_COUNT && failed == 16u);
 
     re_guest_memory_init(&memory);
     assert(re_guest_memory_map_ex(&memory, base, sizeof(guest), guest,
@@ -282,7 +282,7 @@ int main(void) {
             &nonseek_backend, &pipe_stream) == RE_GUEST_LIBC_STDIO_OK);
         assert(re_guest_import_table_init(&imports, 0x30000000u) == RE_IMPORT_OK);
         assert(re_guest_libc_stdio_provider_bind_elf_symbols(&nonseek_provider,
-            &imports, symbols, 15u, pipe_exports,
+            &imports, symbols, 16u, pipe_exports,
             RE_GUEST_LIBC_STDIO_SYMBOL_COUNT, &export_count, &failed) ==
             RE_GUEST_LIBC_STDIO_OK);
         re_guest_runtime_init_mapped(&runtime, &bus, &imports, 0x40000000u,
@@ -330,10 +330,38 @@ int main(void) {
         call_import(&runtime, pipe_exports[9].value, base + 0x20u,
             handle, 0u, 0u, 0u);
         assert(runtime.cpu.r[0] == 1u);
-        call_import(&runtime, pipe_exports[13].value, base + 0x22u,
+        /* clearerr clears both stream indicators without closing the stream. */
+        call_import(&runtime, pipe_exports[14].value, base + 0x22u,
+            handle, 0u, 0u, 0u);
+        assert(runtime.cpu.r[0] == 0u);
+        call_import(&runtime, pipe_exports[8].value, base + 0x24u,
+            handle, 0u, 0u, 0u);
+        assert(runtime.cpu.r[0] == 0u);
+        call_import(&runtime, pipe_exports[9].value, base + 0x26u,
+            handle, 0u, 0u, 0u);
+        assert(runtime.cpu.r[0] == 0u);
+        /* A backend error without buffered bytes is a zero-item fread,
+         * not EOF and not an import-dispatch failure. */
+        fake_read_error_once = 1;
+        call_import(&runtime, pipe_exports[2].value, base + 0x28u,
+            base + 0x98cu, 1u, 1u, handle);
+        assert(runtime.cpu.r[0] == 0u);
+        call_import(&runtime, pipe_exports[8].value, base + 0x2au,
+            handle, 0u, 0u, 0u);
+        assert(runtime.cpu.r[0] == 0u);
+        call_import(&runtime, pipe_exports[9].value, base + 0x2cu,
+            handle, 0u, 0u, 0u);
+        assert(runtime.cpu.r[0] == 1u);
+        call_import(&runtime, pipe_exports[14].value, base + 0x2eu,
+            handle, 0u, 0u, 0u);
+        assert(runtime.cpu.r[0] == 0u);
+        call_import(&runtime, pipe_exports[9].value, base + 0x30u,
+            handle, 0u, 0u, 0u);
+        assert(runtime.cpu.r[0] == 0u);
+        call_import(&runtime, pipe_exports[13].value, base + 0x32u,
             (uint32_t)-1, handle, 0u, 0u);
         assert(runtime.cpu.r[0] == (uint32_t)-1);
-        call_import(&runtime, pipe_exports[1].value, base + 0x1cu,
+        call_import(&runtime, pipe_exports[1].value, base + 0x34u,
             handle, 0u, 0u, 0u);
         assert(runtime.cpu.r[0] == 0u && !pipe_stream.opened);
     }

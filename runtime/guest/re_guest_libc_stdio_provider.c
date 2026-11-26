@@ -9,10 +9,11 @@
 enum { STDIO_FOPEN, STDIO_FCLOSE, STDIO_FREAD, STDIO_FWRITE,
        STDIO_FSEEK, STDIO_FTELL, STDIO_FGETS, STDIO_FPRINTF,
        STDIO_FEOF, STDIO_FERROR, STDIO_FFLUSH, STDIO_SSCANF, STDIO_FSCANF,
-       STDIO_UNGETC };
+       STDIO_UNGETC, STDIO_CLEARERR };
 static const char *const k_names[RE_GUEST_LIBC_STDIO_SYMBOL_COUNT] = {
     "fopen", "fclose", "fread", "fwrite", "fseek", "ftell", "fgets",
-    "fprintf", "feof", "ferror", "fflush", "sscanf", "fscanf", "ungetc"
+    "fprintf", "feof", "ferror", "fflush", "sscanf", "fscanf", "ungetc",
+    "clearerr"
 };
 
 static int guest_cstring(const REGUESTMEMBUS *bus, uint32_t address,
@@ -105,7 +106,7 @@ static int64_t file_read(REGUESTLIBCStdioProvider *p,
                                       out + copied, bytes - copied);
         if (got < 0 || (uint64_t)got > bytes - copied) {
             f->error = 1u;
-            return copied ? (int64_t)copied : -1;
+            return (int64_t)copied;
         }
         copied += (uint64_t)got;
     }
@@ -259,7 +260,7 @@ static REGUESTIMPORTStatus stdio_handler(
         while (written + 1u < count) {
             int64_t got = file_read(p, f, &byte, 1u);
             if (got < 0 || got > 1) { f->error = 1u; return RE_IMPORT_E_HANDLER; }
-            if (got == 0) { f->eof = 1u; break; }
+            if (got == 0) { if (!f->error) f->eof = 1u; break; }
             ((char *)host)[written++] = (char)byte;
             if (byte == (uint8_t)'\n') break;
         }
@@ -361,6 +362,12 @@ static REGUESTIMPORTStatus stdio_handler(
         f = resolve_file(p, a);
         if (!f) return RE_IMPORT_E_HANDLER;
         result->r0 = ctx->kind == STDIO_FEOF ? (uint32_t)f->eof : (uint32_t)f->error;
+        break;
+    case STDIO_CLEARERR:
+        f = resolve_file(p, a);
+        if (!f) return RE_IMPORT_E_HANDLER;
+        f->eof = 0u;
+        f->error = 0u;
         break;
     case STDIO_FFLUSH:
         if (a == 0u) {

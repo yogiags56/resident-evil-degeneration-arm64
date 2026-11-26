@@ -1,3 +1,11 @@
+## Stage 124F — guest `clearerr` and stdio error recovery (validation pending)
+
+Added a fifteenth stdio provider export, `clearerr`, which clears both the guest EOF and error indicators for a valid stream without closing it. The follow-up also corrected read-error return behavior: backend read failures now return the number of bytes already copied (zero when none were copied), while setting `ferror`; `fread` therefore reports a partial/zero item count rather than failing import dispatch. `fgets` no longer marks EOF when its zero-byte result was caused by a backend error. Regression coverage checks buffered and unbuffered backend failures, `feof`, `ferror`, and `clearerr` recovery.
+
+Host and Android ARM64 CI must pass on the final branch head. No game boot is claimed.
+
+---
+
 ## Stage 124E — stdio EOF and backend read-error semantics (validation pending)
 
 The follow-up distinguishes clean EOF from backend read failures. `file_read` preserves bytes already copied from the unread buffer when the backend subsequently errors, sets the stream error indicator, and returns the partial count. `fread` must not convert that error into EOF. A regression injects a one-shot backend error after a pushed-back byte and checks the returned byte, `feof`, and `ferror`. Host and Android ARM64 CI are pending. No original game boot is claimed.
