@@ -760,3 +760,10 @@ The stdio provider now supports forward-only stream backends for `fscanf`
 through a bounded per-file unread buffer. Unconsumed lookahead bytes remain
 available to `fread` and `fgets`; seek/tell callbacks are optional.
 See [Stage 124C report](docs/STAGE124C_NONSEEKABLE_STREAMS.md).
+
+
+## Stage 124D — Guest stdio pushback
+
+Registered the guest `ungetc` import and implemented bounded pushback using the per-file unread buffer. Pushback is independent of backend seek/tell support, clears EOF on success, and rejects EOF/full-buffer inputs. Regression coverage includes forward-only streams, EOF reset, byte readback, and EOF-argument rejection. Host and Android ARM64 CI are the acceptance gate; original game boot is not claimed. See [Stage 124D report](docs/STAGE124D_UNGETC_PUSHBACK.md).
+
+

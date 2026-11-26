@@ -11,7 +11,9 @@ typedef struct {
     size_t length;
     size_t position;
     uint8_t opened;
-} FakeStream;
+ } FakeStream;
+
+static int fake_read_error_once;
 
 static void *fake_open(void *user, const char *path, const char *mode) {
     FakeStream *s = (FakeStream *)user;
@@ -28,6 +30,10 @@ static int64_t fake_read(void *user, void *stream, void *dst, uint64_t bytes) {
     size_t available, take;
     (void)user;
     if (!s || !s->opened || (!dst && bytes)) return -1;
+    if (fake_read_error_once) {
+        fake_read_error_once = 0;
+        return -1;
+    }
     available = s->position < s->length ? s->length - s->position : 0u;
     take = bytes < available ? (size_t)bytes : available;
     if (take) memcpy(dst, s->bytes + s->position, take);
@@ -105,7 +111,7 @@ int main(void) {
     const uint32_t base = 0x10000000u;
     static const char *const names[RE_GUEST_LIBC_STDIO_SYMBOL_COUNT] = {
         "fopen", "fclose", "fread", "fwrite", "fseek", "ftell", "fgets",
-        "fprintf", "feof", "ferror", "fflush", "sscanf", "fscanf"
+        "fprintf", "feof", "ferror", "fflush", "sscanf", "fscanf", "ungetc"
     };
     REGUESTMEMORY memory;
     REGUESTMEMBUS bus;
@@ -116,7 +122,7 @@ int main(void) {
     REGUESTLIBCStdioBackend backend = {
         fake_open, fake_read, fake_write, fake_seek, fake_tell, fake_close, fake_flush
     };
-    REGUESTELF32LINKSYMBOL symbols[14] = {0};
+    REGUESTELF32LINKSYMBOL symbols[15] = {0};
     REGUESTSYMBOL exports[RE_GUEST_LIBC_STDIO_SYMBOL_COUNT];
     FakeStream stream = {{'a','b','c','d','e','f'}, 6u, 0u, 0u};
     size_t export_count = 0u, failed = 0u;
@@ -141,9 +147,9 @@ int main(void) {
            RE_GUEST_LIBC_STDIO_OK);
     assert(re_guest_import_table_init(&imports, 0x30000000u) == RE_IMPORT_OK);
     assert(re_guest_libc_stdio_provider_bind_elf_symbols(&provider, &imports,
-        symbols, 14u, exports, RE_GUEST_LIBC_STDIO_SYMBOL_COUNT,
+        symbols, 15u, exports, RE_GUEST_LIBC_STDIO_SYMBOL_COUNT,
         &export_count, &failed) == RE_GUEST_LIBC_STDIO_OK);
-    assert(export_count == RE_GUEST_LIBC_STDIO_SYMBOL_COUNT && failed == 14u);
+    assert(export_count == RE_GUEST_LIBC_STDIO_SYMBOL_COUNT && failed == 15u);
 
     re_guest_memory_init(&memory);
     assert(re_guest_memory_map_ex(&memory, base, sizeof(guest), guest,
@@ -276,7 +282,7 @@ int main(void) {
             &nonseek_backend, &pipe_stream) == RE_GUEST_LIBC_STDIO_OK);
         assert(re_guest_import_table_init(&imports, 0x30000000u) == RE_IMPORT_OK);
         assert(re_guest_libc_stdio_provider_bind_elf_symbols(&nonseek_provider,
-            &imports, symbols, 14u, pipe_exports,
+            &imports, symbols, 15u, pipe_exports,
             RE_GUEST_LIBC_STDIO_SYMBOL_COUNT, &export_count, &failed) ==
             RE_GUEST_LIBC_STDIO_OK);
         re_guest_runtime_init_mapped(&runtime, &bus, &imports, 0x40000000u,
@@ -294,13 +300,40 @@ int main(void) {
             base + 0x980u, 1u, 3u, handle);
         assert(runtime.cpu.r[0] == 3u);
         assert(memcmp(guest + 0x980u, "XYZ", 3u) == 0);
-        call_import(&runtime, pipe_exports[5].value, base + 0xf8u,
+        call_import(&runtime, pipe_exports[2].value, base + 0x10u,
+            base + 0x984u, 1u, 1u, handle);
+        assert(runtime.cpu.r[0] == 0u);
+        call_import(&runtime, pipe_exports[8].value, base + 0x12u,
             handle, 0u, 0u, 0u);
-        assert(runtime.cpu.r[0] == (uint32_t)-1);
-        call_import(&runtime, pipe_exports[4].value, base + 0xfau,
+        assert(runtime.cpu.r[0] == 1u);
+        /* Push back an unsigned byte, clear EOF, and consume it first. */
+        call_import(&runtime, pipe_exports[13].value, base + 0x14u,
+            (uint32_t)'Q', handle, 0u, 0u);
+        assert(runtime.cpu.r[0] == (uint32_t)'Q');
+        call_import(&runtime, pipe_exports[8].value, base + 0x16u,
             handle, 0u, 0u, 0u);
+        assert(runtime.cpu.r[0] == 0u);
+        call_import(&runtime, pipe_exports[2].value, base + 0x18u,
+            base + 0x984u, 1u, 1u, handle);
+        assert(runtime.cpu.r[0] == 1u && guest[0x984u] == (uint8_t)'Q');
+        /* A buffered byte must be returned even if the backend then errors. */
+        call_import(&runtime, pipe_exports[13].value, base + 0x1au,
+            (uint32_t)'R', handle, 0u, 0u);
+        assert(runtime.cpu.r[0] == (uint32_t)'R');
+        fake_read_error_once = 1;
+        call_import(&runtime, pipe_exports[2].value, base + 0x1cu,
+            base + 0x988u, 1u, 2u, handle);
+        assert(runtime.cpu.r[0] == 1u && guest[0x988u] == (uint8_t)'R');
+        call_import(&runtime, pipe_exports[8].value, base + 0x1eu,
+            handle, 0u, 0u, 0u);
+        assert(runtime.cpu.r[0] == 0u);
+        call_import(&runtime, pipe_exports[9].value, base + 0x20u,
+            handle, 0u, 0u, 0u);
+        assert(runtime.cpu.r[0] == 1u);
+        call_import(&runtime, pipe_exports[13].value, base + 0x22u,
+            (uint32_t)-1, handle, 0u, 0u);
         assert(runtime.cpu.r[0] == (uint32_t)-1);
-        call_import(&runtime, pipe_exports[1].value, base + 0xfcu,
+        call_import(&runtime, pipe_exports[1].value, base + 0x1cu,
             handle, 0u, 0u, 0u);
         assert(runtime.cpu.r[0] == 0u && !pipe_stream.opened);
     }

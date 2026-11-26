@@ -8,10 +8,11 @@
 
 enum { STDIO_FOPEN, STDIO_FCLOSE, STDIO_FREAD, STDIO_FWRITE,
        STDIO_FSEEK, STDIO_FTELL, STDIO_FGETS, STDIO_FPRINTF,
-       STDIO_FEOF, STDIO_FERROR, STDIO_FFLUSH, STDIO_SSCANF, STDIO_FSCANF };
+       STDIO_FEOF, STDIO_FERROR, STDIO_FFLUSH, STDIO_SSCANF, STDIO_FSCANF,
+       STDIO_UNGETC };
 static const char *const k_names[RE_GUEST_LIBC_STDIO_SYMBOL_COUNT] = {
     "fopen", "fclose", "fread", "fwrite", "fseek", "ftell", "fgets",
-    "fprintf", "feof", "ferror", "fflush", "sscanf", "fscanf"
+    "fprintf", "feof", "ferror", "fflush", "sscanf", "fscanf", "ungetc"
 };
 
 static int guest_cstring(const REGUESTMEMBUS *bus, uint32_t address,
@@ -102,7 +103,10 @@ static int64_t file_read(REGUESTLIBCStdioProvider *p,
     if (copied < bytes) {
         int64_t got = p->backend.read(p->backend_user, f->stream,
                                       out + copied, bytes - copied);
-        if (got < 0 || (uint64_t)got > bytes - copied) return -1;
+        if (got < 0 || (uint64_t)got > bytes - copied) {
+            f->error = 1u;
+            return copied ? (int64_t)copied : -1;
+        }
         copied += (uint64_t)got;
     }
     if (copied < bytes) f->eof = 1u;
@@ -205,7 +209,8 @@ static REGUESTIMPORTStatus stdio_handler(
             f->error = 1u;
             return RE_IMPORT_E_HANDLER;
         }
-        if (ctx->kind == STDIO_FREAD && (uint64_t)transferred < total)
+        if (ctx->kind == STDIO_FREAD && (uint64_t)transferred < total &&
+            !f->error)
             f->eof = 1u;
         result->r0 = (uint32_t)((uint64_t)transferred / b);
         break;
@@ -338,6 +343,19 @@ static REGUESTIMPORTStatus stdio_handler(
                      (input_failure ? (uint32_t)-1 : 0u);
         break;
     }
+    case STDIO_UNGETC:
+        f = resolve_file(p, b);
+        if (!f || !f->readable) return RE_IMPORT_E_HANDLER;
+        if ((int32_t)a == -1 || f->buffered_size >= RE_GUEST_LIBC_STDIO_BUFFER_CAP) {
+            result->r0 = (uint32_t)-1;
+        } else {
+            memmove(f->buffered + 1u, f->buffered, f->buffered_size);
+            f->buffered[0] = (uint8_t)a;
+            ++f->buffered_size;
+            f->eof = 0u;
+            result->r0 = (uint32_t)(uint8_t)a;
+        }
+        break;
     case STDIO_FEOF:
     case STDIO_FERROR:
         f = resolve_file(p, a);
