@@ -103,7 +103,10 @@ static int64_t file_read(REGUESTLIBCStdioProvider *p,
     if (copied < bytes) {
         int64_t got = p->backend.read(p->backend_user, f->stream,
                                       out + copied, bytes - copied);
-        if (got < 0 || (uint64_t)got > bytes - copied) return -1;
+        if (got < 0 || (uint64_t)got > bytes - copied) {
+            f->error = 1u;
+            return copied ? (int64_t)copied : -1;
+        }
         copied += (uint64_t)got;
     }
     if (copied < bytes) f->eof = 1u;
