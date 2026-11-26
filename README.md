@@ -767,3 +767,8 @@ See [Stage 124C report](docs/STAGE124C_NONSEEKABLE_STREAMS.md).
 Registered the guest `ungetc` import and implemented bounded pushback using the per-file unread buffer. Pushback is independent of backend seek/tell support, clears EOF on success, and rejects EOF/full-buffer inputs. Regression coverage includes forward-only streams, EOF reset, byte readback, and EOF-argument rejection. Host and Android ARM64 CI are the acceptance gate; original game boot is not claimed. See [Stage 124D report](docs/STAGE124D_UNGETC_PUSHBACK.md).
 
 
+
+
+## Stage 124E — stdio read error semantics
+
+The follow-up preserves bytes already copied from the unread buffer when a backend read subsequently fails, sets `ferror`, and prevents `fread` from misreporting that short result as EOF. Regression coverage injects a backend read failure after a pushed-back byte. See [Stage 124E report](docs/STAGE124E_STDIO_ERROR_SEMANTICS.md). Host regression and Android ARM64 CI remain the acceptance gate.
