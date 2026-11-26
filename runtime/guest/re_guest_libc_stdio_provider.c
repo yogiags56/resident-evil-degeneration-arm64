@@ -458,10 +458,13 @@ static REGUESTIMPORTStatus stdio_handler(
             if (p->backend.flush) {
                 for (size_t i = 0; i < RE_GUEST_LIBC_STDIO_MAX_FILES; ++i) {
                     REGUESTLIBCStdioFile *open_file = &p->files[i];
-                    if (open_file->active && open_file->stream &&
-                        p->backend.flush(p->backend_user, open_file->stream) != 0) {
-                        open_file->error = 1u;
-                        result->r0 = (uint32_t)-1;
+                    if (open_file->active && open_file->stream) {
+                        if (p->backend.flush(p->backend_user, open_file->stream) != 0) {
+                            open_file->error = 1u;
+                            result->r0 = (uint32_t)-1;
+                        } else {
+                            open_file->last_io = 0u;
+                        }
                     }
                 }
             }
