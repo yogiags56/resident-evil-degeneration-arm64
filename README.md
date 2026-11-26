@@ -777,3 +777,8 @@ The follow-up preserves bytes already copied from the unread buffer when a backe
 ## Stage 124F — guest `clearerr`
 
 Added a fifteenth stdio import for `clearerr`, clearing EOF and error indicators. Backend read failures now return partial/zero counts while preserving `ferror`; they are not confused with EOF or import-dispatch failures. Regression coverage includes buffered and unbuffered backend failures and clearerr recovery. See [Stage 124F report](docs/STAGE124F_CLEARERR_RECOVERY.md). CI remains the acceptance gate.
+
+
+## Stage 124G — stdio lifecycle
+
+Stream close/reopen now resets EOF, error, access-mode, and unread-buffer state. Provider shutdown flushes writable streams when supported. Regression coverage checks slot reuse, generation-token renewal, and no stale pushback leakage. See [Stage 124G report](docs/STAGE124G_STDIO_LIFECYCLE.md). CI remains the acceptance gate.

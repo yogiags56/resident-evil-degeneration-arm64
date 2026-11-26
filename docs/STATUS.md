@@ -1,3 +1,11 @@
+## Stage 124G — stdio lifecycle and seek-state consistency (validation pending)
+
+This stage centralizes stream-slot state reset, clears EOF/error/pushback state on close and reopen, and flushes writable streams during provider shutdown when supported. Regression coverage closes a stream with unread pushback, reopens the reused slot, verifies a new generation token and clean indicators, and reads fresh backend data. Seek/tell backend failures are surfaced through the stream error indicator. Host and Android ARM64 CI are required before acceptance; no game boot is claimed.
+
+See [Stage 124G report](STAGE124G_STDIO_LIFECYCLE.md).
+
+---
+
 ## Stage 124F — guest `clearerr` and stdio error recovery (validation pending)
 
 Added a fifteenth stdio provider export, `clearerr`, which clears both the guest EOF and error indicators for a valid stream without closing it. The follow-up also corrected read-error return behavior: backend read failures now return the number of bytes already copied (zero when none were copied), while setting `ferror`; `fread` therefore reports a partial/zero item count rather than failing import dispatch. `fgets` no longer marks EOF when its zero-byte result was caused by a backend error. Regression coverage checks buffered and unbuffered backend failures, `feof`, `ferror`, and `clearerr` recovery.
