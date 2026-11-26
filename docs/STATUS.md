@@ -1,3 +1,11 @@
+## Stage 124H — stdio seek and logical-position audit (validation pending)
+
+Added regression coverage for `ftell` with a pending `ungetc` byte, `fseek(SEEK_CUR)` accounting for unread bytes, and backend seek failure setting `ferror` with recovery through `clearerr`. The broader audit still needs non-seekable stream behavior, update-stream transitions, and append-mode positioning. Host and Android ARM64 CI are required before acceptance. No original game boot is claimed.
+
+See [Stage 124H report](STAGE124H_STDIO_SEEK_AUDIT.md).
+
+---
+
 ## Stage 124G — stdio lifecycle and seek-state consistency (validation pending)
 
 This stage centralizes stream-slot state reset, clears EOF/error/pushback state on close and reopen, and flushes writable streams during provider shutdown when supported. Regression coverage closes a stream with unread pushback, reopens the reused slot, verifies a new generation token and clean indicators, and reads fresh backend data. Seek/tell backend failures are surfaced through the stream error indicator. Host and Android ARM64 CI are required before acceptance; no game boot is claimed.
