@@ -14,6 +14,7 @@ typedef struct {
  } FakeStream;
 
 static int fake_read_error_once;
+static int fake_flush_calls;
 
 static void *fake_open(void *user, const char *path, const char *mode) {
     FakeStream *s = (FakeStream *)user;
@@ -75,6 +76,7 @@ static int64_t fake_tell(void *user, void *stream) {
 static int fake_flush(void *user, void *stream) {
     FakeStream *s = (FakeStream *)stream;
     (void)user;
+    ++fake_flush_calls;
     return s && s->opened ? 0 : -1;
 }
 static int fake_close(void *user, void *stream) {
@@ -128,6 +130,7 @@ int main(void) {
     size_t export_count = 0u, failed = 0u;
     uint32_t handle;
     size_t append_length;
+    int flush_before_read;
 
     for (size_t i = 0; i < RE_GUEST_LIBC_STDIO_SYMBOL_COUNT; ++i) {
         (void)strcpy(symbols[i + 1u].name, names[i]);
@@ -212,6 +215,11 @@ int main(void) {
     assert(runtime.cpu.r[0] == base + 0x500u);
     assert(strcmp((char *)guest + 0x500u, "bcd") == 0);
 
+    /* Update streams require positioning between input and output. */
+    call_import(&runtime, exports[4].value, base + 0xb0u,
+        handle, 0, 1u, 0u);
+    assert((int32_t)runtime.cpu.r[0] == 0);
+
     /* fwrite returns complete item count and updates the backend stream. */
     call_import(&runtime, exports[3].value, base + 0xc0u,
         base + 0x600u, 1u, 2u, handle);
@@ -224,13 +232,12 @@ int main(void) {
     assert(runtime.cpu.r[0] == 17u);
     assert(memcmp(stream.bytes + 6u, "id=17 name=guest\n", 17u) == 0);
 
-    /* Reading beyond the current end sets EOF; a successful seek clears it. */
-    call_import(&runtime, exports[4].value, base + 0xd2u,
-        handle, 0, 2u, 0u);
-    assert((int32_t)runtime.cpu.r[0] == 0);
+    /* Update-stream output -> input must flush before the read. */
+    flush_before_read = fake_flush_calls;
     call_import(&runtime, exports[2].value, base + 0xd4u,
         base + 0x900u, 1u, 1u, handle);
     assert(runtime.cpu.r[0] == 0u);
+    assert(fake_flush_calls == flush_before_read + 1);
     call_import(&runtime, exports[8].value, base + 0xd6u,
         handle, 0u, 0u, 0u);
     assert(runtime.cpu.r[0] == 1u);

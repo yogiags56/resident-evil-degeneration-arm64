@@ -787,3 +787,8 @@ Stream close/reopen now resets EOF, error, access-mode, and unread-buffer state.
 ## Stage 124I — append semantics
 
 `fwrite` and `fprintf` share append-aware write handling that repositions seekable append streams to EOF before every write. Non-seekable append is rejected with `ferror` until the backend provides an atomic append capability. See [Stage 124I report](docs/STAGE124I_APPEND_NONSEEK.md). CI remains the acceptance gate.
+
+
+## Stage 124J — update-stream transitions
+
+Update-mode streams now track read/write direction. Input after output flushes when the backend supports flushing; output after input requires positioning unless EOF was reached. See [Stage 124J report](docs/STAGE124J_UPDATE_STREAM_TRANSITIONS.md). CI remains the acceptance gate.

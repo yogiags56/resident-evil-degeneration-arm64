@@ -1,3 +1,11 @@
+## Stage 124J — update-stream transitions (validation pending)
+
+Track update-mode (`+`) streams and the last I/O direction. Reads after writes flush through the optional backend callback; writes after reads require positioning unless EOF was reached, accounting for pending pushback. `fread`, `fgets`, `fscanf`, `fwrite`, and `fprintf` share transition preparation. Explicit successful seek resets direction state. Host and Android ARM64 CI are required before acceptance; this is not full Bionic conformance and no game boot is claimed.
+
+See [Stage 124J report](STAGE124J_UPDATE_STREAM_TRANSITIONS.md).
+
+---
+
 ## Stage 124I — append positioning and non-seekable audit (validation pending)
 
 Both `fwrite` and `fprintf` now use a shared stream-write helper. Append-mode streams seek to EOF before every write, preventing a changed backend cursor from overwriting existing content. If the backend cannot seek, append writes fail and set `ferror`; atomic append support for non-seekable backends remains a known limitation. Regression coverage simulates cursor movement after open and checks the append lands at EOF. Host and Android ARM64 CI are required. No game boot is claimed.

@@ -36,6 +36,8 @@ typedef struct {
     uint8_t readable;
     uint8_t writable;
     uint8_t append;
+    uint8_t update;
+    uint8_t last_io;
     uint8_t eof;
     uint8_t error;
     uint16_t buffered_size;
