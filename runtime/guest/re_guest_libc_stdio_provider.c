@@ -276,7 +276,15 @@ static REGUESTIMPORTStatus stdio_handler(
             transferred = file_read(p, f, host, total);
         else
             transferred = file_write(p, f, host, total);
-        if (transferred < 0 || (uint64_t)transferred > total) {
+        if (transferred < 0) {
+            /* Backend I/O failure is a guest stdio condition, not a broken
+             * import dispatch. Preserve the stream error indicator and
+             * report zero complete items to fread/fwrite. */
+            f->error = 1u;
+            result->r0 = 0u;
+            break;
+        }
+        if ((uint64_t)transferred > total) {
             f->error = 1u;
             return RE_IMPORT_E_HANDLER;
         }
