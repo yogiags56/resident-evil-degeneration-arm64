@@ -316,25 +316,25 @@ int main(void) {
 
     /* Backend write failure returns zero complete items and sets ferror. */
     fake_write_error_once = 1;
-    call_import(&runtime, exports[3].value, base + 0xdfu,
+    call_import(&runtime, exports[3].value, base + 0x104u,
         base + 0x600u, 1u, 1u, handle);
     assert(runtime.cpu.r[0] == 0u);
-    call_import(&runtime, exports[9].value, base + 0xe1u,
+    call_import(&runtime, exports[9].value, base + 0x106u,
         handle, 0u, 0u, 0u);
     assert(runtime.cpu.r[0] == 1u);
-    call_import(&runtime, exports[14].value, base + 0xe3u,
+    call_import(&runtime, exports[14].value, base + 0x108u,
         handle, 0u, 0u, 0u);
     assert(runtime.cpu.r[0] == 0u);
 
     /* Explicit flush failure is visible through return value and ferror. */
     fake_flush_error_once = 1;
-    call_import(&runtime, exports[10].value, base + 0xe5u,
+    call_import(&runtime, exports[10].value, base + 0x10au,
         handle, 0u, 0u, 0u);
     assert((int32_t)runtime.cpu.r[0] == -1);
-    call_import(&runtime, exports[9].value, base + 0xe7u,
+    call_import(&runtime, exports[9].value, base + 0x10cu,
         handle, 0u, 0u, 0u);
     assert(runtime.cpu.r[0] == 1u);
-    call_import(&runtime, exports[14].value, base + 0xe9u,
+    call_import(&runtime, exports[14].value, base + 0x10eu,
         handle, 0u, 0u, 0u);
 
     call_import(&runtime, exports[1].value, base + 0xe0u,
