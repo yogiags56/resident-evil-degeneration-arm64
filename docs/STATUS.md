@@ -1,3 +1,11 @@
+## Stage 125A — production module-loader readiness audit
+
+The existing ELF32 pipeline, module graph, constructor execution, root-runtime setup, and exact-SONAME dlopen catalog were reviewed. They are reusable building blocks, not yet an end-to-end production Android loader. The critical missing layer is verified guest-module inventory/materialization from Android assets and a lifecycle coordinator that owns buffers, provider storage, imports, constructors, runtime startup, and teardown. The repository currently contains no game executable or guest DSO payload under `app/src/main/assets` (only `.gitkeep`). No game boot is claimed.
+
+Stage 125A.1 will define a versioned, bounded guest-module manifest and host tests before wiring Android AssetManager materialization. See [readiness audit](STAGE125A_PRODUCTION_LOADER_READINESS.md).
+
+---
+
 ## Stage 124N — final stdio regression expansion (validation pending)
 
 Expanded regression coverage for multiple pushbacks, reverse-order consumption, logical `ftell` position, and EOF recovery after `ungetc`. EOF remains clear while pushed bytes are consumed and returns only after a subsequent backend zero-byte read. Host regression and Android ARM64 CI are required; no game boot is claimed.
