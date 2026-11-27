@@ -106,7 +106,7 @@ static void call_import(REGUESTRuntime *runtime, uint32_t pointer,
     runtime->cpu.r[1] = r1;
     runtime->cpu.r[2] = r2;
     runtime->cpu.r[3] = r3;
-    assert(re_guest_runtime_step(runtime) == RE_RUNTIME_OK);
+    { int step_status = (int)re_guest_runtime_step(runtime); if (step_status != (int)RE_RUNTIME_OK) fprintf(stderr, "import step failed: thunk=%08x lr=%08x pc=%08x status=%d\\n", pointer, runtime->cpu.r[14], runtime->cpu.r[15], step_status); assert(step_status == (int)RE_RUNTIME_OK); }
     if (runtime->cpu.r[15] != return_address) {
         fprintf(stderr, "import dispatch mismatch: thunk=%08x expected=%08x actual=%08x r0=%08x\\n",
                 pointer, return_address, runtime->cpu.r[15], runtime->cpu.r[0]);
