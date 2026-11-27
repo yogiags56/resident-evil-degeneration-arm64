@@ -14,6 +14,7 @@ typedef struct {
  } FakeStream;
 
 static int fake_read_error_once;
+static int fake_read_limit_once;
 static int fake_write_error_once;
 static int fake_flush_error_once;
 static int fake_close_error_once;
@@ -40,6 +41,10 @@ static int64_t fake_read(void *user, void *stream, void *dst, uint64_t bytes) {
     }
     available = s->position < s->length ? s->length - s->position : 0u;
     take = bytes < available ? (size_t)bytes : available;
+    if (fake_read_limit_once && take > 1u) {
+        take = 1u;
+        fake_read_limit_once = 0;
+    }
     if (take) memcpy(dst, s->bytes + s->position, take);
     s->position += take;
     return (int64_t)take;
@@ -336,6 +341,34 @@ int main(void) {
     assert(runtime.cpu.r[0] == 1u);
     call_import(&runtime, exports[14].value, base + 0x10eu,
         handle, 0u, 0u, 0u);
+
+    /* A positive short backend read is not EOF; zero-byte read is EOF. */
+    memcpy(stream.bytes, "XYZ", 3u);
+    stream.length = 3u;
+    stream.position = 0u;
+    call_import(&runtime, exports[4].value, base + 0x110u,
+        handle, 0u, 0u, 0u);
+    assert((int32_t)runtime.cpu.r[0] == 0);
+    fake_read_limit_once = 1;
+    call_import(&runtime, exports[2].value, base + 0x112u,
+        base + 0x990u, 1u, 3u, handle);
+    assert(runtime.cpu.r[0] == 1u && guest[0x990u] == (uint8_t)'X');
+    call_import(&runtime, exports[8].value, base + 0x114u,
+        handle, 0u, 0u, 0u);
+    assert(runtime.cpu.r[0] == 0u);
+    call_import(&runtime, exports[2].value, base + 0x116u,
+        base + 0x991u, 1u, 3u, handle);
+    assert(runtime.cpu.r[0] == 2u);
+    assert(memcmp(guest + 0x991u, "YZ", 2u) == 0);
+    call_import(&runtime, exports[8].value, base + 0x118u,
+        handle, 0u, 0u, 0u);
+    assert(runtime.cpu.r[0] == 0u);
+    call_import(&runtime, exports[2].value, base + 0x11au,
+        base + 0x993u, 1u, 1u, handle);
+    assert(runtime.cpu.r[0] == 0u);
+    call_import(&runtime, exports[8].value, base + 0x11cu,
+        handle, 0u, 0u, 0u);
+    assert(runtime.cpu.r[0] == 1u);
 
     call_import(&runtime, exports[1].value, base + 0xe0u,
         handle, 0u, 0u, 0u);
