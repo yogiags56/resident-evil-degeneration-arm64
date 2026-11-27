@@ -14,6 +14,9 @@ typedef struct {
  } FakeStream;
 
 static int fake_read_error_once;
+static int fake_write_error_once;
+static int fake_flush_error_once;
+static int fake_close_error_once;
 static int fake_flush_calls;
 
 static void *fake_open(void *user, const char *path, const char *mode) {
@@ -48,6 +51,7 @@ static int64_t fake_write(void *user, void *stream, const void *src,
     (void)user;
     if (!s || !s->opened || (!src && bytes) || bytes > sizeof(s->bytes))
         return -1;
+    if (fake_write_error_once) { fake_write_error_once = 0; return -1; }
     take = (size_t)bytes;
     if (s->position > sizeof(s->bytes) - take) return -1;
     if (take) memcpy(s->bytes + s->position, src, take);
@@ -77,6 +81,7 @@ static int fake_flush(void *user, void *stream) {
     FakeStream *s = (FakeStream *)stream;
     (void)user;
     ++fake_flush_calls;
+    if (fake_flush_error_once) { fake_flush_error_once = 0; return -1; }
     return s && s->opened ? 0 : -1;
 }
 static int fake_close(void *user, void *stream) {
@@ -84,6 +89,7 @@ static int fake_close(void *user, void *stream) {
     (void)user;
     if (!s || !s->opened) return -1;
     s->opened = 0u;
+    if (fake_close_error_once) { fake_close_error_once = 0; return -1; }
     return 0;
 }
 static void put_string(uint8_t *guest, size_t offset, const char *s) {
@@ -100,7 +106,7 @@ static void call_import(REGUESTRuntime *runtime, uint32_t pointer,
     runtime->cpu.r[1] = r1;
     runtime->cpu.r[2] = r2;
     runtime->cpu.r[3] = r3;
-    assert(re_guest_runtime_step(runtime) == RE_RUNTIME_OK);
+    { int step_status = (int)re_guest_runtime_step(runtime); if (step_status != (int)RE_RUNTIME_OK) fprintf(stderr, "import step failed: thunk=%08x lr=%08x pc=%08x status=%d\\n", pointer, runtime->cpu.r[14], runtime->cpu.r[15], step_status); assert(step_status == (int)RE_RUNTIME_OK); }
     if (runtime->cpu.r[15] != return_address) {
         fprintf(stderr, "import dispatch mismatch: thunk=%08x expected=%08x actual=%08x r0=%08x\\n",
                 pointer, return_address, runtime->cpu.r[15], runtime->cpu.r[0]);
@@ -308,6 +314,29 @@ int main(void) {
         handle, 0u, 0u, 0u);
     assert(runtime.cpu.r[0] == 0u);
 
+    /* Backend write failure returns zero complete items and sets ferror. */
+    fake_write_error_once = 1;
+    call_import(&runtime, exports[3].value, base + 0x104u,
+        base + 0x600u, 1u, 1u, handle);
+    assert(runtime.cpu.r[0] == 0u);
+    call_import(&runtime, exports[9].value, base + 0x106u,
+        handle, 0u, 0u, 0u);
+    assert(runtime.cpu.r[0] == 1u);
+    call_import(&runtime, exports[14].value, base + 0x108u,
+        handle, 0u, 0u, 0u);
+    assert(runtime.cpu.r[0] == 0u);
+
+    /* Explicit flush failure is visible through return value and ferror. */
+    fake_flush_error_once = 1;
+    call_import(&runtime, exports[10].value, base + 0x10au,
+        handle, 0u, 0u, 0u);
+    assert((int32_t)runtime.cpu.r[0] == -1);
+    call_import(&runtime, exports[9].value, base + 0x10cu,
+        handle, 0u, 0u, 0u);
+    assert(runtime.cpu.r[0] == 1u);
+    call_import(&runtime, exports[14].value, base + 0x10eu,
+        handle, 0u, 0u, 0u);
+
     call_import(&runtime, exports[1].value, base + 0xe0u,
         handle, 0u, 0u, 0u);
     assert(runtime.cpu.r[0] == 0u && !stream.opened);
@@ -448,9 +477,10 @@ int main(void) {
             assert(runtime.cpu.r[0] == 1u && guest[0x990u] == (uint8_t)'N');
             /* Old generation tokens must remain invalid after slot reuse. */
             assert(reopened != handle);
+            fake_close_error_once = 1;
             call_import(&runtime, pipe_exports[1].value, base + 0x40u,
                 reopened, 0u, 0u, 0u);
-            assert(runtime.cpu.r[0] == 0u && !pipe_stream.opened);
+            assert((int32_t)runtime.cpu.r[0] == -1 && !pipe_stream.opened);
         }
     }
     assert(re_guest_import_table_init(&imports, 0x30000000u) == RE_IMPORT_OK);
