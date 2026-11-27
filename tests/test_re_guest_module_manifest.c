@@ -40,6 +40,14 @@ int main(void) {
     const char missing[] =
         "RE-GUEST-MODULES 1\nroot game.so\n"
         "module libc.so system/libc.so 4096\n";
+    const char trailing_separator[] =
+        "RE-GUEST-MODULES 1\nroot game.so\n"
+        "module game.so payload/game.elf/ 4096\n";
+    assert(re_guest_module_manifest_parse(trailing_separator,
+        sizeof(trailing_separator)-1u, &manifest, &line) ==
+        RE_GUEST_MANIFEST_E_PATH);
+    assert(memcmp(&manifest, &before, sizeof(manifest)) == 0);
+
     assert(re_guest_module_manifest_parse(missing, sizeof(missing)-1u,
         &manifest, &line) == RE_GUEST_MANIFEST_E_ROOT);
     assert(memcmp(&manifest, &before, sizeof(manifest)) == 0);
