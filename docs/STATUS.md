@@ -1,3 +1,11 @@
+## Stage 125A.1 — bounded guest-module manifest (validation pending)
+
+Added a strict versioned manifest parser with a 16 KiB input cap, 32-module cap, 1–128 MiB per-module byte limit, exact SONAME/root matching, relative-path traversal checks, duplicate rejection, and transactional output. Registered it in host tests and Android CMake. This defines the module inventory contract only; Android asset materialization, digest verification, ELF identity cross-checking, and runtime coordination remain outstanding. No game boot is claimed.
+
+See [Stage 125A.1 report](STAGE125A1_MODULE_MANIFEST.md).
+
+---
+
 ## Stage 125A — production module-loader readiness audit
 
 The existing ELF32 pipeline, module graph, constructor execution, root-runtime setup, and exact-SONAME dlopen catalog were reviewed. They are reusable building blocks, not yet an end-to-end production Android loader. The critical missing layer is verified guest-module inventory/materialization from Android assets and a lifecycle coordinator that owns buffers, provider storage, imports, constructors, runtime startup, and teardown. The repository currently contains no game executable or guest DSO payload under `app/src/main/assets` (only `.gitkeep`). No game boot is claimed.
