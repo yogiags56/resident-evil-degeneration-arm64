@@ -1,3 +1,11 @@
+## Stage 124N — final stdio regression expansion (validation pending)
+
+Expanded regression coverage for multiple pushbacks, reverse-order consumption, logical `ftell` position, and EOF recovery after `ungetc`. EOF remains clear while pushed bytes are consumed and returns only after a subsequent backend zero-byte read. Host regression and Android ARM64 CI are required; no game boot is claimed.
+
+See [Stage 124N report](STAGE124N_FINAL_STDIO_REGRESSION.md).
+
+---
+
 ## Stage 124M — EOF and short-read semantics (validation pending)
 
 EOF is now set only when the backend explicitly returns zero bytes. Positive short reads preserve the data and leave EOF clear; backend errors remain distinct and set `ferror`. Added a deterministic short-read regression. Detailed `ungetc` conformance remains a separate follow-up. Host and Android ARM64 CI required; no game boot claimed.

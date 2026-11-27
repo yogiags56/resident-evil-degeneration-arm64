@@ -199,6 +199,25 @@ int main(void) {
     call_import(&runtime, exports[2].value, base + 0x48u,
         base + 0x404u, 1u, 1u, handle);
     assert(runtime.cpu.r[0] == 1u && guest[0x404u] == (uint8_t)'d');
+
+    /* Multiple pushbacks are consumed in reverse insertion order. */
+    call_import(&runtime, exports[13].value, base + 0x52u,
+        (uint32_t)'A', handle, 0u, 0u);
+    assert(runtime.cpu.r[0] == (uint32_t)'A');
+    call_import(&runtime, exports[13].value, base + 0x54u,
+        (uint32_t)'B', handle, 0u, 0u);
+    assert(runtime.cpu.r[0] == (uint32_t)'B');
+    call_import(&runtime, exports[5].value, base + 0x56u,
+        handle, 0u, 0u, 0u);
+    assert(runtime.cpu.r[0] == 2u);
+    call_import(&runtime, exports[2].value, base + 0x58u,
+        base + 0x408u, 1u, 2u, handle);
+    assert(runtime.cpu.r[0] == 2u);
+    assert(memcmp(guest + 0x408u, "BA", 2u) == 0);
+    call_import(&runtime, exports[2].value, base + 0x5au,
+        base + 0x40au, 1u, 1u, handle);
+    assert(runtime.cpu.r[0] == 1u && guest[0x40au] == (uint8_t)'e');
+
     /* Backend seek failure sets ferror and clearerr restores the indicator. */
     call_import(&runtime, exports[4].value, base + 0x4au,
         handle, 0u, 9u, 0u);
@@ -367,6 +386,27 @@ int main(void) {
         base + 0x993u, 1u, 1u, handle);
     assert(runtime.cpu.r[0] == 0u);
     call_import(&runtime, exports[8].value, base + 0x11cu,
+        handle, 0u, 0u, 0u);
+    assert(runtime.cpu.r[0] == 1u);
+
+    /* ungetc after EOF clears EOF; consuming pushback does not restore it
+     * until a later read actually probes the exhausted backend. */
+    call_import(&runtime, exports[13].value, base + 0x120u,
+        (uint32_t)'Q', handle, 0u, 0u);
+    assert(runtime.cpu.r[0] == (uint32_t)'Q');
+    call_import(&runtime, exports[8].value, base + 0x122u,
+        handle, 0u, 0u, 0u);
+    assert(runtime.cpu.r[0] == 0u);
+    call_import(&runtime, exports[2].value, base + 0x124u,
+        base + 0x994u, 1u, 1u, handle);
+    assert(runtime.cpu.r[0] == 1u && guest[0x994u] == (uint8_t)'Q');
+    call_import(&runtime, exports[8].value, base + 0x126u,
+        handle, 0u, 0u, 0u);
+    assert(runtime.cpu.r[0] == 0u);
+    call_import(&runtime, exports[2].value, base + 0x128u,
+        base + 0x995u, 1u, 1u, handle);
+    assert(runtime.cpu.r[0] == 0u);
+    call_import(&runtime, exports[8].value, base + 0x12au,
         handle, 0u, 0u, 0u);
     assert(runtime.cpu.r[0] == 1u);
 
