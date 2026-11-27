@@ -1,3 +1,11 @@
+## Stage 124M — EOF and short-read semantics (validation pending)
+
+EOF is now set only when the backend explicitly returns zero bytes. Positive short reads preserve the data and leave EOF clear; backend errors remain distinct and set `ferror`. Added a deterministic short-read regression. Detailed `ungetc` conformance remains a separate follow-up. Host and Android ARM64 CI required; no game boot claimed.
+
+See [Stage 124M report](STAGE124M_EOF_SHORT_READ.md).
+
+---
+
 ## Stage 124L — stdio backend error propagation (validation pending)
 
 Added regression coverage for backend write, explicit flush, and close failures. Tests check guest-visible return values, `ferror`, `clearerr`, and FILE-token invalidation after close failure. Existing read/seek/transition error handling is included in the audit. This stage covers stdio error indicators and return values, not guest `errno` integration or full Bionic conformance. Host and Android ARM64 CI are required; no game boot is claimed.
