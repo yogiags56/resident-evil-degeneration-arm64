@@ -141,8 +141,11 @@ static int64_t file_read(REGUESTLIBCStdioProvider *p,
             return (int64_t)copied;
         }
         copied += (uint64_t)got;
+        /* A positive short read is not proof of EOF (pipes and other
+         * non-seekable streams may return fewer bytes than requested).
+         * EOF is established only when the backend reports zero bytes. */
+        if (got == 0) f->eof = 1u;
     }
-    if (copied < bytes) f->eof = 1u;
     return (int64_t)copied;
 }
 
@@ -288,9 +291,6 @@ static REGUESTIMPORTStatus stdio_handler(
             f->error = 1u;
             return RE_IMPORT_E_HANDLER;
         }
-        if (ctx->kind == STDIO_FREAD && (uint64_t)transferred < total &&
-            !f->error)
-            f->eof = 1u;
         result->r0 = (uint32_t)((uint64_t)transferred / b);
         break;
     }
