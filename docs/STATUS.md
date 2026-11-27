@@ -1,3 +1,11 @@
+## Stage 124L — stdio backend error propagation (validation pending)
+
+Added regression coverage for backend write, explicit flush, and close failures. Tests check guest-visible return values, `ferror`, `clearerr`, and FILE-token invalidation after close failure. Existing read/seek/transition error handling is included in the audit. This stage covers stdio error indicators and return values, not guest `errno` integration or full Bionic conformance. Host and Android ARM64 CI are required; no game boot is claimed.
+
+See [Stage 124L report](STAGE124L_ERROR_PROPAGATION.md).
+
+---
+
 ## Stage 124K — fflush(NULL) synchronization audit (validation pending)
 
 `fflush(NULL)` now flushes all active streams, marks per-stream errors on failures, and resets update-stream direction after successful flush. Regression coverage verifies direction reset. Input-stream `fflush` semantics and complete ISO C/Bionic conformance remain outside this checkpoint. Host and Android ARM64 CI are required; no game boot is claimed.
