@@ -27,7 +27,7 @@ static int valid_path(const char *s) {
         if (i == start || (i - start == 1u && s[start] == '.') ||
             (i - start == 2u && s[start] == '.' && s[start + 1u] == '.'))
             return 0;
-        if (i < n) ++i;
+        if (i < n) { ++i; if (i == n) return 0; }
     }
     return 1;
 }
