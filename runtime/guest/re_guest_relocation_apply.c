@@ -20,6 +20,18 @@ static void write_u32le(uint8_t *p, uint32_t value) {
     p[3] = (uint8_t)(value >> 24);
 }
 
+static int is_control_flow_relocation(uint32_t type) {
+    switch(type) {
+    case RE_ARM_R_PC24: case RE_ARM_R_THM_CALL: case RE_ARM_R_PLT32:
+    case RE_ARM_R_CALL: case RE_ARM_R_JUMP24: case RE_ARM_R_THM_JUMP24:
+    case RE_ARM_R_THM_JUMP19: case RE_ARM_R_THM_JUMP6:
+    case RE_ARM_R_THM_JUMP11: case RE_ARM_R_THM_JUMP8:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
 REGUESTRELOCApplyStatus re_guest_relocations_apply(
     REGUESTMEMORY *memory,
     const REGUESTRELOCATION *relocations,
@@ -49,6 +61,10 @@ REGUESTRELOCApplyStatus re_guest_relocations_apply(
         if (r->has_explicit_addend > 1u || r->symbol_resolved > 1u) {
             if (failed_index) *failed_index = i;
             return RE_GUEST_RELOC_APPLY_E_ARGUMENT;
+        }
+        if (is_control_flow_relocation(r->type)) {
+            if (failed_index) *failed_index = i;
+            return RE_GUEST_RELOC_APPLY_E_CONTROL_FLOW;
         }
         if (r->type != RE_ARM_R_ABS32 &&
             r->type != RE_ARM_R_GLOB_DAT &&
