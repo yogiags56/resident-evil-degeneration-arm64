@@ -5,7 +5,7 @@ REGUESTMODULESESSIONSTATUS re_guest_module_session_prepare(
  const REGUESTMODULESOURCE *source,void *source_user,
  REGUESTMODULESESSION *out,size_t *failed_module,size_t *failed_line) {
  REGUESTMODULESESSION pending;
- REGUESTMODULEMANIFESTSTATUS ms;
+ REGUESTMODULEMANIFESTStatus ms;
  REGUESTMATERIALIZESTATUS materialize_status;
  REGUESTMODULEPREFLIGHTSTATUS preflight_status;
  size_t failed=0u;
