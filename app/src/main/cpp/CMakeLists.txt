@@ -44,6 +44,7 @@ add_library(re_asset_probe SHARED
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_module_materializer.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_module_preflight.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_module_session.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_module_session_load.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_elf32_loader.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_permission_finalize.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../../runtime/guest/re_guest_relocation_apply.c
