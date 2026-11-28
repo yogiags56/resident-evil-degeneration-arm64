@@ -1,3 +1,11 @@
+## Stage 125B.1 — ARM relocation symbol compatibility audit (CI pending)
+
+Hardened relocation symbol classification: reserved ELF section indices (except SHN_ABS) and GNU IFUNC are rejected rather than treated as ordinary static symbols. Added transactional regression tests for SHN_COMMON and IFUNC. Existing supported relocation subset remains R_ARM_RELATIVE, ABS32, GLOB_DAT and JUMP_SLOT; this is not full ARM EABI dynamic-linker compatibility.
+
+See [Stage 125B.1 report](STAGE125B1_ARM_RELOCATION_SYMBOL_AUDIT.md).
+
+---
+
 ## Stage 125A.6 — Manifest-bound ELF32 pipeline handoff (CI pending)
 
 Added a strict adapter from a READY preparation session into the existing ELF32 load pipeline. It verifies session state, module count, root identity, module-name ordering, and exact materialized ELF buffer pointer/size identity before pipeline invocation. The caller still supplies memory, load biases, segment buffers, symbol/relocation scratch, and provider scratch. Success transitions the session to LOADED; failure leaves it READY and requires borrowed scratch buffers to be reset before retry. This wires mapping and relocation but does not claim guest CPU start or game boot.
