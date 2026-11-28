@@ -1,3 +1,11 @@
+## Stage 125B.1 — ARM relocation symbol and control-flow audit (CI pending)
+
+Hardened relocation symbol classification: reserved ELF section indices (except SHN_ABS) and GNU IFUNC/TLS are rejected. Added a dedicated fail-closed status for ARM PC24, PLT32, CALL, JUMP24 and Thumb CALL, JUMP24, JUMP19, JUMP6, JUMP11 and JUMP8 relocations because the current apply engine only handles 32-bit data words. Regression tests cover all listed branch types plus SHN_COMMON and IFUNC. Supported subset remains R_ARM_RELATIVE, ABS32, GLOB_DAT and JUMP_SLOT; no branch instruction encoding or full ARM EABI linking is claimed.
+
+See [Stage 125B.1 report](STAGE125B1_ARM_RELOCATION_SYMBOL_AUDIT.md).
+
+---
+
 ## Stage 125B.1 — ARM relocation symbol compatibility audit (CI pending)
 
 Hardened relocation symbol classification: reserved ELF section indices (except SHN_ABS) and GNU IFUNC are rejected rather than treated as ordinary static symbols. Added transactional regression tests for SHN_COMMON and IFUNC. Existing supported relocation subset remains R_ARM_RELATIVE, ABS32, GLOB_DAT and JUMP_SLOT; this is not full ARM EABI dynamic-linker compatibility.
