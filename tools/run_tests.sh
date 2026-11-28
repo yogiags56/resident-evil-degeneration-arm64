@@ -69,6 +69,12 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
   runtime/guest/re_guest_elf32_dynamic.c runtime/guest/re_guest_elf32_image.c \
   runtime/guest/re_guest_elf32_module_graph.c \
   -o build/host-tests/test_re_guest_module_preflight
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_module_session.c \
+  runtime/guest/re_guest_module_session.c runtime/guest/re_guest_module_manifest.c \
+  runtime/guest/re_guest_module_materializer.c runtime/guest/re_guest_module_preflight.c \
+  runtime/guest/re_guest_elf32_identity.c runtime/guest/re_guest_elf32_dynamic.c \
+  runtime/guest/re_guest_elf32_image.c runtime/guest/re_guest_elf32_module_graph.c \
+  -o build/host-tests/test_re_guest_module_session
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_elf32_provider_catalog.c \
   runtime/guest/re_guest_elf32_provider_catalog.c \
   -o build/host-tests/test_re_guest_elf32_provider_catalog
