@@ -44,7 +44,10 @@ int main(void) {
     assert(out.module_count==0u && out.modules[0].bytes==NULL);
     assert(fake.closed==1);
 
-    fake.fail_read=0;strcpy(m.modules[0].asset_path,"missing.bin");
+    fake.fail_read=0;strcpy(m.modules[0].asset_path,"../escape.elf");
+    assert(re_guest_module_materialize(&m,&src,&fake,&out)==RE_GUEST_MATERIALIZE_E_MANIFEST);
+    assert(out.module_count==0u);
+    strcpy(m.modules[0].asset_path,"missing.bin");
     assert(re_guest_module_materialize(&m,&src,&fake,&out)==RE_GUEST_MATERIALIZE_E_OPEN);
     assert(out.module_count==0u);
 
