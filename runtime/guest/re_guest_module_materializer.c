@@ -3,6 +3,25 @@
 #include <string.h>
 #include <limits.h>
 
+static int safe_relative_asset_path(const char *path) {
+    size_t n, i = 0u;
+    if (!path || !(n = strlen(path)) ||
+        n >= RE_GUEST_MANIFEST_PATH_CAP || path[0] == '/' || path[0] == '\\\\')
+        return 0;
+    while (i < n) {
+        size_t start = i;
+        while (i < n && path[i] != '/' && path[i] != '\\\\') {
+            unsigned char c = (unsigned char)path[i];
+            if (c < 0x21u || c > 0x7eu || c == ':') return 0;
+            ++i;
+        }
+        if (i == start || (i-start == 1u && path[start] == '.') ||
+            (i-start == 2u && path[start] == '.' && path[start+1u] == '.'))
+            return 0;
+        if (i < n) { ++i; if (i == n || path[i] == '/' || path[i] == '\\\\') return 0; }
+    }
+    return 1;
+}
 static int output_is_empty(const REGUESTMATERIALIZEDSET *set) {
     if (!set || set->module_count != 0u) return 0;
     for (size_t i = 0; i < RE_GUEST_MANIFEST_MAX_MODULES; ++i)
