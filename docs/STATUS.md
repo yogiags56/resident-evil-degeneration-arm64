@@ -1,3 +1,11 @@
+## Stage 125A.4 — Materialized module identity and dependency preflight (CI pending)
+
+Added a read-only preflight API that checks each materialized buffer against manifest byte limits, verifies ELF32 ARM identity and SONAME, extracts DT_NEEDED, builds the dependency graph, and rejects unresolved/cyclic/unreachable modules. Added a synthetic host test and registered the module in host test runner and Android CMake. This does not map, relocate, initialize, or execute guest code; full ABI certification and original game payload remain outstanding.
+
+See [Stage 125A.4 report](STAGE125A4_MODULE_PREFLIGHT.md).
+
+---
+
 ## Stage 125A.3 — ELF32 ARM identity verification (CI pending)
 
 Added a read-only identity gate for ELF32 ARM modules: image/header/program-header validation, ARM EABI version policy, dynamic metadata parsing, and exact DT_SONAME matching when a shared-library SONAME is expected. Added synthetic ELF regression tests and registered the module in host tests and Android CMake. This is not full ABI certification and does not load or execute modules. Stage 125A.2 passed host Source checks and Android ARM64 native build on `fd8d6954a8cc931d91b0bbb3801510c496ec48a6`; Stage 125A.3 validation is pending.
