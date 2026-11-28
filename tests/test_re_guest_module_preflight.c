@@ -1,4 +1,5 @@
 #include "re_guest_module_preflight.h"
+#include "re_guest_elf32_identity.h"
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
