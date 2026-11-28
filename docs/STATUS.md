@@ -1,3 +1,13 @@
+## Stage 125B.1 — ARM relocation symbol and control-flow audit (apply-boundary CI pending)
+
+Hardened both relocation planning and application. Reserved ELF section indices (except SHN_ABS), GNU IFUNC/TLS and unsupported ARM/Thumb branch instruction relocations are rejected. The apply layer independently rejects branch types before target lookup/write, so preconstructed records cannot bypass the planner guard. Regression tests verify transactional behavior at both boundaries. Supported subset remains R_ARM_RELATIVE, ABS32, GLOB_DAT and JUMP_SLOT.
+
+Stage 125A.6 follow-up commit `32ea7b753d518d808fc701ae99b643f4b8063458` passed Host Source Checks and Android ARM64 Native Build. New Stage 125B.1 apply-boundary CI is pending.
+
+See [Stage 125B.1 report](STAGE125B1_ARM_RELOCATION_SYMBOL_AUDIT.md).
+
+---
+
 ## Stage 125B.1 — ARM relocation symbol and control-flow audit (CI pending)
 
 Hardened relocation symbol classification: reserved ELF section indices (except SHN_ABS) and GNU IFUNC/TLS are rejected. Added a dedicated fail-closed status for ARM PC24, PLT32, CALL, JUMP24 and Thumb CALL, JUMP24, JUMP19, JUMP6, JUMP11 and JUMP8 relocations because the current apply engine only handles 32-bit data words. Regression tests cover all listed branch types plus SHN_COMMON and IFUNC. Supported subset remains R_ARM_RELATIVE, ABS32, GLOB_DAT and JUMP_SLOT; no branch instruction encoding or full ARM EABI linking is claimed.
