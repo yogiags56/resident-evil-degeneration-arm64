@@ -1,7 +1,7 @@
 #ifndef RE_ANDROID_MODULE_ASSET_SOURCE_H
 #define RE_ANDROID_MODULE_ASSET_SOURCE_H
 #include "re_android_asset_backend.h"
-#include "../../../../runtime/guest/re_guest_module_materializer.h"
+#include "re_guest_module_materializer.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
