@@ -135,6 +135,9 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_relocation_apply.c \
   runtime/guest/re_guest_relocation_apply.c runtime/guest/re_guest_memory.c \
   -o build/host-tests/test_re_guest_relocation_apply
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_arm_branch_reloc.c \
+  runtime/guest/re_guest_arm_branch_reloc.c \
+  -o build/host-tests/test_re_guest_arm_branch_reloc
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_symbol_resolve.c \
   runtime/guest/re_guest_symbol_resolve.c \
   -o build/host-tests/test_re_guest_symbol_resolve
