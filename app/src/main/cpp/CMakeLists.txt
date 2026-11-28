@@ -6,6 +6,7 @@ add_library(re_asset_probe SHARED
     re_file_adapter.c
     re_android_asset_backend.c
     re_android_jni_assets.c
+    re_android_module_asset_source.c
     re_s3e_file_read_contract.c
     re_s3e_file_api_audit.c
     re_s3e_file_bridge.c
