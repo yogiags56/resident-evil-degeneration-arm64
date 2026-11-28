@@ -41,6 +41,10 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_elf32_image.c \
   runtime/guest/re_guest_elf32_image.c \
   -o build/host-tests/test_re_guest_elf32_image
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_elf32_identity.c \
+  runtime/guest/re_guest_elf32_identity.c runtime/guest/re_guest_elf32_dynamic.c \
+  runtime/guest/re_guest_elf32_image.c \
+  -o build/host-tests/test_re_guest_elf32_identity
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_elf32_dynamic.c \
   runtime/guest/re_guest_elf32_dynamic.c runtime/guest/re_guest_elf32_image.c \
   -o build/host-tests/test_re_guest_elf32_dynamic
@@ -54,6 +58,23 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_elf32_module_graph.c \
   runtime/guest/re_guest_elf32_module_graph.c \
   -o build/host-tests/test_re_guest_elf32_module_graph
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_module_manifest.c \
+  runtime/guest/re_guest_module_manifest.c \
+  -o build/host-tests/test_re_guest_module_manifest
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_module_materializer.c \
+  runtime/guest/re_guest_module_materializer.c \
+  -o build/host-tests/test_re_guest_module_materializer
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_module_preflight.c \
+  runtime/guest/re_guest_module_preflight.c runtime/guest/re_guest_elf32_identity.c \
+  runtime/guest/re_guest_elf32_dynamic.c runtime/guest/re_guest_elf32_image.c \
+  runtime/guest/re_guest_elf32_module_graph.c \
+  -o build/host-tests/test_re_guest_module_preflight
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_module_session.c \
+  runtime/guest/re_guest_module_session.c runtime/guest/re_guest_module_manifest.c \
+  runtime/guest/re_guest_module_materializer.c runtime/guest/re_guest_module_preflight.c \
+  runtime/guest/re_guest_elf32_identity.c runtime/guest/re_guest_elf32_dynamic.c \
+  runtime/guest/re_guest_elf32_image.c runtime/guest/re_guest_elf32_module_graph.c \
+  -o build/host-tests/test_re_guest_module_session
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_elf32_provider_catalog.c \
   runtime/guest/re_guest_elf32_provider_catalog.c \
   -o build/host-tests/test_re_guest_elf32_provider_catalog
@@ -114,6 +135,9 @@ CFLAGS=(-std=c11 -Wall -Wextra -Werror -I runtime/guest -I app/src/main/cpp -I.)
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_relocation_apply.c \
   runtime/guest/re_guest_relocation_apply.c runtime/guest/re_guest_memory.c \
   -o build/host-tests/test_re_guest_relocation_apply
+"$CC" "${CFLAGS[@]}" tests/test_re_guest_arm_branch_reloc.c \
+  runtime/guest/re_guest_arm_branch_reloc.c \
+  -o build/host-tests/test_re_guest_arm_branch_reloc
 "$CC" "${CFLAGS[@]}" tests/test_re_guest_symbol_resolve.c \
   runtime/guest/re_guest_symbol_resolve.c \
   -o build/host-tests/test_re_guest_symbol_resolve

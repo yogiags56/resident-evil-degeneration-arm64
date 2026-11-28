@@ -1,3 +1,97 @@
+## Stage 125B.2 — Initial A32 ARM branch encoder (CI pending)
+
+Added a standalone A32 B/BL relocation encoder for R_ARM_PC24, R_ARM_PLT32, R_ARM_CALL and R_ARM_JUMP24. It validates A32 branch opcode/condition, CALL-vs-JUMP link bit, ARM-state target, REL/RELA addends, P+8 PC bias, alignment and signed displacement range. Output remains untouched on failure. Added host regression tests and Android CMake integration. This helper is not yet wired into the production relocation apply transaction; Thumb relocation remains fail-closed.
+
+See [Stage 125B.2 report](STAGE125B2_A32_BRANCH_ENCODER.md).
+
+---
+
+## Stage 125B.1 — ARM relocation symbol and control-flow audit (apply-boundary CI pending)
+
+Hardened both relocation planning and application. Reserved ELF section indices (except SHN_ABS), GNU IFUNC/TLS and unsupported ARM/Thumb branch instruction relocations are rejected. The apply layer independently rejects branch types before target lookup/write, so preconstructed records cannot bypass the planner guard. Regression tests verify transactional behavior at both boundaries. Supported subset remains R_ARM_RELATIVE, ABS32, GLOB_DAT and JUMP_SLOT.
+
+Stage 125A.6 follow-up commit `32ea7b753d518d808fc701ae99b643f4b8063458` passed Host Source Checks and Android ARM64 Native Build. New Stage 125B.1 apply-boundary CI is pending.
+
+See [Stage 125B.1 report](STAGE125B1_ARM_RELOCATION_SYMBOL_AUDIT.md).
+
+---
+
+## Stage 125B.1 — ARM relocation symbol and control-flow audit (CI pending)
+
+Hardened relocation symbol classification: reserved ELF section indices (except SHN_ABS) and GNU IFUNC/TLS are rejected. Added a dedicated fail-closed status for ARM PC24, PLT32, CALL, JUMP24 and Thumb CALL, JUMP24, JUMP19, JUMP6, JUMP11 and JUMP8 relocations because the current apply engine only handles 32-bit data words. Regression tests cover all listed branch types plus SHN_COMMON and IFUNC. Supported subset remains R_ARM_RELATIVE, ABS32, GLOB_DAT and JUMP_SLOT; no branch instruction encoding or full ARM EABI linking is claimed.
+
+See [Stage 125B.1 report](STAGE125B1_ARM_RELOCATION_SYMBOL_AUDIT.md).
+
+---
+
+## Stage 125B.1 — ARM relocation symbol compatibility audit (CI pending)
+
+Hardened relocation symbol classification: reserved ELF section indices (except SHN_ABS) and GNU IFUNC are rejected rather than treated as ordinary static symbols. Added transactional regression tests for SHN_COMMON and IFUNC. Existing supported relocation subset remains R_ARM_RELATIVE, ABS32, GLOB_DAT and JUMP_SLOT; this is not full ARM EABI dynamic-linker compatibility.
+
+See [Stage 125B.1 report](STAGE125B1_ARM_RELOCATION_SYMBOL_AUDIT.md).
+
+---
+
+## Stage 125A.6 — Manifest-bound ELF32 pipeline handoff (CI pending)
+
+Added a strict adapter from a READY preparation session into the existing ELF32 load pipeline. It verifies session state, module count, root identity, module-name ordering, and exact materialized ELF buffer pointer/size identity before pipeline invocation. The caller still supplies memory, load biases, segment buffers, symbol/relocation scratch, and provider scratch. Success transitions the session to LOADED; failure leaves it READY and requires borrowed scratch buffers to be reset before retry. This wires mapping and relocation but does not claim guest CPU start or game boot.
+
+Stage 125A.5 CI failures (manifest status enum spelling and unused test callback parameter) were fixed in commits `33f07a26a2a84a5426ce6595cfa094788f2ff02d` and `0a7727b30bdc0036d2f82bb82b16bc6c81231672`. Revalidation and Stage 125A.6 CI are pending.
+
+See [Stage 125A.6 report](STAGE125A6_PIPELINE_HANDOFF.md).
+
+---
+
+## Stage 125A.5 — Guest module preparation session (CI pending)
+
+Added a transactional lifecycle coordinator connecting the v1 manifest parser, module materializer, ELF32 ARM identity verifier, and DT_NEEDED dependency preflight. A READY session is published only after all stages succeed; failures release temporary buffers and leave caller output unchanged. Added a synthetic short-read source integration test and registered it in host checks and Android CMake.
+
+This is preparation only: it does not call the ELF load pipeline, map guest memory, resolve imports, relocate, initialize constructors/CPU, or execute the game.
+
+See [Stage 125A.5 report](STAGE125A5_MODULE_SESSION.md).
+
+---
+
+## Stage 125A.4 — Materialized module identity and dependency preflight (CI pending)
+
+Added a read-only preflight API that checks each materialized buffer against manifest byte limits, verifies ELF32 ARM identity and SONAME, extracts DT_NEEDED, builds the dependency graph, and rejects unresolved/cyclic/unreachable modules. Added a synthetic host test and registered the module in host test runner and Android CMake. This does not map, relocate, initialize, or execute guest code; full ABI certification and original game payload remain outstanding.
+
+See [Stage 125A.4 report](STAGE125A4_MODULE_PREFLIGHT.md).
+
+---
+
+## Stage 125A.3 — ELF32 ARM identity verification (CI pending)
+
+Added a read-only identity gate for ELF32 ARM modules: image/header/program-header validation, ARM EABI version policy, dynamic metadata parsing, and exact DT_SONAME matching when a shared-library SONAME is expected. Added synthetic ELF regression tests and registered the module in host tests and Android CMake. This is not full ABI certification and does not load or execute modules. Stage 125A.2 passed host Source checks and Android ARM64 native build on `fd8d6954a8cc931d91b0bbb3801510c496ec48a6`; Stage 125A.3 validation is pending.
+
+See [Stage 125A.3 report](STAGE125A3_ELF32_IDENTITY_VERIFICATION.md).
+
+---
+
+## Stage 125A.2 — Android AssetManager module materializer (CI rerun)
+
+Implemented transactional module materialization and Android AssetManager callbacks, with per-module and 256 MiB aggregate limits, safe-path validation, short-read handling, and cleanup guarantees. Initial CI failed because a C backslash character literal was over-escaped; corrected in commit `1c10be6172901b104745e7e642d1130a3c4abdc2`. Source checks and Android ARM64 native build are rerunning on that commit. ELF identity/digest checks and runtime pipeline integration remain outstanding; no original game boot is claimed.
+
+See [Stage 125A.2 report](STAGE125A2_ANDROID_ASSET_MATERIALIZER.md).
+
+---
+
+## Stage 125A.1 — bounded guest-module manifest (validation pending)
+
+Added a strict versioned manifest parser with a 16 KiB input cap, 32-module cap, 1–128 MiB per-module byte limit, exact SONAME/root matching, relative-path traversal checks, duplicate rejection, and transactional output. Registered it in host tests and Android CMake. This defines the module inventory contract only; Android asset materialization, digest verification, ELF identity cross-checking, and runtime coordination remain outstanding. No game boot is claimed.
+
+See [Stage 125A.1 report](STAGE125A1_MODULE_MANIFEST.md).
+
+---
+
+## Stage 125A — production module-loader readiness audit
+
+The existing ELF32 pipeline, module graph, constructor execution, root-runtime setup, and exact-SONAME dlopen catalog were reviewed. They are reusable building blocks, not yet an end-to-end production Android loader. The critical missing layer is verified guest-module inventory/materialization from Android assets and a lifecycle coordinator that owns buffers, provider storage, imports, constructors, runtime startup, and teardown. The repository currently contains no game executable or guest DSO payload under `app/src/main/assets` (only `.gitkeep`). No game boot is claimed.
+
+Stage 125A.1 will define a versioned, bounded guest-module manifest and host tests before wiring Android AssetManager materialization. See [readiness audit](STAGE125A_PRODUCTION_LOADER_READINESS.md).
+
+---
+
 ## Stage 124N — final stdio regression expansion (validation pending)
 
 Expanded regression coverage for multiple pushbacks, reverse-order consumption, logical `ftell` position, and EOF recovery after `ungetc`. EOF remains clear while pushed bytes are consumed and returns only after a subsequent backend zero-byte read. Host regression and Android ARM64 CI are required; no game boot is claimed.

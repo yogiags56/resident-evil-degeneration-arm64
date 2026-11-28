@@ -4,12 +4,20 @@
 
 #define RE_GUEST_ELF32_RELOC_MAX 4096u
 #define RE_ELF32_SHN_ABS 0xfff1u
+#define RE_ELF32_SHN_LORESERVE 0xff00u
 #define RE_ELF32_STT_TLS 6u
+#define RE_ELF32_STT_GNU_IFUNC 10u
 #define RE_ELF32_DT_VERSYM 0x6ffffff0u
 #define RE_ELF32_DT_VERDEF 0x6ffffffcu
 #define RE_ELF32_DT_VERDEFNUM 0x6ffffffdu
 #define RE_ELF32_DT_VERNEED 0x6ffffffeu
 #define RE_ELF32_DT_VERNEEDNUM 0x6fffffffu
+
+static int is_arm_branch_relocation(uint32_t type) {
+    return type==1u || type==10u || type==27u || type==28u ||
+           type==29u || type==30u || type==51u || type==52u ||
+           type==102u || type==103u;
+}
 
 static int has_unsupported_version_tags(const REGUESTELF32DYNAMIC *d) {
     for (size_t i=0;i<d->entry_count;i++) {
@@ -66,6 +74,10 @@ REGUESTELF32RELOCPLANStatus re_guest_elf32_prepare_relocations(
             }
             continue;
         }
+        if(is_arm_branch_relocation(in->type)) {
+            if(failed_index)*failed_index=i;
+            return RE_GUEST_ELF32_RELOC_PLAN_E_CONTROL_FLOW;
+        }
         if(in->type!=RE_ARM_R_ABS32 && in->type!=RE_ARM_R_GLOB_DAT &&
            in->type!=RE_ARM_R_JUMP_SLOT) {
             if(failed_index)*failed_index=i;
@@ -76,13 +88,18 @@ REGUESTELF32RELOCPLANStatus re_guest_elf32_prepare_relocations(
             return RE_GUEST_ELF32_RELOC_PLAN_E_SYMBOL;
         }
         const REGUESTELF32LINKSYMBOL *s=&symbols[in->symbol_index];
-        if(s->type==RE_ELF32_STT_TLS) {
+        if(s->type==RE_ELF32_STT_TLS || s->type==RE_ELF32_STT_GNU_IFUNC) {
             if(failed_index)*failed_index=i;
             return RE_GUEST_ELF32_RELOC_PLAN_E_UNSUPPORTED;
         }
         out->symbol_index=in->symbol_index;
         out->symbol_resolved=1u;
         if(s->section_index!=0u) {
+            if(s->section_index>=RE_ELF32_SHN_LORESERVE &&
+               s->section_index!=RE_ELF32_SHN_ABS) {
+                if(failed_index)*failed_index=i;
+                return RE_GUEST_ELF32_RELOC_PLAN_E_UNSUPPORTED;
+            }
             uint64_t value=s->value;
             if(s->section_index!=RE_ELF32_SHN_ABS)value+=bias;
             if(value>UINT32_MAX) {
