@@ -1,3 +1,13 @@
+## Stage 125A.5 — Guest module preparation session (CI pending)
+
+Added a transactional lifecycle coordinator connecting the v1 manifest parser, module materializer, ELF32 ARM identity verifier, and DT_NEEDED dependency preflight. A READY session is published only after all stages succeed; failures release temporary buffers and leave caller output unchanged. Added a synthetic short-read source integration test and registered it in host checks and Android CMake.
+
+This is preparation only: it does not call the ELF load pipeline, map guest memory, resolve imports, relocate, initialize constructors/CPU, or execute the game.
+
+See [Stage 125A.5 report](STAGE125A5_MODULE_SESSION.md).
+
+---
+
 ## Stage 125A.4 — Materialized module identity and dependency preflight (CI pending)
 
 Added a read-only preflight API that checks each materialized buffer against manifest byte limits, verifies ELF32 ARM identity and SONAME, extracts DT_NEEDED, builds the dependency graph, and rejects unresolved/cyclic/unreachable modules. Added a synthetic host test and registered the module in host test runner and Android CMake. This does not map, relocate, initialize, or execute guest code; full ABI certification and original game payload remain outstanding.
