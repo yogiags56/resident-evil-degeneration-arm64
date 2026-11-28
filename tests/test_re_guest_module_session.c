@@ -23,7 +23,7 @@ static void fixture(uint8_t*b){
 }
 static void *src_open(void*u,const char*p){SOURCE*s=u;(void)p;s->offset=0;return s;}
 static int64_t src_length(void*u,void*stream){SOURCE*s=u;(void)stream;return (int64_t)s->size;}
-static int64_t src_read(void*u,void*stream,void*d,uint64_t n){SOURCE*s=u;size_t left=s->size-s->offset;size_t take=(size_t)n;if(take>left)take=left;if(take>37u)take=37u;memcpy(d,s->bytes+s->offset,take);s->offset+=take;return (int64_t)take;}
+static int64_t src_read(void*u,void*stream,void*d,uint64_t n){SOURCE*s=u;(void)stream;size_t left=s->size-s->offset;size_t take=(size_t)n;if(take>left)take=left;if(take>37u)take=37u;memcpy(d,s->bytes+s->offset,take);s->offset+=take;return (int64_t)take;}
 static void src_close(void*u,void*stream){SOURCE*s=u;(void)stream;s->closed++;}
 int main(void){
  static const char manifest[]="RE-GUEST-MODULES 1\nroot libfoo.so\nmodule libfoo.so payload/libfoo.so 256\n";
