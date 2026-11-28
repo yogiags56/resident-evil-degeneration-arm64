@@ -42,6 +42,22 @@ int main(void) {
     assert(get32(image + 8) == 0x3000);
     assert(get32(image + 12) == 0x5000);
 
+    /* Branch relocations must never reach the 32-bit data-word writer. */
+    put32(image + 28, 0xE1A00000);
+    {
+        const uint32_t branch_types[]={RE_ARM_R_PC24,RE_ARM_R_THM_CALL,
+            RE_ARM_R_PLT32,RE_ARM_R_CALL,RE_ARM_R_JUMP24,
+            RE_ARM_R_THM_JUMP24,RE_ARM_R_THM_JUMP19,RE_ARM_R_THM_JUMP6,
+            RE_ARM_R_THM_JUMP11,RE_ARM_R_THM_JUMP8};
+        for(size_t i=0;i<sizeof(branch_types)/sizeof(branch_types[0]);i++) {
+            relocs[0]=(REGUESTRELOCATION){0x101C,branch_types[i],1,0x2000,
+                0,0,1,1};
+            assert(re_guest_relocations_apply(&memory,relocs,1,&failed)
+                ==RE_GUEST_RELOC_APPLY_E_CONTROL_FLOW);
+            assert(failed==0&&get32(image+28)==0xE1A00000);
+        }
+    }
+
     /* RELA uses its explicit addend and does not read target contents. */
     put32(image + 16, 0xDEADBEEF);
     relocs[0] = (REGUESTRELOCATION){0x1010, RE_ARM_R_ABS32, 7, 0x100,
