@@ -8,7 +8,7 @@ static int valid_expected_soname(const char *s) {
     if (!s) return 1;
     n = strlen(s);
     if (!n || n >= RE_GUEST_ELF32_DYNAMIC_STRING_CAP ||
-        strchr(s, '/') || strchr(s, '\\\\')) return 0;
+        strchr(s, '/') || strchr(s, '\\')) return 0;
     for (size_t i = 0; i < n; ++i) {
         unsigned char ch = (unsigned char)s[i];
         if (ch < 0x21u || ch > 0x7eu) return 0;
