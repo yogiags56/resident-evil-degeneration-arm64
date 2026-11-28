@@ -1,6 +1,6 @@
-## Stage 125A.2 — Android AssetManager module materializer (validation pending)
+## Stage 125A.2 — Android AssetManager module materializer (CI rerun)
 
-Added a generic transactional module materializer plus Android AssetManager source adapter. It revalidates safe relative paths, enforces per-module and 256 MiB aggregate limits, handles positive short reads, closes assets on all paths, and commits buffers only when the full set succeeds. Added host regression coverage for short reads, integrity, cleanup, read failure, traversal and missing assets. Android ARM64 and host CI are pending on the latest head. ELF identity/digest verification and runtime pipeline integration remain follow-up work; no original game boot is claimed.
+Implemented transactional module materialization and Android AssetManager callbacks, with per-module and 256 MiB aggregate limits, safe-path validation, short-read handling, and cleanup guarantees. Initial CI failed because a C backslash character literal was over-escaped; corrected in commit `1c10be6172901b104745e7e642d1130a3c4abdc2`. Source checks and Android ARM64 native build are rerunning on that commit. ELF identity/digest checks and runtime pipeline integration remain outstanding; no original game boot is claimed.
 
 See [Stage 125A.2 report](STAGE125A2_ANDROID_ASSET_MATERIALIZER.md).
 
