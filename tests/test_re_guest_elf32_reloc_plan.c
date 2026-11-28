@@ -50,7 +50,7 @@ int main(void) {
     symbols[1].type=0u;input[1].symbol_index=1;
     /* ARM/Thumb branch relocations need instruction-aware encoding and are not word relocations. */
     {
-        const uint32_t branch_types[]={28u,29u,10u,30u,51u,102u,103u};
+        const uint32_t branch_types[]={1u,10u,27u,28u,29u,30u,51u,52u,102u,103u};
         for(size_t bi=0;bi<sizeof(branch_types)/sizeof(branch_types[0]);bi++) {
             input[0].type=branch_types[bi];
             assert(re_guest_elf32_prepare_relocations(&dynamic,symbols,4,input,1,
