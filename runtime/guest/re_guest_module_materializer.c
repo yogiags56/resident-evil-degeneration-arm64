@@ -6,11 +6,11 @@
 static int safe_relative_asset_path(const char *path) {
     size_t n, i = 0u;
     if (!path || !(n = strlen(path)) ||
-        n >= RE_GUEST_MANIFEST_PATH_CAP || path[0] == '/' || path[0] == '\\\\')
+        n >= RE_GUEST_MANIFEST_PATH_CAP || path[0] == '/' || path[0] == '\\')
         return 0;
     while (i < n) {
         size_t start = i;
-        while (i < n && path[i] != '/' && path[i] != '\\\\') {
+        while (i < n && path[i] != '/' && path[i] != '\\') {
             unsigned char c = (unsigned char)path[i];
             if (c < 0x21u || c > 0x7eu || c == ':') return 0;
             ++i;
@@ -18,7 +18,7 @@ static int safe_relative_asset_path(const char *path) {
         if (i == start || (i-start == 1u && path[start] == '.') ||
             (i-start == 2u && path[start] == '.' && path[start+1u] == '.'))
             return 0;
-        if (i < n) { ++i; if (i == n || path[i] == '/' || path[i] == '\\\\') return 0; }
+        if (i < n) { ++i; if (i == n || path[i] == '/' || path[i] == '\\') return 0; }
     }
     return 1;
 }
