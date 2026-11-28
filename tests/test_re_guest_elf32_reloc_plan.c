@@ -48,6 +48,17 @@ int main(void) {
         providers,1,0x100000,output,4,&failed)==RE_GUEST_ELF32_RELOC_PLAN_E_UNSUPPORTED);
     assert(failed==1&&memcmp(output,before,sizeof(output))==0);
     symbols[1].type=0u;input[1].symbol_index=1;
+    /* ARM/Thumb branch relocations need instruction-aware encoding and are not word relocations. */
+    {
+        const uint32_t branch_types[]={28u,29u,10u,30u,51u,102u,103u};
+        for(size_t bi=0;bi<sizeof(branch_types)/sizeof(branch_types[0]);bi++) {
+            input[0].type=branch_types[bi];
+            assert(re_guest_elf32_prepare_relocations(&dynamic,symbols,4,input,1,
+                providers,1,0x100000,output,4,&failed)==RE_GUEST_ELF32_RELOC_PLAN_E_CONTROL_FLOW);
+            assert(failed==0&&memcmp(output,before,sizeof(output))==0);
+        }
+        input[0].type=RE_ARM_R_RELATIVE;
+    }
     input[2].symbol_index=2;dynamic.entries[0].tag=0x6ffffffeu;
     assert(re_guest_elf32_prepare_relocations(&dynamic,symbols,4,input,4,
         providers,1,0x100000,output,4,&failed)==RE_GUEST_ELF32_RELOC_PLAN_E_UNSUPPORTED);
