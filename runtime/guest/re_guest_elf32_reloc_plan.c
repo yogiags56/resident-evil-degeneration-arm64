@@ -13,6 +13,11 @@
 #define RE_ELF32_DT_VERNEED 0x6ffffffeu
 #define RE_ELF32_DT_VERNEEDNUM 0x6fffffffu
 
+static int is_arm_branch_relocation(uint32_t type) {
+    return type==28u || type==29u || type==10u || type==30u ||
+           type==51u || type==102u || type==103u;
+}
+
 static int has_unsupported_version_tags(const REGUESTELF32DYNAMIC *d) {
     for (size_t i=0;i<d->entry_count;i++) {
         uint32_t t=d->entries[i].tag;
@@ -67,6 +72,10 @@ REGUESTELF32RELOCPLANStatus re_guest_elf32_prepare_relocations(
                 return RE_GUEST_ELF32_RELOC_PLAN_E_SYMBOL;
             }
             continue;
+        }
+        if(is_arm_branch_relocation(in->type)) {
+            if(failed_index)*failed_index=i;
+            return RE_GUEST_ELF32_RELOC_PLAN_E_CONTROL_FLOW;
         }
         if(in->type!=RE_ARM_R_ABS32 && in->type!=RE_ARM_R_GLOB_DAT &&
            in->type!=RE_ARM_R_JUMP_SLOT) {
