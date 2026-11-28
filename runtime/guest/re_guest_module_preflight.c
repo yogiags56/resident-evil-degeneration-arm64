@@ -31,7 +31,9 @@ REGUESTMODULEPREFLIGHTSTATUS re_guest_module_preflight(
   REGUESTELF32IDENTITYTYPE expected_type=is_root?
    RE_GUEST_ELF32_IDENTITY_ANY:RE_GUEST_ELF32_IDENTITY_SHARED;
   REGUESTELF32IDENTITYSTATUS status;
-  if(!module->bytes||!module->size||!memchr(entry->soname,'\\0',sizeof(entry->soname))){
+  if(!module->bytes||!module->size||entry->max_bytes==0u||
+     module->size>entry->max_bytes||
+     !memchr(entry->soname,'\0',sizeof(entry->soname))){
    if(failed_module)*failed_module=i;
    free(identities);return RE_GUEST_PREFLIGHT_E_MANIFEST;
   }
@@ -61,6 +63,12 @@ REGUESTMODULEPREFLIGHTSTATUS re_guest_module_preflight(
  if(graph_status!=RE_GUEST_ELF32_MODULE_GRAPH_OK){
   if(failed_module&&graph_failed<manifest->module_count)*failed_module=graph_failed;
   free(identities);return RE_GUEST_PREFLIGHT_E_GRAPH;
+ }
+ for(size_t i=0;i<manifest->module_count;i++){
+  if(!pending.graph.reachable[i]){
+   if(failed_module)*failed_module=i;
+   free(identities);return RE_GUEST_PREFLIGHT_E_GRAPH;
+  }
  }
  pending.module_count=manifest->module_count;
  pending.root_module_index=manifest->root_module_index;
