@@ -14,8 +14,9 @@
 #define RE_ELF32_DT_VERNEEDNUM 0x6fffffffu
 
 static int is_arm_branch_relocation(uint32_t type) {
-    return type==28u || type==29u || type==10u || type==30u ||
-           type==51u || type==102u || type==103u;
+    return type==1u || type==10u || type==27u || type==28u ||
+           type==29u || type==30u || type==51u || type==52u ||
+           type==102u || type==103u;
 }
 
 static int has_unsupported_version_tags(const REGUESTELF32DYNAMIC *d) {
