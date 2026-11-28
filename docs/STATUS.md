@@ -1,3 +1,11 @@
+## Stage 125A.2 — Android AssetManager module materializer (validation pending)
+
+Added a generic transactional module materializer plus Android AssetManager source adapter. It revalidates safe relative paths, enforces per-module and 256 MiB aggregate limits, handles positive short reads, closes assets on all paths, and commits buffers only when the full set succeeds. Added host regression coverage for short reads, integrity, cleanup, read failure, traversal and missing assets. Android ARM64 and host CI are pending on the latest head. ELF identity/digest verification and runtime pipeline integration remain follow-up work; no original game boot is claimed.
+
+See [Stage 125A.2 report](STAGE125A2_ANDROID_ASSET_MATERIALIZER.md).
+
+---
+
 ## Stage 125A.1 — bounded guest-module manifest (validation pending)
 
 Added a strict versioned manifest parser with a 16 KiB input cap, 32-module cap, 1–128 MiB per-module byte limit, exact SONAME/root matching, relative-path traversal checks, duplicate rejection, and transactional output. Registered it in host tests and Android CMake. This defines the module inventory contract only; Android asset materialization, digest verification, ELF identity cross-checking, and runtime coordination remain outstanding. No game boot is claimed.
