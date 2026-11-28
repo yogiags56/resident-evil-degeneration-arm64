@@ -58,6 +58,7 @@ REGUESTMATERIALIZESTATUS re_guest_module_materialize(
         uint8_t *buffer;
         if (!memchr(entry->asset_path, '\0', sizeof(entry->asset_path)) ||
             !memchr(entry->soname, '\0', sizeof(entry->soname)) ||
+            !safe_relative_asset_path(entry->asset_path) ||
             entry->max_bytes == 0u ||
             entry->max_bytes > RE_GUEST_MANIFEST_MAX_MODULE_BYTES)
             goto manifest_error;
