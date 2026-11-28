@@ -14,6 +14,9 @@ REGUESTMODULESESSIONSTATUS re_guest_module_session_prepare(
  if(!manifest_text||!manifest_length||!source||!out||
     out->state!=RE_GUEST_SESSION_EMPTY||out->materialized.module_count!=0u)
   return RE_GUEST_SESSION_E_ARGUMENT;
+ for(size_t i=0;i<RE_GUEST_MANIFEST_MAX_MODULES;i++)
+  if(out->materialized.modules[i].bytes||out->materialized.modules[i].size)
+   return RE_GUEST_SESSION_E_ARGUMENT;
  memset(&pending,0,sizeof(pending));
  ms=re_guest_module_manifest_parse(manifest_text,manifest_length,
      &pending.manifest,failed_line);
