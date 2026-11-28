@@ -2,24 +2,25 @@
 
 ## Scope
 
-Audited the bounded ELF32 ARM relocation preparation path and hardened symbol classification before producing relocation records. The existing relocation engine applies 32-bit data-word relocations only; it does not rewrite ARM/Thumb instruction encodings.
+Audited the bounded ELF32 ARM relocation preparation and application paths. The engine currently applies 32-bit data-word relocations; it does not rewrite ARM/Thumb instruction encodings.
 
 ## Changes
 
-- Reject reserved ELF section indices (SHN_LORESERVE and above), except SHN_ABS, instead of treating special indices such as SHN_COMMON as ordinary section-relative definitions.
-- Reject GNU IFUNC symbols alongside TLS symbols. IFUNC requires resolver execution and is outside the current static relocation preparation contract.
-- Add a dedicated control-flow relocation rejection status and fail closed for ARM PC24, PLT32, CALL, JUMP24 and Thumb CALL, JUMP24, JUMP19, JUMP6, JUMP11 and JUMP8 relocation types.
-- Preserve transactional output semantics: rejected records do not publish partially prepared relocation arrays.
-- Add regression coverage for SHN_COMMON, IFUNC and every currently classified branch relocation type.
+- Reject reserved ELF section indices (SHN_LORESERVE and above), except SHN_ABS.
+- Reject GNU IFUNC and TLS symbols; resolver execution and TLS models are not implemented.
+- Planner returns a dedicated control-flow status for ARM PC24, PLT32, CALL, JUMP24 and Thumb CALL, JUMP24, JUMP19, JUMP6, JUMP11 and JUMP8.
+- Independently harden the relocation apply boundary: the same ARM/Thumb control-flow relocation types are rejected before any target lookup or write, even if a malformed/preconstructed relocation record bypasses the planner.
+- Preserve transactional output and memory semantics. Rejected planner records do not publish output; rejected apply records do not modify guest memory.
+- Add regression coverage for SHN_COMMON, IFUNC and all listed branch relocation types at both planner and apply boundaries.
 
 ## Supported relocation subset
 
-The planner continues to accept R_ARM_RELATIVE, R_ARM_ABS32, R_ARM_GLOB_DAT and R_ARM_JUMP_SLOT. It explicitly rejects unsupported relocation types, versioned dynamic symbol tags, TLS, IFUNC, unsupported special section indices and instruction-encoding relocations.
+The planner and apply engine support R_ARM_RELATIVE, R_ARM_ABS32, R_ARM_GLOB_DAT and R_ARM_JUMP_SLOT only. This is a bounded subset, not a complete ARM EABI dynamic linker.
 
-## Known gaps
+## Remaining work
 
-This is not a complete ARM EABI dynamic linker. Implementing branch relocation requires opcode validation, correct ARM/Thumb PC bias, displacement alignment/range checks, instruction-bitfield encoding, Thumb-2 wide instruction validation, and ARM/Thumb interworking policy. Other remaining gaps include COPY relocations, TLS models, GNU symbol version decoding, GNU hash-only symbol bounds, REL/RELA semantic cross-checks, PLT/GOT conventions, IFUNC resolver policy, and real payload relocation inventory. These must be driven by actual ELF metadata, not assumptions.
+Branch relocation implementation still requires ARM/Thumb opcode validation, correct PC bias, displacement alignment/range checks, instruction bitfield encoding, Thumb-2 wide instruction validation and interworking policy. Additional gaps include COPY, TLS, GNU symbol versioning, GNU hash bounds, REL/RELA semantic cross-checks, PLT/GOT conventions, IFUNC policy and actual payload relocation inventory.
 
 ## Validation
 
-Stage 125A.6 Host Source Checks passed on commit `2de75cf6c3a67ddb0f5dc9dae2a0ef2920235d60`. Android build at that commit was blocked during Gradle dependency resolution by Maven Central HTTP 429 throttling. Stage 125B.1 host and Android workflows are pending on the latest commits.
+Commit `32ea7b753d518d808fc701ae99b643f4b8063458` passed both Host Source Checks and Android ARM64 Native Build. Stage 125B.1 apply-boundary hardening CI is pending on commit `1469efb34371795f237a25ac8a3bd0ceac987244`.
