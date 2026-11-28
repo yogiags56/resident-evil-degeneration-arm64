@@ -1,3 +1,13 @@
+## Stage 125A.6 — Manifest-bound ELF32 pipeline handoff (CI pending)
+
+Added a strict adapter from a READY preparation session into the existing ELF32 load pipeline. It verifies session state, module count, root identity, module-name ordering, and exact materialized ELF buffer pointer/size identity before pipeline invocation. The caller still supplies memory, load biases, segment buffers, symbol/relocation scratch, and provider scratch. Success transitions the session to LOADED; failure leaves it READY and requires borrowed scratch buffers to be reset before retry. This wires mapping and relocation but does not claim guest CPU start or game boot.
+
+Stage 125A.5 CI failures (manifest status enum spelling and unused test callback parameter) were fixed in commits `33f07a26a2a84a5426ce6595cfa094788f2ff02d` and `0a7727b30bdc0036d2f82bb82b16bc6c81231672`. Revalidation and Stage 125A.6 CI are pending.
+
+See [Stage 125A.6 report](STAGE125A6_PIPELINE_HANDOFF.md).
+
+---
+
 ## Stage 125A.5 — Guest module preparation session (CI pending)
 
 Added a transactional lifecycle coordinator connecting the v1 manifest parser, module materializer, ELF32 ARM identity verifier, and DT_NEEDED dependency preflight. A READY session is published only after all stages succeed; failures release temporary buffers and leave caller output unchanged. Added a synthetic short-read source integration test and registered it in host checks and Android CMake.
