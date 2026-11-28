@@ -19,7 +19,7 @@ static void fixture(uint8_t *b){
  p32(b+0x88,RE_GUEST_ELF32_DT_STRSZ);p32(b+0x8c,11);
  p32(b+0x90,RE_GUEST_ELF32_DT_SONAME);p32(b+0x94,1);
  p32(b+0x98,RE_GUEST_ELF32_DT_NULL);p32(b+0x9c,0);
- memcpy(b+0xe0,"\\0libfoo.so\\0",11);
+ memcpy(b+0xe0,"\0libfoo.so\0",11);
 }
 int main(void){
  uint8_t bytes[256];REGUESTELF32IDENTITY identity;size_t failed=99;
