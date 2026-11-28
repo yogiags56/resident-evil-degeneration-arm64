@@ -1,3 +1,11 @@
+## Stage 125B.2 — Initial A32 ARM branch encoder (CI pending)
+
+Added a standalone A32 B/BL relocation encoder for R_ARM_PC24, R_ARM_PLT32, R_ARM_CALL and R_ARM_JUMP24. It validates A32 branch opcode/condition, CALL-vs-JUMP link bit, ARM-state target, REL/RELA addends, P+8 PC bias, alignment and signed displacement range. Output remains untouched on failure. Added host regression tests and Android CMake integration. This helper is not yet wired into the production relocation apply transaction; Thumb relocation remains fail-closed.
+
+See [Stage 125B.2 report](STAGE125B2_A32_BRANCH_ENCODER.md).
+
+---
+
 ## Stage 125B.1 — ARM relocation symbol and control-flow audit (apply-boundary CI pending)
 
 Hardened both relocation planning and application. Reserved ELF section indices (except SHN_ABS), GNU IFUNC/TLS and unsupported ARM/Thumb branch instruction relocations are rejected. The apply layer independently rejects branch types before target lookup/write, so preconstructed records cannot bypass the planner guard. Regression tests verify transactional behavior at both boundaries. Supported subset remains R_ARM_RELATIVE, ABS32, GLOB_DAT and JUMP_SLOT.
