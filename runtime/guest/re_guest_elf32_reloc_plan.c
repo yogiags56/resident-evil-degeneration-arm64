@@ -4,7 +4,9 @@
 
 #define RE_GUEST_ELF32_RELOC_MAX 4096u
 #define RE_ELF32_SHN_ABS 0xfff1u
+#define RE_ELF32_SHN_LORESERVE 0xff00u
 #define RE_ELF32_STT_TLS 6u
+#define RE_ELF32_STT_GNU_IFUNC 10u
 #define RE_ELF32_DT_VERSYM 0x6ffffff0u
 #define RE_ELF32_DT_VERDEF 0x6ffffffcu
 #define RE_ELF32_DT_VERDEFNUM 0x6ffffffdu
@@ -76,13 +78,18 @@ REGUESTELF32RELOCPLANStatus re_guest_elf32_prepare_relocations(
             return RE_GUEST_ELF32_RELOC_PLAN_E_SYMBOL;
         }
         const REGUESTELF32LINKSYMBOL *s=&symbols[in->symbol_index];
-        if(s->type==RE_ELF32_STT_TLS) {
+        if(s->type==RE_ELF32_STT_TLS || s->type==RE_ELF32_STT_GNU_IFUNC) {
             if(failed_index)*failed_index=i;
             return RE_GUEST_ELF32_RELOC_PLAN_E_UNSUPPORTED;
         }
         out->symbol_index=in->symbol_index;
         out->symbol_resolved=1u;
         if(s->section_index!=0u) {
+            if(s->section_index>=RE_ELF32_SHN_LORESERVE &&
+               s->section_index!=RE_ELF32_SHN_ABS) {
+                if(failed_index)*failed_index=i;
+                return RE_GUEST_ELF32_RELOC_PLAN_E_UNSUPPORTED;
+            }
             uint64_t value=s->value;
             if(s->section_index!=RE_ELF32_SHN_ABS)value+=bias;
             if(value>UINT32_MAX) {
